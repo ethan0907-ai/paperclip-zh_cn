@@ -32,6 +32,23 @@ import {
 type StoryArtifactKindFilter = (typeof ARTIFACT_KIND_FILTERS)[number]["value"];
 type StoryArtifactGroupBy = (typeof ARTIFACT_GROUP_OPTIONS)[number]["value"];
 
+const KIND_LABELS: Record<string, string> = {
+  all: "All",
+  images: "Images",
+  documents: "Documents",
+  spreadsheets: "Spreadsheets",
+  presentations: "Presentations",
+  media: "Media",
+  source: "Source",
+  data: "Data",
+  other: "Other",
+};
+const GROUP_LABELS: Record<string, string> = {
+  none: "None",
+  project: "Project",
+  company: "Company",
+};
+
 const SAMPLE_IMAGE =
   "data:image/svg+xml;utf8," +
   encodeURIComponent(
@@ -208,14 +225,14 @@ function ArtifactsToolbar({
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-44">
             <DropdownMenuLabel>Group by</DropdownMenuLabel>
-            {ARTIFACT_GROUP_OPTIONS.map(({ value, label }) => (
+            {ARTIFACT_GROUP_OPTIONS.map(({ value }) => (
               <DropdownMenuItem
                 key={value}
                 aria-selected={groupBy === value}
                 onSelect={() => onGroupByChange(value)}
                 className="justify-between"
               >
-                {label}
+                {GROUP_LABELS[value] ?? value}
                 {groupBy === value ? <Check className="h-3.5 w-3.5" /> : null}
               </DropdownMenuItem>
             ))}
@@ -237,7 +254,7 @@ function ArtifactsToolbar({
                   : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
               )}
             >
-              {filter.label}
+              {KIND_LABELS[filter.value] ?? filter.value}
             </button>
           ))}
         </div>

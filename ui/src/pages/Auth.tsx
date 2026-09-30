@@ -92,7 +92,7 @@ export function AuthPage() {
 
   // A health/session failure must not be mistaken for a self-hosted instance.
   if (healthQuery.error || sessionError) {
-    return <p role="alert" className="p-6 text-sm text-destructive">Unable to check sign-in. Refresh and try again.</p>;
+    return <p role="alert" className="p-6 text-sm text-destructive">t("auth.signInFailed")</p>;
   }
 
   if (healthQuery.data?.cloud) {

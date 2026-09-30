@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "@/i18n";
 import {
   Activity,
   BadgeDollarSign,
@@ -52,13 +53,12 @@ export function AgentContextualSidebar({
   agentRef,
   agentId,
   agentName,
-  labels = { secrets: "Secrets & variables" },
 }: {
   agentRef: string;
   agentId?: string;
   agentName?: string;
-  labels?: Partial<Record<AgentLocalDetailView, string>>;
 }) {
+  const { t } = useTranslation();
   const { selectedCompanyId } = useCompany();
   const { enabled: chatConnectorsEnabled } = useChatConnectorsEnabled();
   const shouldResolveAgent = !agentId || !agentName;
@@ -93,7 +93,7 @@ export function AgentContextualSidebar({
               data-slot="contextual-sidebar-section-label"
               className={contextualSidebarStyles.sectionLabel}
             >
-              {section.label}
+              {t(section.labelKey)}
             </p>
             <div data-slot="contextual-sidebar-group" className={contextualSidebarStyles.group}>
               {section.items
@@ -104,7 +104,7 @@ export function AgentContextualSidebar({
                     <SidebarNavItem
                       key={item.value}
                       to={href}
-                      label={labels?.[item.value] ?? item.label}
+                      label={t(item.labelKey)}
                       icon={localIcons[item.value]}
                     />
                   );
@@ -118,7 +118,7 @@ export function AgentContextualSidebar({
             data-slot="contextual-sidebar-section-label"
             className={contextualSidebarStyles.sectionLabel}
           >
-            Audit
+            {t("agents.detail.nav.audit")}
           </p>
           <div data-slot="contextual-sidebar-group" className={contextualSidebarStyles.group}>
             {resolvedId ? auditItems.map((item) => (

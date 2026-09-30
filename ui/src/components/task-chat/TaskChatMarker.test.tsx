@@ -3,6 +3,7 @@
 import { flushSync } from "react-dom";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { i18n } from "@/i18n";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { TaskChatMarker } from "./TaskChatMarker";
 import { TaskChatThreadView } from "./TaskChatThreadView";
@@ -14,6 +15,7 @@ vi.mock("@/lib/router", () => ({
 }));
 
 describe("TaskChatMarker", () => {
+  beforeEach(() => i18n.changeLanguage("en"));
   let container: HTMLDivElement;
   let root: Root | null = null;
 

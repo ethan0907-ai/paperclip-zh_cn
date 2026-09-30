@@ -142,6 +142,8 @@ const mockApprovalsApi = vi.hoisted(() => ({
   create: vi.fn(),
 }));
 const mockSecretsApi = vi.hoisted(() => ({
+  create: vi.fn(),
+  remove: vi.fn(),
   list: vi.fn(),
   removeUserSecretDefinition: vi.fn(),
   listMyUserSecrets: vi.fn(),
@@ -332,6 +334,8 @@ describe("OnboardingWizard restore-gate (stale localStorage across accounts)", (
     });
     mockSecretsApi.list.mockResolvedValue([]);
     mockSecretsApi.listMyUserSecrets.mockResolvedValue([]);
+    mockSecretsApi.create.mockResolvedValue({ id: "gateway-secret" });
+    mockSecretsApi.remove.mockResolvedValue({ ok: true });
     mockSecretsApi.removeUserSecretDefinition.mockResolvedValue({ ok: true });
     window.localStorage.clear();
     mockDialog.onboardingOpen = true;
@@ -2244,6 +2248,42 @@ describe("OnboardingWizard restore-gate (stale localStorage across accounts)", (
       });
       for (let i = 0; i < 8; i++) await flushReact();
     }
+
+    it("creates the first agent through a separately hosted Hermes Gateway", async () => {
+      mockAdapterRegistry.list = [
+        { type: "claude_local" },
+        { type: "codex_local" },
+        { type: "hermes_gateway" },
+      ];
+      const { root } = await openStep4({ adapterType: "hermes_gateway" });
+      await pickSource(/Hermes Gateway/);
+
+      await act(async () => {
+        setControlledValue(document.body.querySelector('input[aria-label="Hermes API base URL"]')!, "http://hermes:8642");
+        setControlledValue(document.body.querySelector('input[aria-label="Hermes API_SERVER_KEY"]')!, "gateway-key");
+      });
+      const allowHttp = document.body.querySelector('input[type="checkbox"]') as HTMLInputElement;
+      await act(async () => allowHttp.click());
+      await flushReact();
+      await pressArcPrimary();
+
+      expect(mockSecretsApi.create).toHaveBeenCalledWith("company-new", expect.objectContaining({ value: "gateway-key" }));
+      expect(mockAgentsApi.testEnvironment).toHaveBeenCalledWith(
+        "company-new",
+        "hermes_gateway",
+        expect.objectContaining({ adapterConfig: expect.objectContaining({
+          apiBaseUrl: "http://hermes:8642",
+          apiKey: { type: "secret_ref", secretId: "gateway-secret", version: "latest" },
+          dangerouslyAllowInsecureRemoteHttp: true,
+        }) }),
+      );
+      expect(mockAgentsApi.hire).toHaveBeenCalledWith("company-new", expect.objectContaining({
+        adapterType: "hermes_gateway",
+        adapterConfig: expect.objectContaining({ apiBaseUrl: "http://hermes:8642" }),
+        onboardingFirstAgent: true,
+      }));
+      await act(async () => root.unmount());
+    });
 
     it("starts the claude_local sign-in on Connect when the signal reports no ready credential", async () => {
       mockAgentsApi.getAdapterAuthSignal.mockResolvedValue({ status: "absent" });

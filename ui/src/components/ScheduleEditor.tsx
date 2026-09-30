@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslation } from "@/i18n";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
@@ -6,14 +7,14 @@ import { nextCronFires, parseCronExpression } from "../lib/cron-fires";
 
 export type SchedulePreset = "every_minute" | "every_hour" | "every_day" | "weekdays" | "weekly" | "monthly" | "custom";
 
-const PRESETS: { value: SchedulePreset; label: string }[] = [
-  { value: "every_minute", label: "Every minute" },
-  { value: "every_hour", label: "Every hour" },
-  { value: "every_day", label: "Every day" },
-  { value: "weekdays", label: "Weekdays" },
-  { value: "weekly", label: "Weekly" },
-  { value: "monthly", label: "Monthly" },
-  { value: "custom", label: "Custom (cron)" },
+const PRESETS: { value: SchedulePreset; labelKey: string }[] = [
+  { value: "every_minute", labelKey: "schedule.presets.everyMinute" },
+  { value: "every_hour", labelKey: "schedule.presets.everyHour" },
+  { value: "every_day", labelKey: "schedule.presets.everyDay" },
+  { value: "weekdays", labelKey: "schedule.presets.weekdays" },
+  { value: "weekly", labelKey: "schedule.presets.weekly" },
+  { value: "monthly", labelKey: "schedule.presets.monthly" },
+  { value: "custom", labelKey: "schedule.presets.custom" },
 ];
 
 const HOURS = Array.from({ length: 24 }, (_, i) => ({
@@ -200,6 +201,7 @@ export function ScheduleEditor({
   onChange: (cron: string) => void;
   onValidityChange?: (valid: boolean) => void;
 }) {
+  const { t } = useTranslation();
   const parsed = useMemo(() => parseCronToPreset(value), [value]);
   const [preset, setPreset] = useState<SchedulePreset>(parsed.preset);
   const [hour, setHour] = useState(parsed.hour);
@@ -253,7 +255,7 @@ export function ScheduleEditor({
         <SelectContent>
           {PRESETS.map((p) => (
             <SelectItem key={p.value} value={p.value}>
-              {p.label}
+              {t(p.labelKey)}
             </SelectItem>
           ))}
         </SelectContent>
@@ -298,7 +300,7 @@ export function ScheduleEditor({
         <div className="flex flex-wrap items-center gap-2">
           {preset !== "every_minute" && preset !== "every_hour" && (
             <>
-              <span className="text-sm text-muted-foreground">at</span>
+              <span className="text-sm text-muted-foreground">{t("schedule.at")}</span>
               <Select
                 value={hour}
                 onValueChange={(h) => {
@@ -365,7 +367,7 @@ export function ScheduleEditor({
 
           {preset === "weekly" && (
             <>
-              <span className="text-sm text-muted-foreground">on</span>
+              <span className="text-sm text-muted-foreground">{t("schedule.on")}</span>
               <div className="flex gap-1">
                 {DAYS_OF_WEEK.map((d) => (
                   <Button

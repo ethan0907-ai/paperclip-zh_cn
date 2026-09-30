@@ -3,11 +3,13 @@
 import { flushSync } from "react-dom";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { i18n } from "@/i18n";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { TaskChatSystemNotice } from "./TaskChatSystemNotice";
 import type { TaskChatMessageItem } from "./task-chat-model";
 
 describe("TaskChatSystemNotice (PAP-443)", () => {
+  beforeEach(() => i18n.changeLanguage("en"));
   let container: HTMLDivElement;
   let root: Root | null = null;
 

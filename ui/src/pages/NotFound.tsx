@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useTranslation } from "@/i18n";
 import { Link, useLocation } from "@/lib/router";
 import { AlertTriangle, Compass } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -58,7 +59,7 @@ export function NotFoundPage({ scope = "global", requestedPrefix }: NotFoundPage
             </Link>
           </Button>
           <Button variant="outline" asChild>
-            <Link to="/">Go home</Link>
+            <Link to="/">t("notFound.goHome")</Link>
           </Button>
         </div>
       </Card>

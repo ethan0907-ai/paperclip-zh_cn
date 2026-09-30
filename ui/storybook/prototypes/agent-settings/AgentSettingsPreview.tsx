@@ -262,7 +262,6 @@ function SettingsPage() {
             agentRef={REF}
             agentId={ID}
             agentName={agent.name}
-            labels={{ secrets: "Secrets & variables" }}
           />
         </div>
         <main className="min-w-0 flex-1 px-6 py-8 lg:px-10">

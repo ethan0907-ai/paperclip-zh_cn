@@ -28,6 +28,7 @@ import {
   type ReactNode,
   type Ref,
 } from "react";
+import { useTranslation } from "@/i18n";
 import { pickTextColorForPillBg } from "@/lib/color-contrast";
 import {
   Link,

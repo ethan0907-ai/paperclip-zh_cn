@@ -1,4 +1,5 @@
 import { ChevronsUpDown, Plus, RefreshCw, Settings } from "lucide-react";
+import { useTranslation } from "@/i18n";
 import { Link } from "@/lib/router";
 import { useCompany } from "../context/CompanyContext";
 import {
@@ -31,6 +32,7 @@ interface CompanySwitcherProps {
 }
 
 export function CompanySwitcher({ open: controlledOpen, onOpenChange }: CompanySwitcherProps = {}) {
+  const { t } = useTranslation();
   const [internalOpen, setInternalOpen] = useState(false);
   const { companies, selectedCompany, setSelectedCompanyId, companyListUnavailable, retryCompanies } =
     useCompany();
@@ -57,7 +59,7 @@ export function CompanySwitcher({ open: controlledOpen, onOpenChange }: CompanyS
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-(--sz-220px)">
-        <DropdownMenuLabel>Organizations</DropdownMenuLabel>
+        <DropdownMenuLabel>{t("companySwitcher.organizations")}</DropdownMenuLabel>
         <DropdownMenuSeparator />
         {sidebarCompanies.map((company) => (
           <DropdownMenuItem

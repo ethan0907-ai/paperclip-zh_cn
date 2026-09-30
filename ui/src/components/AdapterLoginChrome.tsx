@@ -50,6 +50,7 @@ export const CONNECT_SOURCE_NAMES: Record<string, string> = {
   claude_local: "Claude",
   codex_local: "OpenAI",
   grok_local: "Grok",
+  hermes_gateway: "Hermes Gateway",
 };
 
 /** The provider name for a source, falling back to the type when unlisted. */

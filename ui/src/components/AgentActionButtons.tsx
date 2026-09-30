@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState, type ReactNode } from "react";
+import { useTranslation } from "@/i18n";
 import { useNavigate } from "@/lib/router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -81,11 +82,12 @@ export function PauseResumeButton({
   disabled?: boolean;
   size?: "sm" | "default";
 }) {
+  const { t } = useTranslation();
   if (isPaused) {
     return (
       <Button variant="outline" size={size} onClick={onResume} disabled={disabled}>
         <Play className="h-3.5 w-3.5 sm:mr-1" />
-        <span className="hidden sm:inline">Resume</span>
+        <span className="hidden sm:inline">{t("agentActions.resume")}</span>
       </Button>
     );
   }
@@ -93,7 +95,7 @@ export function PauseResumeButton({
   return (
     <Button variant="outline" size={size} onClick={onPause} disabled={disabled}>
       <Pause className="h-3.5 w-3.5 sm:mr-1" />
-      <span className="hidden sm:inline">Pause</span>
+      <span className="hidden sm:inline">{t("agentActions.pause")}</span>
     </Button>
   );
 }
@@ -114,10 +116,10 @@ export function ClearErrorButton({
       onClick={onClick}
       disabled={disabled}
       className="border-destructive/60 text-destructive hover:bg-destructive/10 hover:text-destructive dark:border-destructive/50"
-      aria-label="Clear error and return agent to idle"
+      aria-label="ClearError and return agent to idle"
     >
       <CheckCircle2 className="h-3.5 w-3.5 sm:mr-1" />
-      <span className="hidden sm:inline">Clear error</span>
+      <span className="hidden sm:inline">ClearError</span>
     </Button>
   );
 }
@@ -217,6 +219,7 @@ export function AgentActionButtons({
   const queryClient = useQueryClient();
   const { openNewIssue } = useDialogActions();
   const { pushToast } = useToastActions();
+  const { t } = useTranslation();
   const [moreOpen, setMoreOpen] = useState(false);
   const [pauseConfirmOpen, setPauseConfirmOpen] = useState(false);
   const pendingNavigationChangesRef = useRef(hasPendingNavigationChanges);
@@ -421,7 +424,7 @@ export function AgentActionButtons({
           title="Capture exact provider traffic for this run (expires after 24 hours)"
         >
           <Bug className="h-3.5 w-3.5 sm:mr-1" />
-          <span className="hidden sm:inline">Run with provider trace</span>
+          <span className="hidden sm:inline">RunWithProviderTrace</span>
         </Button>
       )}
       {isError ? (
@@ -449,7 +452,7 @@ export function AgentActionButtons({
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogCancel>{t("agentActions.cancel")}</AlertDialogCancel>
               <AlertDialogAction onClick={() => agentAction.mutate("pause")}>
                 Pause anyway
               </AlertDialogAction>

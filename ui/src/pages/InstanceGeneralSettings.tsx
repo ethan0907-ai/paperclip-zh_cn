@@ -17,10 +17,12 @@ import { queryKeys } from "../lib/queryKeys";
 import { ToggleSwitch } from "@/components/ui/toggle-switch";
 import { cn } from "../lib/utils";
 import { useSignOut } from "@/hooks/useSignOut";
+import { setAppLocale, useTranslation } from "@/i18n";
 
 const FEEDBACK_TERMS_URL = import.meta.env.VITE_FEEDBACK_TERMS_URL?.trim() || "https://paperclip.ing/tos";
 
 export function InstanceGeneralSettings({ embedded = false }: { embedded?: boolean }) {
+  const { t, i18n } = useTranslation();
   const { setBreadcrumbs } = useBreadcrumbs();
   const queryClient = useQueryClient();
   const [actionError, setActionError] = useState<string | null>(null);
@@ -118,6 +120,27 @@ export function InstanceGeneralSettings({ embedded = false }: { embedded?: boole
           {visibleActionError}
         </div>
       )}
+
+      <section className="flex flex-wrap items-start justify-between gap-4">
+        <div className="space-y-1.5">
+          <label htmlFor="app-language" className="text-sm font-semibold">
+            {t("settings.general.language")}
+          </label>
+          <p id="app-language-description" className="max-w-2xl text-sm text-muted-foreground">
+            {t("settings.general.languageDescription")}
+          </p>
+        </div>
+        <select
+          id="app-language"
+          aria-describedby="app-language-description"
+          value={i18n.language}
+          onChange={(event) => setAppLocale(event.target.value)}
+          className="rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+        >
+          <option value="zh-CN">简体中文</option>
+          <option value="en">English</option>
+        </select>
+      </section>
 
       {showDeploymentStatus && (
       <section>

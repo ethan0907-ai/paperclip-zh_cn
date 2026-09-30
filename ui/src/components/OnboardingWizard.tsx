@@ -4,7 +4,7 @@ import { useLocalAiLogin } from "./ai-connections/useLocalAiLogin";
 import { aiConnectionsApi } from "@/api/ai-connections";
 import { aiProviderForAdapter } from "./ai-connections/AiConnectionField";
 import type { AiConnectionBinding } from "@paperclipai/shared";
-import { storeProviderApiKey } from "../lib/provider-credential";
+import { storeOrganizationApiKey, storeProviderApiKey } from "../lib/provider-credential";
 import { SavedProviderKeySelect, useSavedProviderKeys } from "./onboarding/SavedProviderKeySelect";
 import { randomAgentAppearance, resolveAgentAppearance, agentAppearanceSchema } from "@paperclipai/shared";
 import { OnboardingCharacter } from "./onboarding/OnboardingCharacter";
@@ -16,6 +16,7 @@ import type {
   AdapterEnvironmentTestResult,
   AgentRole,
   ClaudeOAuthTokenStatusResponse,
+  EnvBinding,
   Environment,
   InstanceSettings,
 } from "@paperclipai/shared";
@@ -147,9 +148,8 @@ type Step = 0 | 1 | 2 | 3 | 4 | 5;
 // wizard's registry-driven approach rather than a fixed union.
 type AdapterType = string;
 
-// First-run onboarding stays on the proven direct adapters even when an
-// instance administrator has opted into Paperclip Runner elsewhere. The
-// experimental flag only exposes the runner in explicit agent configuration.
+// First-run onboarding excludes the experimental runner. Hermes Gateway is
+// offered below because it works when Hermes runs in a separate container.
 const ONBOARDING_EXCLUDED_ADAPTER_TYPES = new Set([
   "process",
   "http",
@@ -251,6 +251,7 @@ const MODEL_SOURCE_INLINE_MARKS: Record<string, ComponentType<{ className?: stri
 const API_KEY_ENV_KEYS: Record<string, string> = {
   claude_local: ANTHROPIC_API_KEY_ENV_KEY,
   codex_local: "OPENAI_API_KEY",
+  hermes_gateway: "API_SERVER_KEY",
 };
 
 function apiKeyEnvKeyFor(adapterType: string): string {
@@ -684,6 +685,7 @@ function OnboardingWizardInner({
    * `localStorage`, and a provider key does not belong there.
    */
   const [apiKey, setApiKey] = useState("");
+  const [allowGatewayHttp, setAllowGatewayHttp] = useState(false);
   // The owner's stored Claude subscription login, read right before the hire
   // (see handleGiveHeartbeat). Onboarding applies it with no extra control,
   // so nothing else reads this state yet.
@@ -707,8 +709,8 @@ function OnboardingWizardInner({
   const selectedApiKeyId = selectedSavedKey?.companyId === createdCompanyId && selectedSavedKey?.envKey === apiKeyEnvKeyFor(adapterType)
     ? selectedSavedKey.id
     : savedKeys.options[0]?.id;
-  const selectedApiKey = savedKeys.options.find((option) => option.id === selectedApiKeyId);
-  const credentialMode = credentialModeChoice ?? (
+  const selectedApiKey = adapterType === "hermes_gateway" ? undefined : savedKeys.options.find((option) => option.id === selectedApiKeyId);
+  const credentialMode = adapterType === "hermes_gateway" ? "api" : credentialModeChoice ?? (
     (savedKeys.subscriptions.length > 0 || (adapterType === "claude_local" && savedKeys.storedLogin.data))
       ? "subscription" : savedKeys.options.length || adapterType === "opencode_local" ? "api" : "subscription"
   );
@@ -759,7 +761,7 @@ function OnboardingWizardInner({
    * customer on the step to try again — and without this each press would store
    * another copy of the same credential.
    */
-  const apiKeySecretRef = useRef<{ key: string; companyId: string; envKey: string; binding?: Awaited<ReturnType<typeof storeProviderApiKey>>["binding"]; aiConnection?: AiConnectionBinding } | null>(null);
+  const apiKeySecretRef = useRef<{ key: string; companyId: string; envKey: string; binding?: EnvBinding; aiConnection?: AiConnectionBinding } | null>(null);
   const managedSubscriptionRef = useRef<{ companyId: string; binding: AiConnectionBinding } | null>(null);
   const managedProvider = aiProviderForAdapter(adapterType);
   function managedBindingForStep(): AiConnectionBinding | undefined {
@@ -1121,7 +1123,7 @@ function OnboardingWizardInner({
     adapterCaps.supportsInstructionsBundle ||
     adapterCaps.supportsSkills ||
     adapterCaps.supportsLocalAgentJwt;
-  const isLocalAdapter =
+  const needsAdapterEnvironmentTest =
     isLocalAdapterCaps ||
     adapterType === "claude_local" ||
     adapterType === "codex_local" ||
@@ -1129,7 +1131,8 @@ function OnboardingWizardInner({
     adapterType === "kimi_local" ||
     adapterType === "opencode_local" ||
     adapterType === "pi_local" ||
-    adapterType === "cursor";
+    adapterType === "cursor" ||
+    adapterType === "hermes_gateway";
   // Build adapter grids dynamically from the UI registry + display metadata.
   // External/plugin adapters automatically appear with generic defaults, and
   // server-disabled types are filtered out.
@@ -1138,13 +1141,13 @@ function OnboardingWizardInner({
       .filter((a) =>
         !ONBOARDING_EXCLUDED_ADAPTER_TYPES.has(a.type) &&
         !disabledTypes.has(a.type) &&
-        isVisualAdapterChoice(a.type)
+        (isVisualAdapterChoice(a.type) || a.type === "hermes_gateway")
       )
       .map((a) => ({ ...getAdapterDisplay(a.type), type: a.type }));
 
     return {
-      recommendedAdapters: all.filter((a) => a.recommended),
-      moreAdapters: all.filter((a) => !a.recommended),
+      recommendedAdapters: all.filter((a) => a.recommended || a.type === "hermes_gateway"),
+      moreAdapters: all.filter((a) => !a.recommended && a.type !== "hermes_gateway"),
     };
   }, [disabledTypes]);
 
@@ -1384,7 +1387,8 @@ function OnboardingWizardInner({
                 label: "Connect",
                 icon: "arrow",
                 disabled:
-                  !connectStepReady || (credentialMode === "api" && !apiKey.trim() && !selectedApiKey),
+                  !connectStepReady || (credentialMode === "api" && !apiKey.trim() && !selectedApiKey) ||
+                  (adapterType === "hermes_gateway" && !url.trim()),
               }
           : // Nothing is chosen on arrival, and the row is what chooses. Until
             // it has been answered the button has nothing to do.
@@ -1428,6 +1432,7 @@ function OnboardingWizardInner({
    * it is meant to start, against a source with no credential.
    */
   function handleConnectStepPrimary() {
+    if (connectCta.disabled) return;
     // Mid-sequence the button belongs to the sign-in, not to the step.
     if (connectPhase === "ready" && connectStepNeedsLogin) {
       if (connectAuthUrl) window.open(connectAuthUrl, "_blank", "noreferrer,noopener");
@@ -1540,7 +1545,7 @@ function OnboardingWizardInner({
     setAdapterEnvResult(null);
     adapterEnvResultAppliedStoredLoginRef.current = false;
     setAdapterEnvError(null);
-  }, [step, adapterType, model, command, args, url, credentialMode, apiKey, selectedSavedKey, selectedApiKey?.id, savedSubscription?.id]);
+  }, [step, adapterType, model, command, args, url, allowGatewayHttp, credentialMode, apiKey, selectedSavedKey, selectedApiKey?.id, savedSubscription?.id]);
 
   /**
    * Leaving the step puts the row back to a question.
@@ -1631,6 +1636,7 @@ function OnboardingWizardInner({
     setCommand("");
     setArgs("");
     setUrl("");
+    setAllowGatewayHttp(false);
     setAdapterEnvResult(null);
     adapterEnvResultAppliedStoredLoginRef.current = false;
     setAdapterEnvError(null);
@@ -1802,7 +1808,9 @@ function OnboardingWizardInner({
         apiKeySecretRef.current = { key, companyId, envKey, aiConnection: { provider: managedProvider, method: "api_key", mode: "responsible_user" } };
         return true;
       }
-      const stored = await storeProviderApiKey(companyId, envKey, key);
+      const stored = adapterType === "hermes_gateway"
+        ? await storeOrganizationApiKey(companyId, envKey, key)
+        : await storeProviderApiKey(companyId, envKey, key);
       apiKeySecretRef.current = { key, companyId, envKey, binding: stored.binding };
       return true;
     } catch (err) {
@@ -1840,6 +1848,16 @@ function OnboardingWizardInner({
           ? DEFAULT_CODEX_LOCAL_BYPASS_APPROVALS_AND_SANDBOX
           : defaultCreateValues.dangerouslyBypassSandbox
     });
+    if (adapterType === "hermes_gateway") {
+      config.apiBaseUrl = url.trim();
+      if (allowGatewayHttp && url.trim().startsWith("http://")) {
+        config.dangerouslyAllowInsecureRemoteHttp = true;
+      }
+      if (bindApiKey || apiKeySecretRef.current?.key === apiKey.trim()) {
+        config.apiKey = apiKeySecretRef.current?.binding;
+      }
+      return config;
+    }
     if (adapterType === "claude_local" && forceUnsetAnthropicApiKey) {
       const env =
         typeof config.env === "object" &&
@@ -2127,7 +2145,7 @@ function OnboardingWizardInner({
           }
         : baseAdapterConfig;
 
-      if (isLocalAdapter) {
+      if (needsAdapterEnvironmentTest) {
         // A cached result is reusable only when it tested the same
         // configuration the hire below sends, and only when it does not
         // block the hire — see blocksAgentCreate. With the "Test now" card
@@ -2202,9 +2220,8 @@ function OnboardingWizardInner({
         adapterType,
         adapterConfig: hireAdapterConfig,
         ...(shouldApplyStoredClaudeLogin ? { applyStoredClaudeLogin: true } : {}),
-        // The server owns what the first agent is told now: this marker seeds
-        // the chief-of-staff persona over the agent's entry instruction file.
-        // The wizard no longer composes or overwrites it.
+        // The server seeds the chief-of-staff persona for adapters that support
+        // managed instruction bundles. Remote gateways manage their own instructions.
         onboardingFirstAgent: true,
         runtimeConfig: { ...buildNewAgentRuntimeConfig(), ...(managedBinding ? { aiConnection: managedBinding } : {}) }
       });
@@ -2222,9 +2239,7 @@ function OnboardingWizardInner({
       queryClient.invalidateQueries({
         queryKey: queryKeys.agents.list(createdCompanyId)
       });
-      // The agent's instruction file is seeded server-side from the
-      // `onboardingFirstAgent` marker above (the chief-of-staff persona). The
-      // wizard no longer composes or overwrites it.
+      // Bundle-capable adapters receive the chief-of-staff persona server-side.
 
       if (!isCurrent()) return;
       setCreatedAgentId(agent.id);
@@ -2662,11 +2677,8 @@ function OnboardingWizardInner({
               {step === 4 && (
                 <motion.div key="step-4" {...stepContentMotion} exit={stepHandoff ? stepContentMotion.exit : undefined} className="space-y-8">
                   <div>
-                    {/* Sources come from `recommendedAdapters`, not a list
-                        written here — that filter is `recommended` in the
-                        display registry, so a third tile appears the day
-                        someone marks one rather than the day someone
-                        remembers to edit this file.
+                    {/* Sources come from `recommendedAdapters`: recommended
+                        local adapters plus Hermes Gateway for remote setups.
 
                         Picking one starts the sign-in now. The row is the
                         question, and answering it is what opens the card. */}
@@ -2720,8 +2732,8 @@ function OnboardingWizardInner({
                       transition={{ opacity: SOURCE_LINK_EXIT, height: MAKE_ROOM }}
                     >
                       <div className="-ml-3 mt-1">
-                        <CredentialModeLink mode={credentialMode} onChange={setCredentialMode} />
-                        {savedKeys.options.length > 0 && <p className="px-3 text-sm text-muted-foreground">{savedKeys.options.length} saved API {savedKeys.options.length === 1 ? "key available" : "keys available"}.</p>}
+                        {adapterType !== "hermes_gateway" && <CredentialModeLink mode={credentialMode} onChange={setCredentialMode} />}
+                        {adapterType !== "hermes_gateway" && savedKeys.options.length > 0 && <p className="px-3 text-sm text-muted-foreground">{savedKeys.options.length} saved API {savedKeys.options.length === 1 ? "key available" : "keys available"}.</p>}
                         {credentialMode === "subscription" && authSignalStatus === "present" && <p className="px-3 text-sm text-muted-foreground">An existing provider connection is available.</p>}
                       </div>
                     </motion.div>
@@ -2770,17 +2782,21 @@ function OnboardingWizardInner({
                       </p>
                     ) : credentialMode === "api" ? (
                       <OnboardingLoginCard
-                        instruction={savedKeys.options.length ? "Choose a saved API key or enter a new one" : `Provide your ${
+                        instruction={adapterType === "hermes_gateway" ? "Connect to a running Hermes Gateway" : savedKeys.options.length ? "Choose a saved API key or enter a new one" : `Provide your ${
                           CONNECT_SOURCE_NAMES[adapterType] ?? adapterType
                         } API key to connect`}
                       >
-                        <SavedProviderKeySelect {...savedKeys} disabled={loading || adapterEnvLoading} value={selectedApiKey?.id ?? ""} onChange={(id) => {
+                        {adapterType === "hermes_gateway" && <>
+                          <OnboardingCardField label="Hermes API base URL" placeholder="https://hermes.example.com" value={url} onChange={setUrl} onSubmit={handleConnectStepPrimary} />
+                          <p className="text-xs text-muted-foreground">Use the Hermes address reachable from the Paperclip container, not localhost in your browser.</p>
+                        </>}
+                        {adapterType !== "hermes_gateway" && <SavedProviderKeySelect {...savedKeys} disabled={loading || adapterEnvLoading} value={selectedApiKey?.id ?? ""} onChange={(id) => {
                           setSelectedSavedKey(createdCompanyId ? { companyId: createdCompanyId, envKey: apiKeyEnvKeyFor(adapterType), id } : null);
                           setApiKey("");
-                        }} />
+                        }} />}
                         {!selectedApiKey && <OnboardingCardField
-                          label="API key"
-                          placeholder="Enter API key here"
+                          label={adapterType === "hermes_gateway" ? "Hermes API_SERVER_KEY" : "API key"}
+                          placeholder={adapterType === "hermes_gateway" ? "Enter the Hermes gateway key" : "Enter API key here"}
                           masked
                           // The card is the answer to the tile just pressed, so
                           // the field is unambiguously the next thing. Carried
@@ -2793,6 +2809,12 @@ function OnboardingWizardInner({
                           }}
                           onSubmit={() => handleConnectStepPrimary()}
                         />}
+                        {adapterType === "hermes_gateway" && url.trim().startsWith("http://") && !/^http:\/\/(localhost|127\.0\.0\.1)(:|\/|$)/i.test(url.trim()) && (
+                          <label className="flex items-start gap-2 text-xs text-muted-foreground">
+                            <input type="checkbox" checked={allowGatewayHttp} onChange={(event) => setAllowGatewayHttp(event.target.checked)} />
+                            Allow plain HTTP for local Docker development only. Use HTTPS for remote deployment.
+                          </label>
+                        )}
                       </OnboardingLoginCard>
                     ) : connectStepNeedsLogin &&
                       createdCompanyId &&
@@ -2916,7 +2938,7 @@ function OnboardingWizardInner({
                       the hire, because `handleGiveHeartbeat` clears it in its
                       `finally` after the early return — so a genuine block still
                       shows its checks, which is the whole reason this is here. */}
-                  {isLocalAdapter && !loading && (adapterEnvError || (adapterEnvResult && adapterEnvResult.status !== "pass")) && (
+                  {needsAdapterEnvironmentTest && !loading && (adapterEnvError || (adapterEnvResult && adapterEnvResult.status !== "pass")) && (
                     <div className="space-y-2 rounded-md border border-border p-3">
                       {adapterEnvError && (
                         <div className="rounded-md border border-destructive/30 bg-destructive/10 px-2.5 py-2 text-(length:--text-micro) text-destructive">
@@ -2976,6 +2998,8 @@ function OnboardingWizardInner({
                           <p className="text-muted-foreground font-mono break-all">
                             {adapterType === "cursor"
                               ? `${effectiveAdapterCommand} -p --mode ask --output-format json \"Respond with hello.\"`
+                              : adapterType === "hermes_gateway"
+                                ? `GET ${url.trim().replace(/\/+$/, "")}/health with Authorization: Bearer <API_SERVER_KEY>`
                               : adapterType === "codex_local"
                               ? `${effectiveAdapterCommand} exec --json -`
                               : adapterType === "gemini_local"
@@ -2986,11 +3010,13 @@ function OnboardingWizardInner({
                                 ? `${effectiveAdapterCommand} run --format json "Respond with hello."`
                               : `${effectiveAdapterCommand} --print - --output-format stream-json --verbose`}
                           </p>
-                          <p className="text-muted-foreground">
+                          {adapterType !== "hermes_gateway" && <p className="text-muted-foreground">
                             Prompt:{" "}
                             <span className="font-mono">Respond with hello.</span>
-                          </p>
-                          {adapterType === "cursor" ||
+                          </p>}
+                          {adapterType === "hermes_gateway" ? (
+                            <p className="text-muted-foreground">Check the URL, API_SERVER_KEY, and network access from the Paperclip container.</p>
+                          ) : adapterType === "cursor" ||
                           adapterType === "codex_local" ||
                           adapterType === "gemini_local" ||
                           adapterType === "kimi_local" ||

@@ -1,11 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { t } from ".";
+import { i18n, t } from ".";
 import en from "./locales/en.json";
-import { localeMessages } from "./locales";
+import { DEFAULT_LOCALE, localeMessages } from "./locales";
 import { validateLocaleMessages } from "./locale-validation";
 
 describe("locale validation", () => {
   it("resolves English messages with key and default fallbacks", () => {
+    i18n.changeLanguage("en");
     expect(t("app.noCompanies.title")).toBe(en.app.noCompanies.title);
     expect(t("app.missing", { defaultValue: "Fallback" })).toBe("Fallback");
     expect(t("app.missing")).toBe("app.missing");
@@ -14,21 +15,32 @@ describe("locale validation", () => {
   it("accepts registered locale files", () => {
     expect(Object.keys(localeMessages)).toContain("en");
     for (const [locale, messages] of Object.entries(localeMessages)) {
-      expect(validateLocaleMessages(messages), locale).toEqual([]);
+      if (locale === DEFAULT_LOCALE) {
+        // The default locale must match the English reference exactly.
+        expect(validateLocaleMessages(messages, localeMessages["en"], { strict: true }), locale).toEqual([]);
+      } else {
+        // Other locales may omit keys (English fallback); provided keys must
+        // still exist in English and keep the right shape.
+        expect(validateLocaleMessages(messages), locale).toEqual([]);
+      }
     }
   });
 
   it("rejects missing and extra nested keys", () => {
     expect(
-      validateLocaleMessages({
-        app: {
-          noCompanies: {
-            title: en.app.noCompanies.title,
-            description: en.app.noCompanies.description,
-            unexpected: "Unexpected",
+      validateLocaleMessages(
+        {
+          app: {
+            noCompanies: {
+              title: en.app.noCompanies.title,
+              description: en.app.noCompanies.description,
+              unexpected: "Unexpected",
+            },
           },
         },
-      }),
+        en,
+        { strict: true },
+      ),
     ).toEqual(
       expect.arrayContaining([
         "app.noCompanies.newCompany is missing",

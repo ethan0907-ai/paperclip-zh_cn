@@ -13,6 +13,17 @@ Paperclip ships both Hermes adapters as built-ins:
   Paperclip host.
 - `hermes_gateway` calls an already-running Hermes API server over HTTP/SSE.
 
+The first-agent onboarding wizard offers Hermes Gateway directly. Enter the
+Hermes API base URL reachable from the Paperclip container and the Hermes
+`API_SERVER_KEY`; the wizard tests the gateway before creating the agent.
+For separate containers, use a Docker network address rather than `localhost`.
+Remote HTTP is blocked by default; use HTTPS outside local development.
+The wizard creates and tests the agent connection. The gateway adapter does not
+currently sync Paperclip instruction bundles or the onboarding `first-task`
+skill into the remote Hermes runtime; configure those on Hermes separately
+before relying on it for the first-task workflow. Hermes also needs a Paperclip
+agent key and a Paperclip API URL reachable from its container to update tasks.
+
 No Adapter manager installation is required for normal use. Adapter manager is
 only needed when you intentionally install an external
 `@paperclipai/hermes-paperclip-adapter` package to override or shadow a built-in

@@ -26,6 +26,8 @@ import { NavigationType } from "react-router-dom";
 import { flushSync } from "react-dom";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+beforeEach(() => i18n.changeLanguage("en"));
 import { TooltipProvider } from "@/components/ui/tooltip";
 import {
   canBoardManageRuntime,
@@ -43,6 +45,7 @@ import {
 import { getRecentTasksStorageKey, readRecentTasks } from "../lib/recent-tasks";
 import { ApiError } from "../api/client";
 import type { issuesApi } from "../api/issues";
+import { i18n } from "@/i18n";
 
 const mockIssuesApi = vi.hoisted(() => ({
   get: vi.fn(),

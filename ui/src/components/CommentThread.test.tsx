@@ -6,6 +6,7 @@ import { createRoot } from "react-dom/client";
 import { MemoryRouter } from "react-router-dom";
 import type { Agent, Approval } from "@paperclipai/shared";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { i18n } from "@/i18n";
 import { CommentThread } from "./CommentThread";
 
 vi.mock("./MarkdownBody", () => ({
@@ -74,6 +75,7 @@ vi.mock("@/plugins/slots", () => ({
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
 
 describe("CommentThread", () => {
+  beforeEach(() => i18n.changeLanguage("en"));
   let container: HTMLDivElement;
   let writeTextMock: ReturnType<typeof vi.fn<(text: string) => Promise<void>>>;
   let execCommandMock: ReturnType<typeof vi.fn<typeof document.execCommand>>;

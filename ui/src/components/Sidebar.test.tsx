@@ -52,6 +52,27 @@ vi.mock("../context/CompanyContext", () => ({
   }),
 }));
 
+vi.mock("@/i18n", async () => {
+  const actual = await vi.importActual<typeof import("@/i18n")>("@/i18n");
+  const messages = (await import("../i18n/locales/en.json")).default;
+  const flat: Record<string, string> = {};
+  const walk = (obj: Record<string, unknown>, prefix: string) => {
+    for (const [k, v] of Object.entries(obj)) {
+      const key = prefix ? prefix + "." + k : k;
+      if (v && typeof v === "object") walk(v as Record<string, unknown>, key);
+      else flat[key] = String(v);
+    }
+  };
+  walk(messages, "");
+  return {
+    ...actual,
+    useTranslation: () => ({
+      t: (key: string) => flat[key] ?? key,
+      i18n: { language: "en" },
+    }),
+  };
+});
+
 const mockSidebar = vi.hoisted(() => ({
   isMobile: false,
   setSidebarOpen: vi.fn(),
