@@ -10,6 +10,13 @@ export const PROVIDER_ENV_KEYS: Record<string, string> = {
   opencode: "OPENCODE_API_KEY",
 };
 
+function setupKey(envKey: string) {
+  // This is a record identifier, not the credential; getRandomValues also works over HTTP.
+  const id = Array.from(crypto.getRandomValues(new Uint8Array(16)),
+    (byte) => byte.toString(16).padStart(2, "0")).join("");
+  return `${envKey}.setup.${id}`;
+}
+
 /** New organization credentials get a distinct key; never rotate another agent's secret. */
 export async function storeOrganizationApiKey(
   companyId: string,
@@ -18,7 +25,7 @@ export async function storeOrganizationApiKey(
 ) {
   const secret = await secretsApi.create(companyId, {
     name: `${envKey} · agent setup`,
-    key: `${envKey}.setup.${crypto.randomUUID()}`,
+    key: setupKey(envKey),
     value: value.trim(),
     description: "Adapter credential supplied during agent setup.",
   });
@@ -39,7 +46,7 @@ export async function storeProviderApiKey(
   envKey: string,
   value: string,
 ) {
-  const key = `${envKey}.setup.${crypto.randomUUID()}`;
+  const key = setupKey(envKey);
   const definition = await secretsApi.createUserSecretDefinition(companyId, {
     key,
     name: `${envKey} · agent setup`,

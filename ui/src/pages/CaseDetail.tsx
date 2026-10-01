@@ -433,15 +433,15 @@ function CasePropertiesContent({
         )}
       </PropertySection>
 
-      <PropertySection title={`Children${childCases.length > 0 ? ` ${childCases.length}` : ""}`}>
+      <PropertySection title={`${t("caseDetail.children")}${childCases.length > 0 ? ` ${childCases.length}` : ""}`}>
         <CaseChildrenTree children={childCases} />
       </PropertySection>
 
       {caseData.attachments.length > 0 ? (
         <PropertySection title={t("caseDetail.attachments")}>
-          <CasePropertyRow label="Files" mode={mode}>
+          <CasePropertyRow label={t("caseDetail.files")} mode={mode}>
             <span className="text-xs text-muted-foreground">
-              {caseData.attachments.length} {caseData.attachments.length === 1 ? "file" : "files"}
+              {caseData.attachments.length} {t("caseDetail.fileCount", { count: caseData.attachments.length })}
             </span>
           </CasePropertyRow>
         </PropertySection>
