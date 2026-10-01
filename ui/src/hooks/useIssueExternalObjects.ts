@@ -1,3 +1,4 @@
+import { t, useTranslation } from "@/i18n";
 import { useCallback, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type {
@@ -34,19 +35,19 @@ export async function fetchIssueExternalObjectSummariesInBatches(
 function formatMentionSourceLabel(mention: ExternalObjectMention): string {
   switch (mention.sourceKind) {
     case "title":
-      return "Title";
+      return t("sharedFeedTail.title");
     case "description":
-      return "Description";
+      return t("sharedFeedTail.description");
     case "comment":
-      return "Comment";
+      return t("sharedFeedTail.comment");
     case "document":
-      return mention.documentKey ? `Document: ${mention.documentKey}` : "Document";
+      return mention.documentKey ? t("sharedFeedTail.documentKey", { key: mention.documentKey }) : t("sharedFeedTail.document");
     case "property":
-      return mention.propertyKey ? `Property: ${mention.propertyKey}` : "Property";
+      return mention.propertyKey ? t("sharedFeedTail.propertyKey", { key: mention.propertyKey }) : t("sharedFeedTail.property");
     case "plugin":
-      return "Plugin";
+      return t("sharedFeedTail.plugin");
     default:
-      return "Source";
+      return t("sharedFeedTail.source");
   }
 }
 
@@ -86,6 +87,7 @@ function useExternalObjectsFeature() {
  * surface reads from the same query result.
  */
 export function useIssueExternalObjects(issueId: string | null | undefined): IssueExternalObjectsResult {
+  const { t } = useTranslation();
   const externalObjectsFeature = useExternalObjectsFeature();
   const enabled = externalObjectsFeature.isEnabled && Boolean(issueId);
   const query = useQuery({
@@ -122,7 +124,7 @@ export function useIssueExternalObjects(issueId: string | null | undefined): Iss
           },
         };
       });
-  }, [query.data]);
+  }, [query.data, t]);
 
   const markdownReferences = useMemo<MarkdownExternalReferenceMap>(() => {
     const result: MarkdownExternalReferenceMap = {};

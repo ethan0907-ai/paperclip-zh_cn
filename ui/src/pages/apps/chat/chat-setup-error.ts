@@ -1,5 +1,19 @@
+import { t } from "@/i18n";
+
 export const chatSetupErrorFallback =
   "Check the required values and provider access, then try again.";
+
+const localErrorKeys: Record<string, string> = {
+  "Check the required values and provider access, then try again.": "appsChatLocalErrors.requiredValues",
+  "That file is empty. Choose the private key downloaded from your GitHub App.": "appsChatLocalErrors.emptyPrivateKey",
+  "That file is too large. Choose a GitHub App private key smaller than 64 KB.": "appsChatLocalErrors.largePrivateKey",
+  "Paperclip couldn't read that file. Choose the .pem file again or paste the private key.": "appsChatLocalErrors.privateKeyRead",
+};
+
+export function chatSetupErrorDisplay(message: string): string {
+  const key = localErrorKeys[message];
+  return key ? t(key) : message;
+}
 
 function uriEncoded(value: string): string | null {
   try {

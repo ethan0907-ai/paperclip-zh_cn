@@ -1,4 +1,5 @@
-import { checkMcpRemoteHeaderName, checkMcpRemoteHeaderValue, mcpRemoteHeaderRejectionMessage } from "@paperclipai/shared";
+import { t } from "@/i18n";
+import { checkMcpRemoteHeaderName, checkMcpRemoteHeaderValue, type McpRemoteHeaderRejection } from "@paperclipai/shared";
 import type { GenericMcpAuthMode } from "@paperclipai/shared";
 
 /**
@@ -170,18 +171,50 @@ export function genericConnectGuidance(
  * The API validates these too; checking here means the operator finds out before a
  * round trip rather than after one.
  */
+const GUIDANCE_DISPLAY_KEYS: Record<string, string> = {
+  "Paperclip couldn't connect to that address. Check it and try again.": "appsGenericGuidance.fallback",
+  "That doesn't look like a server address": "appsGenericGuidance.invalidTitle",
+  "Paste the full address, starting with https:// — for example https://mcp.example.com/mcp.": "appsGenericGuidance.invalidBody",
+  "That address is inside a private network": "appsGenericGuidance.privateTitle",
+  "This Paperclip is reachable from the internet, so it won't call addresses on your local network. Use the server's public address instead.": "appsGenericGuidance.privateBody",
+  "We couldn't find that host": "appsGenericGuidance.hostTitle",
+  "The address didn't resolve. Check the spelling, or confirm the server is published on the internet.": "appsGenericGuidance.hostBody",
+  "Paperclip can't send that header": "appsGenericGuidance.headerTitle",
+  "Paperclip couldn’t name this connection": "appsGenericGuidance.nameTitle",
+  "Try connecting again.": "appsGenericGuidance.retry",
+  "This server wants a credential": "appsGenericGuidance.credentialTitle",
+  "It asked us to authenticate but didn't offer a sign-in Paperclip can complete on its own. Add the key or headers its docs list under Advanced authentication.": "appsGenericGuidance.credentialBody",
+  "This server needs sign-in details you create yourself": "appsGenericGuidance.manualTitle",
+  "Register Paperclip in the provider's settings, then add the client ID and secret it gives you under Advanced authentication.": "appsGenericGuidance.manualBody",
+  "This Paperclip needs a public HTTPS address first": "appsGenericGuidance.httpsTitle",
+  "Sign-in sends the operator back to Paperclip, so this instance has to be reachable over HTTPS. Ask your Paperclip admin to configure it.": "appsGenericGuidance.httpsBody",
+  "We couldn't reach that server": "appsGenericGuidance.reachTitle",
+  "Nothing answered at that address. Confirm the server is running and the address is right, then try again.": "appsGenericGuidance.reachBody",
+  "Paperclip couldn't connect": "appsGenericGuidance.connectTitle"
+};
+
+export function genericConnectGuidanceDisplay(message: string): string {
+  const key = GUIDANCE_DISPLAY_KEYS[message];
+  return key ? t(key) : message;
+}
+
+function headerRejectionMessage(name: string, reason: McpRemoteHeaderRejection): string {
+  const keys: Record<McpRemoteHeaderRejection, string> = { empty: "appsGenericGuidance.emptyHeader", too_long: "appsGenericGuidance.longHeader", invalid_characters: "appsGenericGuidance.invalidHeader", forbidden: "appsGenericGuidance.forbiddenHeader", value_too_long: "appsGenericGuidance.longValue", value_control_characters: "appsGenericGuidance.controlValue" };
+  return t(keys[reason], { name: reason === "too_long" || reason === "invalid_characters" ? name.slice(0, 128) : name });
+}
+
 export function customHeaderError(rows: CustomHeaderRow[]): string | null {
   const seen = new Set<string>();
   for (const row of rows) {
     const name = row.name.trim();
     if (!name && !row.value.trim()) continue;
     const nameCheck = checkMcpRemoteHeaderName(name);
-    if (!nameCheck.ok) return mcpRemoteHeaderRejectionMessage(name, nameCheck.reason!);
+    if (!nameCheck.ok) return headerRejectionMessage(name, nameCheck.reason!);
     const valueCheck = checkMcpRemoteHeaderValue(row.value);
-    if (!valueCheck.ok) return mcpRemoteHeaderRejectionMessage(name, valueCheck.reason!);
-    if (!row.value.trim()) return `Add a value for "${name}", or remove the row.`;
+    if (!valueCheck.ok) return headerRejectionMessage(name, valueCheck.reason!);
+    if (!row.value.trim()) return t("appsGenericGuidance.missingValue", { name });
     const lower = name.toLowerCase();
-    if (seen.has(lower)) return `"${name}" is listed twice.`;
+    if (seen.has(lower)) return t("appsGenericGuidance.duplicateHeader", { name });
     seen.add(lower);
   }
   return null;

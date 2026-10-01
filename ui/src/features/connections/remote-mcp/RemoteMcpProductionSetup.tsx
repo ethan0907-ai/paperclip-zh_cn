@@ -1,3 +1,4 @@
+import { useTranslation } from "@/i18n";
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { REMOTE_MCP_CONNECTOR_METHODS, type ToolConnection } from "@paperclipai/shared";
@@ -25,6 +26,7 @@ function readAccessDraft(key: string): Partial<RemoteMcpSetupState> {
 export function RemoteMcpProductionSetup({ providerId, connection, host = "page", interactionId,
   upstreamServiceName, requestedAgentId, existingConnections = [], forceNewConnection, onUseExisting, onComplete, onCancel, onPhaseChange,
 }: ConnectionSetupFlowProps & { providerId: RemoteMcpProviderId; connection?: ToolConnection }) {
+  const { t } = useTranslation();
   const provider = remoteMcpProviders[providerId];
   const { selectedCompanyId } = useCompany();
   const navigate = useNavigate();
@@ -50,7 +52,7 @@ export function RemoteMcpProductionSetup({ providerId, connection, host = "page"
     url: typeof connection?.config?.url === "string" ? connection.config?.url : provider.defaultUrl,
     auth: connection?.config?.mcpAuthMode === "bearer" ? "bearer" : connection?.authKind === "api_key" ? "headers" : provider.supportsBrowserAuth ? "auto" : "none",
     token: "", headers: [], advanced: false, connectStatus: oauthOutcome === "denied" ? "cancelled" : oauthOutcome === "failed" ? "oauth_failed" : "idle", connected: false,
-    identity: null, allAgents: true, agentIds: [], permissions: {}, tools: [], notice: connection?.authKind === "api_key" ? "Saved credentials are retained when these fields are left blank. Enter a replacement only to change them." : null, refreshing: false,
+    identity: null, allAgents: true, agentIds: [], permissions: {}, tools: [], notice: connection?.authKind === "api_key" ? "connectionRemote.savedCredentialsAreRetainedWhenTheseFieldsAreLeft" : null, refreshing: false,
     ...(!connection ? readAccessDraft(accessDraftKey) : {}),
     ...(requestedAgentId ? { allAgents: false, agentIds: [requestedAgentId] } : {}),
   }));
@@ -107,7 +109,7 @@ export function RemoteMcpProductionSetup({ providerId, connection, host = "page"
       if (state.auth === "headers" || state.auth === "bearer") {
         for (const header of state.headers) {
           if (!header.name.trim() && !header.value) continue;
-          if (!header.name.trim() || !header.value) throw new Error("Enter both a name and value for each header.");
+          if (!header.name.trim() || !header.value) throw new Error(t("connectionRemote.enterBothANameAndValueForEachHeader"));
           credentials[`headers.${header.name.trim()}`] = header.value;
         }
       }
@@ -160,7 +162,7 @@ export function RemoteMcpProductionSetup({ providerId, connection, host = "page"
       popup.current?.close();
       popup.current = null;
       onPhaseChange?.("needs_retry");
-      edit({ connectStatus: "idle", notice: error instanceof Error ? error.message : "Could not connect. Please try again." });
+      edit({ connectStatus: "idle", notice: error instanceof Error ? error.message : t("connectionRemote.couldNotConnectPleaseTryAgain") });
     } finally { busy.current = false; }
   };
   const actions: RemoteMcpSetupActions = {
@@ -184,8 +186,8 @@ export function RemoteMcpProductionSetup({ providerId, connection, host = "page"
     connections={existingConnections} pendingId={choicePending} error={choiceError}
     onCancel={onCancel} onConnectNew={() => setShowChoices(false)} onSelect={(id) => {
       setChoicePending(id); setChoiceError(null);
-      void onUseExisting(id).catch((error) => { setChoiceError(error instanceof Error ? error.message : "Could not use this connection."); setChoicePending(null); });
+      void onUseExisting(id).catch((error) => { setChoiceError(error instanceof Error ? error.message : t("connectionRemote.couldNotUseThisConnection")); setChoicePending(null); });
     }} />;
-  if (connection && !installs.data) return <div className="space-y-3 p-8"><p>{installs.isError ? "Could not load saved access. Retry before changing this connection." : "Loading saved access…"}</p>{installs.isError && <button type="button" className="text-primary underline" onClick={() => void installs.refetch()}>Try again</button>}</div>;
+  if (connection && !installs.data) return <div className="space-y-3 p-8"><p>{installs.isError ? t("connectionRemote.couldNotLoadSavedAccessRetryBeforeChangingThis") : t("connectionRemote.loadingSavedAccess")}</p>{installs.isError && <button type="button" className="text-primary underline" onClick={() => void installs.refetch()}>{t("connectionRemote.tryAgain")}</button>}</div>;
   return <RemoteMcpConnectionSetup upstreamServiceName={upstreamServiceName} host={host} lockedAgentId={requestedAgentId} authorizationUrl={host === "dialog" ? authorizationUrl.current : undefined} provider={provider} connectionId={savedConnection.current?.id ?? ""} fixedGrantKind={savedConnection.current ? savedConnection.current.credentialPolicy === "per_user" ? "user" : "organization" : undefined} state={state} actions={actions} agents={agents.data ?? []} />;
 }

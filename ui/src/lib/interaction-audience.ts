@@ -1,3 +1,4 @@
+import { t } from "@/i18n";
 /**
  * Plain-language presentation of *who may resolve* an issue-thread interaction
  * (PAP-17280, Phase 3 of the open-default resolver contract in
@@ -37,9 +38,9 @@ export const DEFAULT_RESOLVER_POLICY: IssueThreadInteractionCanonicalResolverPol
 
 /** Short label for a resolver audience — badges, select options, table cells. */
 const RESOLVER_POLICY_LABELS: Record<IssueThreadInteractionCanonicalResolverPolicy, string> = {
-  anyone: "Anyone",
-  not_creator: "Anyone except creator",
-  human_only: "Human only",
+  get anyone() { return t("issueShared.anyone"); },
+  get not_creator() { return t("issueShared.anyone_except_creator"); },
+  get human_only() { return t("issueShared.human_only"); },
 };
 
 /**
@@ -49,11 +50,9 @@ const RESOLVER_POLICY_LABELS: Record<IssueThreadInteractionCanonicalResolverPoli
  * {@link describeInteractionAudience}.
  */
 const RESOLVER_POLICY_EFFECTS: Record<IssueThreadInteractionCanonicalResolverPolicy, string> = {
-  anyone:
-    "Anyone in the organization can respond — the board or any agent, including the one that asked.",
-  not_creator:
-    "Anyone in the organization except the agent that created the card, and its run. Use this when the answer has to come from someone else.",
-  human_only: "Only a person on the board can respond. Agents are turned away.",
+  get anyone() { return t("issueShared.anyone_in_the_organization_can_respond_the_board_or_any_agent_including_the_one_that_asked"); },
+  get not_creator() { return t("issueShared.anyone_in_the_organization_except_the_agent_that_created_the_card_and_its_run_use_this_when_the_answer_has_to_come_from_someone_else"); },
+  get human_only() { return t("issueShared.only_a_person_on_the_board_can_respond_agents_are_turned_away"); },
 };
 
 /** Accepts canonical values and the deprecated `board_*` compatibility aliases. */
@@ -78,8 +77,8 @@ export const RESOLVER_POLICY_CHOICES: readonly {
   isDefault: boolean;
 }[] = ISSUE_THREAD_INTERACTION_CANONICAL_RESOLVER_POLICIES.map((value) => ({
   value,
-  label: RESOLVER_POLICY_LABELS[value],
-  effect: RESOLVER_POLICY_EFFECTS[value],
+  get label() { return RESOLVER_POLICY_LABELS[value]; },
+  get effect() { return RESOLVER_POLICY_EFFECTS[value]; },
   isDefault: value === DEFAULT_RESOLVER_POLICY,
 }));
 
@@ -184,33 +183,33 @@ export function describeResolverAudience({
   // respond."). Every use below is inside a sentence.
   const midSentence = (label: string) => (label === "You" ? "you" : label);
   const addressee = midSentence(
-    addresseeLabel?.trim() || (isUserAddressee ? "the addressed user" : "the addressed agent"),
+    addresseeLabel?.trim() || (isUserAddressee ? t("issueShared.the_addressed_user") : t("issueShared.the_addressed_agent")),
   );
-  const creator = midSentence(creatorLabel?.trim() || "the agent that created it");
+  const creator = midSentence(creatorLabel?.trim() || t("issueShared.the_agent_that_created_it"));
 
   const summary = isUserAddressee
-    ? `Only ${addressee} can respond.`
+    ? t("issueShared.only_named_can_respond", { name: addressee })
     : policy === "human_only"
-    ? `${hasAddressee ? `Assigned to ${addressee}. ` : ""}Only a person on the board can respond — agents cannot resolve this card.`
+    ? `${hasAddressee ? t("issueShared.assigned_to", { name: addressee }) : ""}${t("issueShared.only_board_person_can_respond")}`
     : hasAddressee
-      ? `Only ${addressee} or a person on the board can respond.`
+      ? t("issueShared.only_named_or_board_person", { name: addressee })
       : policy === "not_creator"
-        ? `Anyone in the organization except ${creator} can respond.`
-        : "Anyone in the organization can respond — the board or any agent, including the one that asked.";
+        ? t("issueShared.anyone_except_named", { name: creator })
+        : t("issueShared.anyone_in_the_organization_can_respond_the_board_or_any_agent_including_the_one_that_asked");
 
   // Same fact, fewer words: a collapsed row has to answer "is this mine to
   // decide?" in one glance, next to the buttons that act on the answer.
   const shortSummary = isUserAddressee
-    ? `Only ${addressee} can respond`
+    ? t("issueShared.only_named_can_respond_short", { name: addressee })
     : policy === "human_only"
     ? hasAddressee
-      ? `Assigned to ${addressee} · board only`
-      : "Only the board can respond"
+      ? t("issueShared.assigned_board_only", { name: addressee })
+      : t("issueShared.only_the_board_can_respond")
     : hasAddressee
-      ? `Only ${addressee} or the board can respond`
+      ? t("issueShared.only_named_or_board", { name: addressee })
       : policy === "not_creator"
-        ? `Anyone except ${creator} can respond`
-        : "Anyone can respond";
+        ? t("issueShared.anyone_except_named_short", { name: creator })
+        : t("issueShared.anyone_can_respond");
 
   const source = facts.effectiveResolverPolicySource;
   const provenance = facts.resolverPolicyProvenance;
@@ -220,11 +219,11 @@ export function describeResolverAudience({
   // open resolution existed. An explicitly requested restriction is already
   // fully described by `summary`.
   const narrowedNote = source === "governed_action"
-    ? "This card runs a governed action, so it stays human-only whatever audience was requested."
+    ? t("issueShared.this_card_runs_a_governed_action_so_it_stays_human_only_whatever_audience_was_requested")
     : source === "company_cap"
-      ? `Organization interaction governance narrowed this from ${RESOLVER_POLICY_LABELS[requestedPolicy]} to ${RESOLVER_POLICY_LABELS[policy]}.`
+      ? t("issueShared.governance_narrowed", { from: RESOLVER_POLICY_LABELS[requestedPolicy], to: RESOLVER_POLICY_LABELS[policy] })
       : provenance === "legacy_inherited_restriction"
-        ? "Created before Anyone became the default, so it stays restricted. A new card would be open."
+        ? t("issueShared.created_before_anyone_became_the_default_so_it_stays_restricted_a_new_card_would_be_open")
         : null;
 
   const narrowedBy: InteractionAudienceNarrowing | null = source === "governed_action"
@@ -246,7 +245,7 @@ export function describeResolverAudience({
     // while the sentence next to it names one actor. `human_only` wins for an
     // agent addressee, while a user addressee is the narrower human audience.
     label: (policy !== "human_only" || isUserAddressee) && hasAddressee
-      ? "Addressed"
+      ? t("issueShared.addressed")
       : RESOLVER_POLICY_LABELS[policy],
     summary,
     shortSummary,

@@ -1,3 +1,4 @@
+import { t, useTranslation } from "@/i18n";
 import { useState } from "react";
 import { useInfiniteQuery, useMutation, useQuery } from "@tanstack/react-query";
 import type { AgentInstructionsFileDetail } from "@paperclipai/shared";
@@ -19,6 +20,7 @@ export function InstructionHistory({
   disabled: boolean;
   onRestored: (file: AgentInstructionsFileDetail) => void;
 }) {
+  const { t, i18n } = useTranslation();
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
   const history = useInfiniteQuery({
@@ -62,13 +64,11 @@ export function InstructionHistory({
         variant="outline"
         aria-expanded={open}
         onClick={() => setOpen(!open)}
-      >
-        History
-      </Button>
+      >{t("skillPipelineWidgetsUi.text36")}</Button>
       {open && (
         <div className="space-y-3">
           {history.isLoading && (
-            <p className="text-sm text-muted-foreground">Loading revisions…</p>
+            <p className="text-sm text-muted-foreground">{t("skillPipelineWidgetsUi.text37")}</p>
           )}
           {error && (
             <p role="alert" className="text-sm text-destructive">
@@ -88,9 +88,9 @@ export function InstructionHistory({
                   <span className="font-mono">{revision.id.slice(0, 8)}</span>
                 </Button>
                 <span className="text-sm text-muted-foreground">
-                  {revision.source} ·{" "}
-                  {new Date(revision.createdAt).toLocaleString()}
-                  {revision.id === currentRevisionId ? " · Current" : ""}
+                  {t(`skillPipelineWidgetsUi.instructionSource_${revision.source}`, { defaultValue: revision.source })} ·{" "}
+                  {new Date(revision.createdAt).toLocaleString(i18n.resolvedLanguage ?? i18n.language)}
+                  {revision.id === currentRevisionId ? t("skillPipelineWidgetsUi.text44") : ""}
                 </span>
               </div>
             ))}
@@ -100,25 +100,21 @@ export function InstructionHistory({
               variant="ghost"
               disabled={history.isFetchingNextPage}
               onClick={() => void history.fetchNextPage()}
-            >
-              Older revisions
-            </Button>
+            >{t("skillPipelineWidgetsUi.text38")}</Button>
           )}
           {diff.data && (
             <>
-              <p className="text-sm text-muted-foreground">Selected revision</p>
+              <p className="text-sm text-muted-foreground">{t("skillPipelineWidgetsUi.text39")}</p>
               <pre className="whitespace-pre-wrap break-words rounded-md border border-border p-3 font-mono text-sm">
                 {diff.data.from.content}
               </pre>
-              <p className="text-sm text-muted-foreground">
-                Changes from selected revision to current
-              </p>
+              <p className="text-sm text-muted-foreground">{t("skillPipelineWidgetsUi.text40")}</p>
               <pre className="whitespace-pre-wrap break-words rounded-md border border-border p-3 font-mono text-sm">
-                {diff.data.removed && `Removed:\n${diff.data.removed}\n`}
-                {diff.data.added && `Added:\n${diff.data.added}`}
+                {diff.data.removed && t("skillPipelineWidgetsUi.removedContent", { content: diff.data.removed })}
+                {diff.data.added && t("skillPipelineWidgetsUi.addedContent", { content: diff.data.added })}
                 {!diff.data.removed &&
                   !diff.data.added &&
-                  "No content changes."}
+                  t("skillPipelineWidgetsUi.text41")}
               </pre>
               <Button
                 type="button"
@@ -128,13 +124,9 @@ export function InstructionHistory({
                   selected === currentRevisionId
                 }
                 onClick={() => restore.mutate()}
-              >
-                Restore as new revision
-              </Button>
+              >{t("skillPipelineWidgetsUi.text42")}</Button>
               {disabled && (
-                <p className="text-sm text-muted-foreground">
-                  Save or cancel your edits before restoring.
-                </p>
+                <p className="text-sm text-muted-foreground">{t("skillPipelineWidgetsUi.text43")}</p>
               )}
             </>
           )}

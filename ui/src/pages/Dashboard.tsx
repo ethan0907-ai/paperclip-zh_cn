@@ -208,7 +208,7 @@ export function Dashboard() {
 
   const userProfileMap = useMemo(
     () => buildCompanyUserProfileMap(companyMembers?.users),
-    [companyMembers?.users],
+    [companyMembers?.users, t],
   );
 
   const recentIssues = issues ? getRecentIssues(issues) : [];

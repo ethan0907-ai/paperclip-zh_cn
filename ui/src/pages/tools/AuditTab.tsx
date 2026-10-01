@@ -1,3 +1,4 @@
+import { t, useTranslation } from "@/i18n";
 import { useEffect, useMemo, useState } from "react";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { ChevronDown, ChevronRight, ScrollText } from "lucide-react";
@@ -30,29 +31,29 @@ const ALL = "__all";
 
 /** Outcome chip vocabulary (spec §4C / §5): Allowed · Blocked · Asked first · Failed · Waiting. */
 const OUTCOME_META: Record<ToolAuditOutcome, { label: string; status: string }> = {
-  allowed: { label: "Allowed", status: "allowed" },
-  blocked: { label: "Blocked", status: "denied" },
-  asked_first: { label: "Asked first", status: "require-approval" },
-  waiting: { label: "Waiting", status: "deferred" },
-  failed: { label: "Failed", status: "failed" },
-  unknown: { label: "Recorded", status: "unchecked" },
+  allowed: { get label() { return t("toolsRestUi.allowed"); }, status: "allowed" },
+  blocked: { get label() { return t("toolsRestUi.blocked"); }, status: "denied" },
+  asked_first: { get label() { return t("toolsRestUi.askedFirst"); }, status: "require-approval" },
+  waiting: { get label() { return t("toolsRestUi.waiting"); }, status: "deferred" },
+  failed: { get label() { return t("toolsRestUi.failed"); }, status: "failed" },
+  unknown: { get label() { return t("toolsRestUi.recorded"); }, status: "unchecked" },
 };
 
 const OUTCOME_FILTERS: { value: string; label: string }[] = [
-  { value: ALL, label: "All outcomes" },
-  { value: "allowed", label: "Allowed" },
-  { value: "blocked", label: "Blocked" },
-  { value: "asked_first", label: "Asked first" },
-  { value: "waiting", label: "Waiting" },
-  { value: "failed", label: "Failed" },
+  { value: ALL, get label() { return t("toolsRestUi.allOutcomes"); } },
+  { value: "allowed", get label() { return t("toolsRestUi.allowed"); } },
+  { value: "blocked", get label() { return t("toolsRestUi.blocked"); } },
+  { value: "asked_first", get label() { return t("toolsRestUi.askedFirst"); } },
+  { value: "waiting", get label() { return t("toolsRestUi.waiting"); } },
+  { value: "failed", get label() { return t("toolsRestUi.failed"); } },
 ];
 
 const WINDOW_FILTERS: { value: ToolAuditWindow; label: string }[] = [
-  { value: "all", label: "All time" },
-  { value: "1h", label: "Last 1 hour" },
-  { value: "24h", label: "Last 24 hours" },
-  { value: "7d", label: "Last 7 days" },
-  { value: "30d", label: "Last 30 days" },
+  { value: "all", get label() { return t("toolsRestUi.allTime"); } },
+  { value: "1h", get label() { return t("toolsRestUi.last1Hour"); } },
+  { value: "24h", get label() { return t("toolsRestUi.last24Hours"); } },
+  { value: "7d", get label() { return t("toolsRestUi.last7Days"); } },
+  { value: "30d", get label() { return t("toolsRestUi.last30Days"); } },
 ];
 
 function detailString(details: Record<string, unknown> | null, key: string): string | undefined {
@@ -89,55 +90,55 @@ function formattedArguments(details: Record<string, unknown> | null): string | u
 
 function lifecycleSummary(event: ToolGatewayActivityEvent): string | null {
   if (!event.lifecycleType) return null;
-  const who = event.actorDisplayName ?? event.agentDisplayName ?? "Someone";
-  const app = event.appDisplayName ?? event.connectionDisplayName ?? "this app";
+  const who = event.actorDisplayName ?? event.agentDisplayName ?? t("toolsRestUi.someone");
+  const app = event.appDisplayName ?? event.connectionDisplayName ?? t("toolsRestUi.thisApp");
   const count = detailNumber(event.details, "count") ?? 0;
   const added = detailNumber(event.details, "added") ?? 0;
   const removed = detailNumber(event.details, "removed") ?? 0;
   switch (event.lifecycleType) {
     case "app_connected":
-      return `${who} connected ${app}`;
+      return t("toolsRestUi.connected", { who, app });
     case "app_paused":
-      return `${who} paused ${app}`;
+      return t("toolsRestUi.paused", { who, app });
     case "app_resumed":
-      return `${who} resumed ${app}`;
+      return t("toolsRestUi.resumed", { who, app });
     case "reconnected":
-      return `${who} reconnected ${app}`;
+      return t("toolsRestUi.reconnected", { who, app });
     case "disconnected":
-      return `${who} disconnected ${app}`;
+      return t("toolsRestUi.disconnected", { who, app });
     case "allowlist_changed":
-      if (added > 0 && removed === 0) return `${who} added ${added} allowed ${added === 1 ? "item" : "items"} in ${app}`;
-      if (removed > 0 && added === 0) return `${who} removed ${removed} allowed ${removed === 1 ? "item" : "items"} in ${app}`;
-      return `${who} updated the allowlist for ${app}`;
+      if (added > 0 && removed === 0) return t("toolsRestUi.allowedAdded", { who, count: added, app });
+      if (removed > 0 && added === 0) return t("toolsRestUi.allowedRemoved", { who, count: removed, app });
+      return t("toolsRestUi.allowlistUpdated", { who, app });
     case "actions_quarantined":
-      return `${count} new ${count === 1 ? "action needs" : "actions need"} review in ${app}`;
+      return t("toolsRestUi.actionsReview", { count, app });
     default:
-      return `${who} updated ${app}`;
+      return t("toolsRestUi.updated", { who, app });
   }
 }
 
 /** Plain-words "why" for the row expander, keyed off the reason code. */
 function plainReason(event: ToolGatewayActivityEvent): string {
-  if (event.lifecycleType) return "This connection change was recorded in the app's activity history.";
+  if (event.lifecycleType) return t("toolsRestUi.thisConnectionChangeWasRecordedInTheAppsActivityHistory");
   const code = detailString(event.details, "reasonCode");
   if (code === "permitted_connections_not_installed") {
-    return "Permitted connections were not installed, so their tools were not added to this run.";
+    return t("toolsRestUi.permittedConnectionsWereNotInstalledSoTheirToolsWereNotAddedToThisRun");
   }
   switch (event.normalizedOutcome) {
     case "allowed":
-      return "Allowed by your rules.";
+      return t("toolsRestUi.allowedByYourRules");
     case "blocked":
-      if (code === "rate_limited") return "Blocked because it ran too many times in a short window.";
-      if (code?.includes("secret")) return "Blocked to keep a sensitive value from leaving.";
-      return "Blocked by a rule.";
+      if (code === "rate_limited") return t("toolsRestUi.blockedBecauseItRanTooManyTimesInAShortWindow");
+      if (code?.includes("secret")) return t("toolsRestUi.blockedToKeepASensitiveValueFromLeaving");
+      return t("toolsRestUi.blockedByARule");
     case "asked_first":
-      return "Held for someone to approve before it could run.";
+      return t("toolsRestUi.heldForSomeoneToApproveBeforeItCouldRun");
     case "waiting":
-      return "Waiting — the app it needs wasn't ready yet.";
+      return t("toolsRestUi.waitingTheAppItNeedsWasntReadyYet");
     case "failed":
-      return "The app was allowed to run it, but returned an error.";
+      return t("toolsRestUi.theAppWasAllowedToRunItButReturnedAnError");
     default:
-      return "Recorded by Paperclip.";
+      return t("toolsRestUi.recordedByPaperclip");
   }
 }
 
@@ -152,6 +153,7 @@ function DetailFact({ label, value, mono }: { label: string; value: string; mono
 }
 
 function OutcomeChip({ outcome }: { outcome: ToolAuditOutcome }) {
+  const { t } = useTranslation();
   const meta = OUTCOME_META[outcome] ?? OUTCOME_META.unknown;
   return <StatusBadge status={meta.status} label={meta.label} />;
 }
@@ -163,11 +165,12 @@ function ActivityRow({
   event: ToolGatewayActivityEvent;
   ruleNamesById: Map<string, string>;
 }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
 
-  const who = event.agentDisplayName ?? "An agent";
-  const action = event.toolDisplayName ?? "an action";
+  const who = event.agentDisplayName ?? t("toolsRestUi.anAgent");
+  const action = event.toolDisplayName ?? t("toolsRestUi.anAction");
   const app = event.appDisplayName ?? event.connectionDisplayName ?? event.applicationDisplayName ?? null;
   const lifecycle = lifecycleSummary(event);
   const rawTool = detailString(event.details, "tool") ?? detailString(event.details, "toolName");
@@ -212,25 +215,11 @@ function ActivityRow({
           <ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
         )}
         <span className="min-w-0 flex-1">
-          {lifecycle ? (
-            <span className="block text-foreground">{lifecycle}</span>
-          ) : isRuntimeMcpDeliveryDiagnostic ? (
-            <span className="block text-foreground">
-              <span className="font-medium">{who}</span>'s run received 0 MCP servers —{" "}
-              <span className="font-medium">{permittedNotInstalledCount ?? permittedNotInstalledConnections.length}</span>{" "}
-              permitted {(permittedNotInstalledCount ?? permittedNotInstalledConnections.length) === 1 ? "connection" : "connections"} not installed
-            </span>
-          ) : (
-            <span className="block text-foreground">
-              <span className="font-medium">{who}</span> used <span className="font-medium">{action}</span>
-              {app ? (
-                <>
-                  {" "}
-                  in <span className="font-medium">{app}</span>
-                </>
-              ) : null}
-            </span>
-          )}
+          <span className="block text-foreground">
+            {lifecycle ?? (isRuntimeMcpDeliveryDiagnostic
+              ? t("toolsRestUi.deliverySummary", { who, count: permittedNotInstalledCount ?? permittedNotInstalledConnections.length })
+              : app ? t("toolsRestUi.actionUsedIn", { who, action, app }) : t("toolsRestUi.actionUsed", { who, action }))}
+          </span>
         </span>
         <span className="flex shrink-0 items-center gap-2 whitespace-nowrap">
           {event.lifecycleType ? null : <OutcomeChip outcome={event.normalizedOutcome} />}
@@ -254,14 +243,10 @@ function ActivityRow({
 
           <div className="flex flex-wrap gap-3 text-xs">
             {issueId ? (
-              <Link to={`/issues/${issueId}`} className="text-primary hover:underline">
-                View task
-              </Link>
+              <Link to={`/issues/${issueId}`} className="text-primary hover:underline">{t("toolsRestUi.viewTask")}</Link>
             ) : null}
             {runId && agentId ? (
-              <Link to={`/agents/${agentId}/runs/${runId}`} className="text-primary hover:underline">
-                View run
-              </Link>
+              <Link to={`/agents/${agentId}/runs/${runId}`} className="text-primary hover:underline">{t("toolsRestUi.viewRun")}</Link>
             ) : null}
           </div>
 
@@ -271,33 +256,31 @@ function ActivityRow({
               onClick={() => setDetailsOpen((v) => !v)}
               className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground"
             >
-              {detailsOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
-              Details
-            </button>
+              {detailsOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}{t("toolsRestUi.details")}</button>
             {detailsOpen ? (
               <div className="mt-2 space-y-1.5 text-xs">
-                {rawTool ? <DetailFact label="Action name" value={rawTool} mono /> : null}
-                <DetailFact label="Reason code" value={reasonCode} mono />
-                <DetailFact label="Actor type" value={event.actorType ?? "—"} />
-                {runId ? <DetailFact label="Run ID" value={runId} mono /> : null}
-                {transport ? <DetailFact label="Transport" value={transport} mono /> : null}
-                {requestMethod && endpoint ? <DetailFact label="HTTP request" value={`${requestMethod} ${endpoint}`} mono /> : null}
-                {mcpMethod ? <DetailFact label="MCP method" value={mcpMethod} mono /> : null}
-                {requestId ? <DetailFact label="Request ID" value={requestId} mono /> : null}
-                {request ? <DetailFact label="Dispatched" value={request.dispatched === true ? "Yes" : "No"} /> : null}
-                {httpStatus !== undefined ? <DetailFact label="HTTP status" value={String(httpStatus)} mono /> : null}
-                {contentType ? <DetailFact label="Content type" value={contentType} mono /> : null}
-                {responseBytes !== undefined ? <DetailFact label="Response size" value={`${responseBytes} bytes`} /> : null}
-                {upstreamRequestId ? <DetailFact label="Upstream ID" value={upstreamRequestId} mono /> : null}
+                {rawTool ? <DetailFact label={t("toolsRestUi.actionName")} value={rawTool} mono /> : null}
+                <DetailFact label={t("toolsRestUi.reasonCode")} value={reasonCode} mono />
+                <DetailFact label={t("toolsRestUi.actorType")} value={event.actorType ?? "—"} />
+                {runId ? <DetailFact label={t("toolsRestUi.runID")} value={runId} mono /> : null}
+                {transport ? <DetailFact label={t("toolsRestUi.transport")} value={transport} mono /> : null}
+                {requestMethod && endpoint ? <DetailFact label={t("toolsRestUi.hTTPRequest")} value={`${requestMethod} ${endpoint}`} mono /> : null}
+                {mcpMethod ? <DetailFact label={t("toolsRestUi.mCPMethod")} value={mcpMethod} mono /> : null}
+                {requestId ? <DetailFact label={t("toolsRestUi.requestID")} value={requestId} mono /> : null}
+                {request ? <DetailFact label={t("toolsRestUi.dispatched")} value={request.dispatched === true ? t("toolsRestUi.yes") : t("toolsRestUi.no")} /> : null}
+                {httpStatus !== undefined ? <DetailFact label={t("toolsRestUi.hTTPStatus")} value={String(httpStatus)} mono /> : null}
+                {contentType ? <DetailFact label={t("toolsRestUi.contentType")} value={contentType} mono /> : null}
+                {responseBytes !== undefined ? <DetailFact label={t("toolsRestUi.responseSize")} value={t("toolsRestUi.bytes", { count: responseBytes })} /> : null}
+                {upstreamRequestId ? <DetailFact label={t("toolsRestUi.upstreamID")} value={upstreamRequestId} mono /> : null}
                 {isRuntimeMcpDeliveryDiagnostic ? (
                   <>
-                    <DetailFact label="Delivered MCP servers" value="0" mono />
+                    <DetailFact label={t("toolsRestUi.deliveredMCPServers")} value="0" mono />
                     {permittedNotInstalledConnections.map((connection) => {
                       const connectionId = detailString(connection, "id");
-                      const connectionName = detailString(connection, "name") ?? "Unnamed connection";
+                      const connectionName = detailString(connection, "name") ?? t("toolsRestUi.unnamedConnection");
                       return connectionId ? (
                         <div key={connectionId} className="flex gap-2">
-                          <span className="shrink-0 text-muted-foreground">Not installed</span>
+                          <span className="shrink-0 text-muted-foreground">{t("toolsRestUi.notInstalledText")}</span>
                           <Link to={`/apps/${connectionId}/permissions`} className="font-medium text-primary hover:underline">
                             {connectionName}
                           </Link>
@@ -308,7 +291,7 @@ function ActivityRow({
                 ) : null}
                 {argumentsText ? (
                   <div className="space-y-1">
-                    <span className="text-muted-foreground">Parameters (redacted)</span>
+                    <span className="text-muted-foreground">{t("toolsRestUi.parametersRedacted")}</span>
                     <pre className="whitespace-pre-wrap break-words rounded-md border border-border bg-background p-3 font-mono text-xs text-foreground">
                       {argumentsText}
                     </pre>
@@ -324,6 +307,7 @@ function ActivityRow({
 }
 
 export function AuditTab({ companyId }: { companyId: string }) {
+  const { t } = useTranslation();
   const [app, setApp] = useState<string>(ALL);
   const [agent, setAgent] = useState<string>(ALL);
   const [outcome, setOutcome] = useState<string>(ALL);
@@ -396,17 +380,17 @@ export function AuditTab({ companyId }: { companyId: string }) {
   return (
     <div className="space-y-4">
       <ToolsPageHeader
-        title="Activity"
-        description="What your agents actually did with your apps, newest first. Each line is one decision — allowed, blocked, asked first, waiting, or failed."
+        title={t("toolsRestUi.activity")}
+        description={t("toolsRestUi.whatYourAgentsActuallyDidWithYourAppsNewestFirstEachLineIsOneDecisionAllowedBlockedAskedFirstWaitingOrFailed")}
       />
 
       <div className="flex flex-wrap items-center gap-2">
         <Select value={app} onValueChange={setApp}>
           <SelectTrigger className="w-40">
-            <SelectValue placeholder="App" />
+            <SelectValue placeholder={t("toolsRestUi.app")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value={ALL}>All apps</SelectItem>
+            <SelectItem value={ALL}>{t("toolsRestUi.allApps")}</SelectItem>
             {(apps.data?.applications ?? []).map((a) => (
               <SelectItem key={a.id} value={a.id}>
                 {a.name}
@@ -415,7 +399,7 @@ export function AuditTab({ companyId }: { companyId: string }) {
           </SelectContent>
         </Select>
         <AgentSelect
-          agents={[{ id: ALL, name: "All agents" }, ...(agents.data ?? [])]}
+          agents={[{ id: ALL, name: t("toolsRestUi.allAgents") }, ...(agents.data ?? [])]}
           value={agent}
           onChange={setAgent}
           triggerClassName="w-40"
@@ -445,15 +429,13 @@ export function AuditTab({ companyId }: { companyId: string }) {
           </SelectContent>
         </Select>
         <Input
-          placeholder="Search activity…"
+          placeholder={t("toolsRestUi.searchActivity")}
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
           className="max-w-xs"
         />
         {hasActiveFilters ? (
-          <Button variant="ghost" size="sm" onClick={clearFilters}>
-            Clear filters
-          </Button>
+          <Button variant="ghost" size="sm" onClick={clearFilters}>{t("toolsRestUi.clearFilters")}</Button>
         ) : null}
       </div>
 
@@ -467,14 +449,10 @@ export function AuditTab({ companyId }: { companyId: string }) {
             <CardContent className="flex flex-col items-center gap-3 py-14 text-center">
               <ScrollText className="h-10 w-10 text-muted-foreground/40" />
               <div>
-                <p className="text-sm font-medium text-foreground">No activity matches these filters</p>
-                <p className="mt-1 max-w-md text-sm text-muted-foreground">
-                  Try a wider time window or different filters.
-                </p>
+                <p className="text-sm font-medium text-foreground">{t("toolsRestUi.noActivityMatchesTheseFilters")}</p>
+                <p className="mt-1 max-w-md text-sm text-muted-foreground">{t("toolsRestUi.tryAWiderTimeWindowOrDifferentFilters")}</p>
               </div>
-              <Button variant="outline" size="sm" onClick={clearFilters}>
-                Clear filters
-              </Button>
+              <Button variant="outline" size="sm" onClick={clearFilters}>{t("toolsRestUi.clearFilters")}</Button>
             </CardContent>
           </Card>
         ) : (
@@ -482,10 +460,8 @@ export function AuditTab({ companyId }: { companyId: string }) {
             <CardContent className="flex flex-col items-center gap-3 py-14 text-center">
               <ScrollText className="h-10 w-10 text-muted-foreground/40" />
               <div>
-                <p className="text-sm font-medium text-foreground">Nothing here yet</p>
-                <p className="mt-1 max-w-md text-sm text-muted-foreground">
-                  As soon as your agents start using connected apps, what they do shows up here.
-                </p>
+                <p className="text-sm font-medium text-foreground">{t("toolsRestUi.nothingHereYet")}</p>
+                <p className="mt-1 max-w-md text-sm text-muted-foreground">{t("toolsRestUi.asSoonAsYourAgentsStartUsingConnectedAppsWhatTheyDoShowsUpHere")}</p>
               </div>
             </CardContent>
           </Card>
@@ -510,7 +486,7 @@ export function AuditTab({ companyId }: { companyId: string }) {
             onClick={() => activity.fetchNextPage()}
             disabled={activity.isFetchingNextPage}
           >
-            {activity.isFetchingNextPage ? "Loading…" : "Load more"}
+            {activity.isFetchingNextPage ? t("toolsRestUi.loading") : t("toolsRestUi.loadMore")}
           </Button>
         </div>
       ) : null}

@@ -1,3 +1,4 @@
+import { t } from "@/i18n";
 import type { SecretAccessEvent } from "@paperclipai/shared";
 
 /**
@@ -32,11 +33,11 @@ export function deliveryModeForConfigPath(configPath: string | null | undefined)
 export function deliveryModeLabel(mode: SecretDeliveryMode): string {
   switch (mode) {
     case "env":
-      return "Env var";
+      return t("secretReviewUi.envVar");
     case "api":
-      return "API access";
+      return t("secretReviewUi.apiAccess");
     default:
-      return "Config";
+      return t("secretReviewUi.config");
   }
 }
 
@@ -44,11 +45,11 @@ export function deliveryModeLabel(mode: SecretDeliveryMode): string {
 export function deliveryModeDescription(mode: SecretDeliveryMode): string {
   switch (mode) {
     case "env":
-      return "Injected as an environment variable at run start.";
+      return t("secretReviewUi.envDescription");
     case "api":
-      return "Fetched on demand via the run-bound agent API. Never written to the environment.";
+      return t("secretReviewUi.apiDescription");
     default:
-      return "Provided through adapter configuration.";
+      return t("secretReviewUi.configDescription");
   }
 }
 
@@ -72,11 +73,11 @@ export function aliasFromConfigPath(configPath: string | null | undefined): stri
 export function consumerTypeLabel(consumerType: SecretAccessEvent["consumerType"]): string {
   switch (consumerType) {
     case "agent_api":
-      return "Agent API";
+      return t("secretReviewUi.agentApi");
     case "plugin_worker":
-      return "Plugin worker";
+      return t("secretReviewUi.pluginWorker");
     case "tool_connection":
-      return "Tool connection";
+      return t("secretReviewUi.toolConnection");
     default:
       return consumerType.charAt(0).toUpperCase() + consumerType.slice(1);
   }

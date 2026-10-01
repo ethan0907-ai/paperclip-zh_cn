@@ -318,8 +318,8 @@ export function TaskChatThreadView({
             (item) =>
               item.kind === "marker" &&
               item.variant === "interrupted" &&
-              (item.label === "Run failed" ||
-                item.label === "Usage limit reached"),
+              ((item.rawLabel ?? item.label) === "Run failed" ||
+                (item.rawLabel ?? item.label) === "Usage limit reached"),
           )?.id
       : undefined;
   // Streaming tail and header updates must not rebuild settled markdown/tool trees.

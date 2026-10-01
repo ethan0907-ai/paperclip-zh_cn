@@ -1,3 +1,4 @@
+import { t, useTranslation } from "@/i18n";
 import {
   useEffect,
   useLayoutEffect,
@@ -62,12 +63,13 @@ export function FoldCurtain({
   children,
   collapsedHeight: explicitCollapsedHeight,
   activationBuffer = 120,
-  moreLabel = "Show more",
-  lessLabel = "Show less",
+  moreLabel = t("finalControls.showMore"),
+  lessLabel = t("finalControls.showLess"),
   className,
   contentClassName,
   toggleClassName,
 }: FoldCurtainProps) {
+  useTranslation();
   const collapsedHeight = useResponsiveCollapsedHeight(explicitCollapsedHeight);
   const contentRef = useRef<HTMLDivElement>(null);
   const [naturalHeight, setNaturalHeight] = useState(0);

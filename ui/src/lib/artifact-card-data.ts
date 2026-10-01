@@ -1,3 +1,18 @@
+import { t } from "@/i18n";
+
+const CSV_ERROR_LABEL_KEYS = new Map<string, string>(Object.entries({
+  "CSV is too large to preview. Download the file to view it.": "artifactsActions.csvIsTooLargeToPreviewDownloadTheFileTo",
+  "CSV has too many columns to preview. Download the file to view it.": "artifactsActions.csvHasTooManyColumnsToPreviewDownloadTheFile",
+  "CSV could not be previewed. Download the file to view it.": "artifactsActions.csvCouldNotBePreviewedDownloadTheFileToView",
+  "CSV preview is unavailable. Download the file to view it.": "artifactsActions.csvPreviewIsUnavailableDownloadTheFileToViewIt",
+  "CSV could not be loaded. Try again or download the file.": "artifactsActions.csvCouldNotBeLoadedTryAgainOrDownloadThe"
+}));
+
+export function artifactCsvErrorLabel(message: string): string {
+  const key = CSV_ERROR_LABEL_KEYS.get(message);
+  return key ? t(key) : message;
+}
+
 /** Optional producer metadata must never become invented facts in an artifact card. */
 export function artifactText(
   metadata: Record<string, unknown> | null,

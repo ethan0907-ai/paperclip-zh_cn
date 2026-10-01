@@ -1,3 +1,4 @@
+import { useTranslation } from "@/i18n";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -45,14 +46,14 @@ import {
 } from "./GitHubBotConfiguration";
 
 const steps = [
-  "Choose agent",
-  "Connect GitHub App",
-  "Install GitHub App",
-  "Select repositories",
-  "Verify connection & tools",
-  "Connect your account",
-  "Configure behavior",
-  "Try it",
+  "appsGithubSetup.chooseAgent",
+  "appsGithubSetup.connectApp",
+  "appsGithubSetup.installApp",
+  "appsGithubSetup.selectRepos",
+  "appsGithubSetup.verifyTools",
+  "appsGithubSetup.connectAccount",
+  "appsGithubSetup.configure",
+  "appsGithubSetup.tryIt",
 ];
 const stages: NonNullable<ChatEndpointSetupState["github"]>["stage"][] = [
   "connect",
@@ -65,6 +66,7 @@ const stages: NonNullable<ChatEndpointSetupState["github"]>["stage"][] = [
   "test",
 ];
 export function GitHubChatSetup() {
+  const { t, i18n } = useTranslation();
   const [params, setParams] = useSearchParams();
   const navigate = useNavigate();
   const { pushToast } = useToast();
@@ -124,11 +126,11 @@ export function GitHubChatSetup() {
   const selectedAgent = agents.data?.find((agent) => agent.id === agentId);
   useEffect(() => {
     setBreadcrumbs([
-      { label: "Connectors", href: "/apps" },
-      { label: "Connect GitHub bot" },
+      { label: t("appsGithubSetup.connectors"), href: "/apps" },
+      { label: t("appsGithubSetup.connectBot") },
     ]);
     return () => setBreadcrumbs([]);
-  }, [setBreadcrumbs]);
+  }, [setBreadcrumbs, t]);
   useEffect(() => {
     if (!current.data) return;
     setEndpoint(current.data);
@@ -156,7 +158,7 @@ export function GitHubChatSetup() {
         })
         .catch((error) =>
           setError(
-            error instanceof Error ? error.message : "Could not resume setup",
+            error instanceof Error ? error.message : "appsGithubSetup.resumeError",
           ),
         );
     }
@@ -170,7 +172,7 @@ export function GitHubChatSetup() {
       setError(
         error instanceof Error
           ? error.message
-          : "Could not save this step. Try again.",
+          : "appsGithubSetup.saveError",
       );
     } finally {
       setBusy(false);
@@ -212,7 +214,7 @@ export function GitHubChatSetup() {
             disabled={busy}
             onClick={() => setStep(step - 1)}
           >
-            Back
+            {t("appsGithubSetup.back")}
           </Button>
         )}
         {extra}
@@ -228,7 +230,7 @@ export function GitHubChatSetup() {
   return (
     <div className="mx-auto w-full max-w-3xl space-y-6 px-4 py-6 sm:px-6">
       <SetupWizardNavigation
-        labels={identityOnly ? ["Connect your account"] : steps}
+        labels={identityOnly ? [t("appsGithubSetup.connectAccount")] : steps.map((label) => t(label))}
         step={identityOnly ? 0 : step}
         availableStep={identityOnly ? 0 : availableStep}
         onSelect={identityOnly ? () => {} : setStep}
@@ -238,12 +240,12 @@ export function GitHubChatSetup() {
       <div>
         <p className="text-xs text-muted-foreground">
           {identityOnly
-            ? "GitHub account linking"
-            : `GitHub bot · Step ${step + 1} of ${steps.length}`}
+            ? t("appsGithubSetup.accountLinking")
+            : t("appsGithubSetup.step", { step: step + 1, total: steps.length })}
         </p>
-        <h1 className="mt-2 text-2xl font-semibold">{steps[step]}</h1>
+        <h1 className="mt-2 text-2xl font-semibold">{t(steps[step])}</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          GitHub conversations run as Paperclip tasks on one assigned agent.
+          {t("appsGithubSetup.taskDescription")}
         </p>
       </div>
       {(error || current.error || agents.error) && (
@@ -251,19 +253,18 @@ export function GitHubChatSetup() {
           role="alert"
           className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm"
         >
-          {error || "Could not load this setup. Refresh to try again."}
+          {error ? (error.startsWith("appsGithubSetup.") ? t(error) : error) : t("appsGithubSetup.loadError")}
         </p>
       )}
       {step === 0 && (
         <>
           <GitHubSetupPrompt />
           <p className="text-sm">
-            This assignment is permanent. The agent works through its existing
-            permissions, budgets, and tools.
+            {t("appsGithubSetup.assignment")}
           </p>
           {endpoint ? (
             <Input
-              aria-label="Assigned agent"
+              aria-label={t("appsGithubSetup.assigned")}
               value={
                 endpoint.assignedAgentName ?? selectedAgent?.name ?? agentId
               }
@@ -276,13 +277,13 @@ export function GitHubChatSetup() {
               )}
               value={agentId}
               onChange={setAgentId}
-              placeholder="Choose an agent"
-              emptyMessage="No agents available"
+              placeholder={t("appsGithubSetup.choose")}
+              emptyMessage={t("appsGithubSetup.noAgents")}
             />
           )}
           <GitHubAgentTrustWarning agent={selectedAgent} />
           {footer(
-            "Continue",
+            t("appsGithubSetup.continue"),
             async () => {
               const bot =
                 endpoint ??
@@ -309,23 +310,16 @@ export function GitHubChatSetup() {
               role="alert"
               className="rounded-lg border border-(--status-task-todo)/30 bg-(--status-task-todo)/10 p-4 text-sm"
             >
-              A publicly reachable HTTPS address is required before App
-              registration. Configure the instance’s public URL or an explicit
-              webhook ingress URL, then refresh. {" "}
-              <a className="underline" href="https://docs.paperclip.ing/reference/deploy/https/" target="_blank" rel="noreferrer">Learn how to set up HTTPS</a>
+              {t("appsGithubSetup.https")} {" "}
+              <a className="underline" href="https://docs.paperclip.ing/reference/deploy/https/" target="_blank" rel="noreferrer">{t("appsGithubSetup.httpsHelp")}</a>
             </div>
           )}
           <p className="text-sm">
-            Create a dedicated GitHub App for{" "}
-            {selectedAgent?.name ?? endpoint.assignedAgentName}. Paperclip
-            stores the credentials in its vault and uses this same App for the
-            agent’s GitHub tools.
+            {t("appsGithubSetup.dedicated", { agent: selectedAgent?.name ?? endpoint.assignedAgentName })}
           </p>
           {reconnecting && (
             <p className="text-sm text-muted-foreground">
-              Verify the saved App and refresh its webhook configuration. Leave
-              the credentials blank to keep them, or enter a replacement private
-              key for the same App.
+              {t("appsGithubSetup.reconnectDescription")}
             </p>
           )}
           <div className="flex gap-2">
@@ -333,19 +327,19 @@ export function GitHubChatSetup() {
               variant={!existing ? "default" : "outline"}
               onClick={() => setExisting(false)}
             >
-              Create an App
+              {t("appsGithubSetup.createApp")}
             </Button>
             <Button
               variant={existing ? "default" : "outline"}
               onClick={() => setExisting(true)}
             >
-              Use an existing App
+              {t("appsGithubSetup.existingApp")}
             </Button>
           </div>
           {existing ? (
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="github-app-id">App ID</Label>
+                <Label htmlFor="github-app-id">{t("appsGithubSetup.appId")}</Label>
                 <Input
                   id="github-app-id"
                   value={credentials.appId}
@@ -354,11 +348,11 @@ export function GitHubChatSetup() {
                   }
                 />
                 <p className="text-xs text-muted-foreground">
-                  Find this in your GitHub App’s settings.
+                  {t("appsGithubSetup.findId")}
                 </p>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="github-private-key">Private key</Label>
+                <Label htmlFor="github-private-key">{t("appsGithubSetup.privateKey")}</Label>
                 <Textarea
                   id="github-private-key"
                   autoComplete="off"
@@ -371,11 +365,11 @@ export function GitHubChatSetup() {
                   }
                 />
                 <p className="text-xs text-muted-foreground">
-                  Paste the PEM key. It is vaulted server-side.
+                  {t("appsGithubSetup.pem")}
                 </p>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="github-webhook-secret">Webhook secret</Label>
+                <Label htmlFor="github-webhook-secret">{t("appsGithubSetup.secret")}</Label>
                 <Input
                   id="github-webhook-secret"
                   type="password"
@@ -389,25 +383,25 @@ export function GitHubChatSetup() {
                   }
                 />
                 <p className="text-xs text-muted-foreground">
-                  Use the same secret in GitHub’s webhook settings.
+                  {t("appsGithubSetup.sameSecret")}
                 </p>
                 {!reconnecting && <div className="flex flex-wrap gap-2">
                   <Button variant="outline" disabled={busy} onClick={() => void run(async () => {
                     const generated = await chatEndpointsApi.generateSetupSecret(endpoint.id);
                     setCredentials(current => ({ ...current, webhookSecret: generated.webhookSecret }));
                     setSecretCopy("idle");
-                  })}>Generate webhook secret</Button>
+                  })}>{t("appsGithubSetup.generateSecret")}</Button>
                   {credentials.webhookSecret && <Button variant="outline" onClick={async () => {
                     try { await copyTextToClipboard(credentials.webhookSecret); setSecretCopy("copied"); }
-                    catch { setSecretCopy("failed"); pushToast({ title: "Couldn't copy to clipboard", body: "Select and copy the value manually.", tone: "error" }); }
-                  }}>{secretCopy === "copied" ? "Webhook secret copied" : secretCopy === "failed" ? "Couldn’t copy — select it manually" : "Copy webhook secret"}</Button>}
+                    catch { setSecretCopy("failed"); pushToast({ title: t("appsGithubSetup.copyFailed"), body: t("appsGithubSetup.copyManually"), tone: "error" }); }
+                  }}>{secretCopy === "copied" ? t("appsGithubSetup.secretCopied") : secretCopy === "failed" ? t("appsGithubSetup.copySelect") : t("appsGithubSetup.copySecret")}</Button>}
                 </div>}
 
               </div>
             </div>
           ) : (
             <div className="space-y-3">
-              <Label htmlFor="github-app-name">GitHub App name</Label>
+              <Label htmlFor="github-app-name">{t("appsGithubSetup.appName")}</Label>
               <Input
                 id="github-app-name"
                 maxLength={34}
@@ -418,8 +412,7 @@ export function GitHubChatSetup() {
                 }}
               />
               <p className="text-xs text-muted-foreground">
-                GitHub requires a unique name. Continue on GitHub, then return
-                automatically to finish setup.
+                {t("appsGithubSetup.uniqueName")}
               </p>
               {registration && (
                 <form
@@ -432,12 +425,11 @@ export function GitHubChatSetup() {
                     value={JSON.stringify(registration.manifest)}
                   />
                   <Button type="submit">
-                    Create App on GitHub
+                    {t("appsGithubSetup.createOnGithub")}
                     <ExternalLink className="ml-2 size-4" />
                   </Button>
                   <p className="mt-2 text-xs text-muted-foreground">
-                    Registration expires at{" "}
-                    {new Date(registration.expiresAt).toLocaleTimeString()}.
+                    {t("appsGithubSetup.expires", { time: new Date(registration.expiresAt).toLocaleTimeString(i18n.language) })}
                   </p>
                 </form>
               )}
@@ -445,16 +437,15 @@ export function GitHubChatSetup() {
           )}
           <details className="rounded-lg border border-border p-4">
             <summary className="cursor-pointer text-sm">
-              App permissions and callback details
+              {t("appsGithubSetup.permissions")}
             </summary>
             <p className="mt-3 text-sm">
-              Contents: read. Issues, Pull requests, Checks: write. Events:
-              issue_comment, pull_request_review_comment, pull_request.
+              {t("appsGithubSetup.permissionDetails")}
             </p>
             <p className="mt-2 break-all text-xs">
-              {endpoint.setup?.webhookUrl ?? "Public webhook URL unavailable"}
+              {endpoint.setup?.webhookUrl ?? t("appsGithubSetup.webhookUnavailable")}
             </p>
-            {endpoint.setup?.webhookUrl && <Button variant="outline" size="sm" className="mt-2" onClick={() => void run(async () => { await copyTextToClipboard(endpoint.setup!.webhookUrl!); pushToast({ title: "Webhook URL copied", tone: "success" }); })}>Copy webhook URL</Button>}
+            {endpoint.setup?.webhookUrl && <Button variant="outline" size="sm" className="mt-2" onClick={() => void run(async () => { await copyTextToClipboard(endpoint.setup!.webhookUrl!); pushToast({ title: t("appsGithubSetup.urlCopied"), tone: "success" }); })}>{t("appsGithubSetup.copyUrl")}</Button>}
             {registration && (
               <pre className="mt-3 overflow-auto text-xs">
                 {JSON.stringify(registration.manifest, null, 2)}
@@ -463,12 +454,12 @@ export function GitHubChatSetup() {
           </details>
           {footer(
             reconnecting
-              ? "Reconnect App"
+              ? t("appsGithubSetup.reconnect")
               : endpoint.setup?.github?.appSlug
-                ? "Continue to installation"
+                ? t("appsGithubSetup.continueInstallation")
                 : existing
-                  ? "Connect App"
-                  : "Prepare registration",
+                  ? t("appsGithubSetup.connect")
+                  : t("appsGithubSetup.prepare"),
             async () => {
               if (reconnecting) {
                 const saved = await chatEndpointsApi.setup(endpoint.id, {
@@ -520,13 +511,10 @@ export function GitHubChatSetup() {
       {step === 2 && endpoint && (
         <>
           <p className="text-sm">
-            Install the bot’s App into your GitHub account or organization. On
-            GitHub, choose the repositories the installation can access.
+            {t("appsGithubSetup.installDescription")}
           </p>
           <p className="text-sm text-muted-foreground">
-            You will choose the subset enabled in Paperclip in the next step.
-            Changing the installation does not automatically enable repositories
-            here.
+            {t("appsGithubSetup.subset")}
           </p>
           {endpoint.setup?.github?.installationUrl && (
             <Button asChild>
@@ -535,12 +523,12 @@ export function GitHubChatSetup() {
                 target="_blank"
                 rel="noreferrer"
               >
-                Install App on GitHub
+                {t("appsGithubSetup.installGithub")}
                 <ExternalLink className="ml-2 size-4" />
               </a>
             </Button>
           )}
-          {footer("I’ve installed the App", async () => {
+          {footer(t("appsGithubSetup.installed"), async () => {
             setResources(await githubChatApi.refreshRepositories(endpoint.id));
             await go(3);
           })}
@@ -562,7 +550,7 @@ export function GitHubChatSetup() {
               }
             >
               <RefreshCw className="mr-2 size-4" />
-              Refresh access
+              {t("appsGithubSetup.refreshAccess")}
             </Button>
             <Button variant="outline" asChild>
               <a
@@ -573,20 +561,18 @@ export function GitHubChatSetup() {
                 target="_blank"
                 rel="noreferrer"
               >
-                Configure access on GitHub
+                {t("appsGithubSetup.configureAccess")}
                 <ExternalLink className="ml-2 size-4" />
               </a>
             </Button>
           </div>
           <p className="text-sm text-muted-foreground">
-            This list comes from the bot App’s installation. Enable the
-            repositories where it should respond and review.
+            {t("appsGithubSetup.repoList")}
           </p>
           <div className="divide-y divide-border rounded-lg border border-border">
             {resources.length === 0 && (
               <p className="p-4 text-sm">
-                No repositories found. Configure installation access on GitHub,
-                then refresh.
+                {t("appsGithubSetup.noRepos")}
               </p>
             )}
             {resources.map((resource) => (
@@ -595,8 +581,8 @@ export function GitHubChatSetup() {
                   label={resource.label}
                   description={
                     resource.availability !== "available"
-                      ? "GitHub installation access is unavailable"
-                      : "Available to this App installation"
+                      ? t("appsGithubSetup.accessUnavailable")
+                      : t("appsGithubSetup.accessAvailable")
                   }
                   checked={
                     resource.enabled && resource.availability === "available"
@@ -619,7 +605,7 @@ export function GitHubChatSetup() {
             ))}
           </div>
           {footer(
-            "Save repositories",
+            t("appsGithubSetup.saveRepos"),
             async () => {
               await chatEndpointsApi.updateResources(
                 endpoint.id,
@@ -650,8 +636,7 @@ export function GitHubChatSetup() {
       {step === 4 && endpoint && (
         <>
           <p className="text-sm">
-            Verify signed delivery, App identity, repository access, and the
-            assigned agent’s effective tools separately.
+            {t("appsGithubSetup.verifyDescription")}
           </p>
           <div className="flex flex-wrap gap-2">
             <Button
@@ -663,7 +648,7 @@ export function GitHubChatSetup() {
                 )
               }
             >
-              Verify connection
+              {t("appsGithubSetup.verifyConnection")}
             </Button>
             <Button
               variant="outline"
@@ -681,13 +666,11 @@ export function GitHubChatSetup() {
                 })
               }
             >
-              Assign this bot’s GitHub tools
+              {t("appsGithubSetup.assignTools")}
             </Button>
           </div>
           <p className="text-xs text-muted-foreground">
-            Tool assignment grants this agent the bot App’s task-scoped tools
-            through its Paperclip tool profile. Existing deny and approval
-            policies still apply.
+            {t("appsGithubSetup.toolDescription")}
           </p>
           <div className="divide-y divide-border rounded-lg border border-border">
             {verification?.checks.map((check) => (
@@ -707,20 +690,17 @@ export function GitHubChatSetup() {
             ))}
           </div>
           <GitHubAgentTrustWarning agent={selectedAgent} />
-          {footer("Continue", () => go(5), !verification?.ready)}
+          {footer(t("appsGithubSetup.continue"), () => go(5), !verification?.ready)}
         </>
       )}
       {step === 5 && endpoint && (
         <>
           <p className="text-sm">
-            Choose your existing personal GitHub connection. Paperclip verifies
-            the account, then asks you to confirm ownership. This link
-            identifies your requests; the bot still uses its own App
-            credentials.
+            {t("appsGithubSetup.personalDescription")}
           </p>
           <div className="space-y-2">
             <Label htmlFor="github-personal-account">
-              Your GitHub connection
+              {t("appsGithubSetup.yourConnection")}
             </Label>
             <select
               id="github-personal-account"
@@ -731,7 +711,7 @@ export function GitHubChatSetup() {
                 setIdentity(null);
               }}
             >
-              <option value="">Choose a personal connection</option>
+              <option value="">{t("appsGithubSetup.chooseConnection")}</option>
               {accounts.data?.map((account) => (
                 <option
                   key={account.connectionId}
@@ -740,12 +720,12 @@ export function GitHubChatSetup() {
                 >
                   {account.name}
                   {account.login ? ` · @${account.login}` : ""}
-                  {account.status !== "active" ? " · reconnect required" : ""}
+                  {account.status !== "active" ? t("appsGithubSetup.reconnectRequired") : ""}
                 </option>
               ))}
             </select>
             <p className="text-xs text-muted-foreground">
-              Shared and agent connections cannot prove your identity.
+              {t("appsGithubSetup.identityDescription")}
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -763,31 +743,30 @@ export function GitHubChatSetup() {
                 )
               }
             >
-              Verify my account
+              {t("appsGithubSetup.verifyAccount")}
             </Button>
             <Button variant="ghost" onClick={() => void accounts.refetch()}>
-              Refresh connections
+              {t("appsGithubSetup.refreshConnections")}
             </Button>
             <Link className="self-center text-sm underline" to="/apps/connect?source=github">
-              Connect GitHub
+              {t("appsGithubSetup.connectGithub")}
             </Link>
           </div>
           {accounts.error && (
             <p role="alert" className="text-sm text-destructive">
-              Could not load personal connections.
+              {t("appsGithubSetup.personalLoadError")}
             </p>
           )}
           {identity && (
             <div className="rounded-lg border border-border p-4">
               <p className="font-medium">@{identity.login}</p>
               <p className="mt-1 text-xs text-muted-foreground">
-                GitHub ID {identity.githubUserId}. Confirm that this is your
-                account.
+                {t("appsGithubSetup.identity", { id: identity.githubUserId })}
               </p>
             </div>
           )}
           {footer(
-            "Confirm this is my account",
+            t("appsGithubSetup.confirmAccount"),
             async () => {
               await githubChatApi.identity(
                 endpoint.id,
@@ -820,7 +799,7 @@ export function GitHubChatSetup() {
               })
             }
           />
-          {footer("Save behavior", async () => {
+          {footer(t("appsGithubSetup.saveBehavior"), async () => {
             await saveConfiguration();
             await go(7);
           })}
@@ -829,17 +808,14 @@ export function GitHubChatSetup() {
       {step === 7 && endpoint && (
         <>
           <p className="text-sm">
-            Mention the bot in an enabled repository. The request should create
-            a real Paperclip task on{" "}
-            {selectedAgent?.name ?? endpoint.assignedAgentName} and reply on
-            GitHub.
+            {t("appsGithubSetup.testDescription", { agent: selectedAgent?.name ?? endpoint.assignedAgentName })}
           </p>
           <div className="flex items-center gap-3 rounded-lg border border-border p-4">
             <code className="min-w-0 flex-1 break-all text-sm">{mention}</code>
             <Button
               variant="ghost"
               size="icon"
-              aria-label="Copy test mention"
+              aria-label={t("appsGithubSetup.copyMention")}
               onClick={() =>
                 void copyTextToClipboard(mention).then(() => setCopied(true))
               }
@@ -849,22 +825,22 @@ export function GitHubChatSetup() {
           </div>
           {copied && (
             <p role="status" className="text-xs text-muted-foreground">
-              Mention copied
+              {t("appsGithubSetup.mentionCopied")}
             </p>
           )}
           <p role="status" className="text-sm">
             {test.data?.messageReceivedAt
-              ? "Message received. Wait for the agent’s response, then finish."
-              : "Waiting for your test message…"}
+              ? t("appsGithubSetup.received")
+              : t("appsGithubSetup.waiting")}
           </p>
           <Link
             className="text-sm underline"
             to={`/apps/chat/${endpoint.id}/conversations`}
           >
-            Open underlying tasks
+            {t("appsGithubSetup.tasks")}
           </Link>
           {footer(
-            "Verify response and finish",
+            t("appsGithubSetup.verifyFinish"),
             async () => {
               await chatEndpointsApi.test(endpoint.id);
               navigate(`/apps/chat/${endpoint.id}/settings`);
@@ -880,7 +856,7 @@ export function GitHubChatSetup() {
                 })
               }
             >
-              Finish without test
+              {t("appsGithubSetup.finishWithout")}
             </Button>,
           )}
         </>

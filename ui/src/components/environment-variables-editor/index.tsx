@@ -1,3 +1,4 @@
+import { t, useTranslation } from "@/i18n";
 import {
   forwardRef,
   useCallback,
@@ -31,8 +32,7 @@ import type { EnvironmentVariableDirtyFields } from "./Row";
 
 const DEFAULT_RESERVED_PREFIXES = ["PAPERCLIP_"];
 
-const DEFAULT_HINT =
-  "Set the KEY to the env var name the process expects, for example GH_TOKEN. Choose a secret to resolve a stored value at run start. PAPERCLIP_* variables are injected automatically.";
+function defaultHint() { return t("governanceControlsUi.text116"); }
 
 // Canonical entries for dirty comparison. Must mirror the emit semantics of
 // valueFromRows (trimmed names, incomplete refs dropped, last-writer-wins on
@@ -83,7 +83,7 @@ const CHANGE_SUMMARY_MAX_NAMES = 3;
 function formatChangedNames(names: readonly string[]): string {
   const shown = names.slice(0, CHANGE_SUMMARY_MAX_NAMES).join(", ");
   return names.length > CHANGE_SUMMARY_MAX_NAMES
-    ? `${shown} +${names.length - CHANGE_SUMMARY_MAX_NAMES} more`
+    ? t("governanceControlsUi.more", { names: shown, count: names.length - CHANGE_SUMMARY_MAX_NAMES })
     : shown;
 }
 
@@ -160,6 +160,7 @@ export const EnvironmentVariablesEditor = forwardRef<EnvironmentVariablesEditorH
   onDirtyChange,
   hideDraftActions = false,
 }: EnvironmentVariablesEditorProps, ref) {
+  const { t } = useTranslation();
   const toast = useOptionalToastActions();
   const editorRootRef = useRef<HTMLDivElement | null>(null);
   const [rows, setRows] = useState<EnvRow[]>(() => rowsFromValue(value));
@@ -264,11 +265,11 @@ export const EnvironmentVariablesEditor = forwardRef<EnvironmentVariablesEditorH
 
   const changeSummaryText = useMemo(() => {
     const parts: string[] = [];
-    if (changeSummary.added.length > 0) parts.push(`New: ${formatChangedNames(changeSummary.added)}`);
-    if (changeSummary.changed.length > 0) parts.push(`Edited: ${formatChangedNames(changeSummary.changed)}`);
-    if (changeSummary.removed.length > 0) parts.push(`Removed: ${formatChangedNames(changeSummary.removed)}`);
+    if (changeSummary.added.length > 0) parts.push(t("governanceControlsUi.new", { names: formatChangedNames(changeSummary.added) }));
+    if (changeSummary.changed.length > 0) parts.push(t("governanceControlsUi.edited", { names: formatChangedNames(changeSummary.changed) }));
+    if (changeSummary.removed.length > 0) parts.push(t("governanceControlsUi.removed", { names: formatChangedNames(changeSummary.removed) }));
     return parts.join(" · ");
-  }, [changeSummary]);
+  }, [changeSummary, t]);
 
   // Warn before the tab unloads with a dirty draft (same guard as the skill
   // file editor). In-app navigation is not intercepted here.
@@ -316,7 +317,7 @@ export const EnvironmentVariablesEditor = forwardRef<EnvironmentVariablesEditorH
       const button = target.closest("button");
       if (!button || button.disabled) return;
       const label = `${button.getAttribute("aria-label") ?? ""} ${button.textContent ?? ""}`;
-      if (button.type === "submit" || /\b(save|create|update|test|import)\b/i.test(label)) {
+      if (button.type === "submit" || /\b(save|create|update|test|import)\b|保存|创建|更新|测试|导入/i.test(label)) {
         flushPendingDraft();
       }
     }
@@ -374,7 +375,7 @@ export const EnvironmentVariablesEditor = forwardRef<EnvironmentVariablesEditorH
       }
     }
     updateDraft(working);
-    toast?.pushToast({ title: `Imported ${pairs.length} variable${pairs.length === 1 ? "" : "s"}`, tone: "success" });
+    toast?.pushToast({ title: t("governanceControlsUi.imported", { count: pairs.length }), tone: "success" });
     return true;
   }
 
@@ -430,7 +431,7 @@ export const EnvironmentVariablesEditor = forwardRef<EnvironmentVariablesEditorH
   }, [recentlyUsedSecrets, rows]);
 
   const hasRows = rows.length > 0;
-  const hint = footerHint === undefined ? DEFAULT_HINT : footerHint;
+  const hint = footerHint === undefined ? defaultHint() : footerHint;
   const committedRowsById = useMemo(
     () => new Map(committedRows.map((row) => [row.id, row])),
     [committedRows],
@@ -442,16 +443,15 @@ export const EnvironmentVariablesEditor = forwardRef<EnvironmentVariablesEditorH
       {attentionCount > 1 ? (
         <p className="inline-flex items-center gap-1.5 text-(length:--text-micro) font-medium text-amber-700 dark:text-amber-400">
           <AlertCircle className="size-3.5" />
-          {attentionCount} bindings need attention
-        </p>
+          {t("governanceControlsUi.attention", { count: attentionCount })}</p>
       ) : null}
 
       {hasRows ? (
         <>
           {/* Header (desktop only) */}
           <div className="hidden gap-x-1.5 @[40rem]/env:grid @[40rem]/env:grid-cols-(--gtc-14)">
-            <span className="text-(length:--text-micro) font-medium uppercase tracking-wide text-muted-foreground">Name</span>
-            <span className="text-(length:--text-micro) font-medium uppercase tracking-wide text-muted-foreground">Value</span>
+            <span className="text-(length:--text-micro) font-medium uppercase tracking-wide text-muted-foreground">{t("governanceControlsUi.text44")}</span>
+            <span className="text-(length:--text-micro) font-medium uppercase tracking-wide text-muted-foreground">{t("governanceControlsUi.text102")}</span>
             <span />
           </div>
 
@@ -484,7 +484,7 @@ export const EnvironmentVariablesEditor = forwardRef<EnvironmentVariablesEditorH
           })}
         </>
       ) : (
-        <p className="text-sm text-muted-foreground">No environment variables</p>
+        <p className="text-sm text-muted-foreground">{t("governanceControlsUi.text118")}</p>
       )}
 
       {/* Footer bar */}
@@ -495,23 +495,19 @@ export const EnvironmentVariablesEditor = forwardRef<EnvironmentVariablesEditorH
           disabled={disabled}
           className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:pointer-events-none disabled:opacity-50"
         >
-          <Plus className="size-3.5" />
-          Add variable
-        </button>
+          <Plus className="size-3.5" />{t("governanceControlsUi.text119")}</button>
 
         {quickBind.length > 0 && !disabled ? (
           <div className="flex flex-wrap items-center gap-1.5">
             <span className="inline-flex items-center gap-1 text-(length:--text-micro) text-muted-foreground/70">
-              <KeyRound className="size-3" />
-              Recently used:
-            </span>
+              <KeyRound className="size-3" />{t("governanceControlsUi.text120")}</span>
             {quickBind.map((secret) => (
               <button
                 key={secret.id}
                 type="button"
                 onClick={() => bindRecentSecret(secret)}
                 className="inline-flex items-center gap-1 rounded-full border border-border px-2 py-0.5 font-mono text-(length:--text-micro) text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
-                title={`Bind ${secret.name}`}
+                title={t("governanceControlsUi.bind", { name: secret.name })}
               >
                 + {secret.name}
               </button>
@@ -529,7 +525,7 @@ export const EnvironmentVariablesEditor = forwardRef<EnvironmentVariablesEditorH
           <div className="flex min-w-0 flex-col gap-0.5">
             <div className="flex items-center gap-2 text-sm font-medium">
               <span className="size-2 rounded-full bg-amber-500 shadow-(--shadow-extract-13)" />
-              <span>Unsaved changes</span>
+              <span>{t("governanceControlsUi.text121")}</span>
             </div>
             {changeSummaryText ? (
               <p className="min-w-0 truncate pl-4 text-xs text-amber-950/80 dark:text-amber-100/80" title={changeSummaryText}>
@@ -543,17 +539,13 @@ export const EnvironmentVariablesEditor = forwardRef<EnvironmentVariablesEditorH
               onClick={revertDraft}
               className="inline-flex h-9 items-center gap-1.5 rounded-md border border-amber-500/30 bg-background px-3 text-sm font-medium text-foreground transition-colors hover:bg-amber-500/10 dark:bg-background/80"
             >
-              <RotateCcw className="size-4" />
-              Revert
-            </button>
+              <RotateCcw className="size-4" />{t("governanceControlsUi.text122")}</button>
             <button
               type="button"
               onClick={saveDraft}
               className="inline-flex h-9 items-center gap-1.5 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
             >
-              <Save className="size-4" />
-              Save
-            </button>
+              <Save className="size-4" />{t("governanceControlsUi.text123")}</button>
           </div>
         </div>
       ) : null}
@@ -562,10 +554,7 @@ export const EnvironmentVariablesEditor = forwardRef<EnvironmentVariablesEditorH
       {rows.some((row) => row.source === "user_secret" && row.userSecretKey) ? (
         <p className="inline-flex items-start gap-1 text-(length:--text-micro) text-muted-foreground/70">
           <UserRound className="mt-0.5 size-3 shrink-0" />
-          <span>
-            User secrets resolve from the user responsible for the run. Required bindings fail until that user
-            sets their value under Secrets → My secrets.
-          </span>
+          <span>{t("governanceControlsUi.text124")}</span>
         </p>
       ) : null}
       </div>

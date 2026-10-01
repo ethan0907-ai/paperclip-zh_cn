@@ -1,3 +1,4 @@
+import { i18n, t, useTranslation } from "@/i18n";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -115,12 +116,12 @@ function statusToneClasses(status: RemoteSecretImportCandidate["status"]) {
 function statusBadgeLabel(status: RemoteSecretImportCandidate["status"]) {
   switch (status) {
     case "duplicate":
-      return "Imported";
+      return t("importVaultUi.imported");
     case "conflict":
-      return "Conflict";
+      return t("importVaultUi.conflict");
     case "ready":
     default:
-      return "Ready";
+      return t("importVaultUi.ready");
   }
 }
 
@@ -129,6 +130,7 @@ function StatusBadge({
 }: {
   status: RemoteSecretImportCandidate["status"];
 }) {
+  const { t } = useTranslation();
   const Icon =
     status === "conflict"
       ? AlertTriangle
@@ -144,6 +146,7 @@ function StatusBadge({
 }
 
 function RowResultBadge({ status }: { status: RemoteSecretImportRowResult["status"] }) {
+  const { t } = useTranslation();
   switch (status) {
     case "imported":
       return (
@@ -151,8 +154,7 @@ function RowResultBadge({ status }: { status: RemoteSecretImportRowResult["statu
           variant="outline"
           className="gap-1 px-1.5 py-0 font-normal text-emerald-600 border-emerald-500/40 dark:text-emerald-400"
         >
-          <CheckCircle2 className="h-3 w-3" /> Created
-        </Badge>
+          <CheckCircle2 className="h-3 w-3" />{" "}{t("importVaultUi.created")}</Badge>
       );
     case "skipped":
       return (
@@ -160,8 +162,7 @@ function RowResultBadge({ status }: { status: RemoteSecretImportRowResult["statu
           variant="outline"
           className="gap-1 px-1.5 py-0 font-normal text-muted-foreground border-border/60"
         >
-          <Link2 className="h-3 w-3" /> Skipped
-        </Badge>
+          <Link2 className="h-3 w-3" />{" "}{t("importVaultUi.skipped")}</Badge>
       );
     case "error":
     default:
@@ -170,8 +171,7 @@ function RowResultBadge({ status }: { status: RemoteSecretImportRowResult["statu
           variant="outline"
           className="gap-1 px-1.5 py-0 font-normal text-destructive border-destructive/40"
         >
-          <XCircle className="h-3 w-3" /> Failed
-        </Badge>
+          <XCircle className="h-3 w-3" />{" "}{t("importVaultUi.failed")}</Badge>
       );
   }
 }
@@ -188,24 +188,24 @@ function formatRelativeShort(value: string | null | undefined): string {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "—";
   const diff = Date.now() - date.getTime();
-  if (diff < 0) return date.toLocaleDateString();
+  if (diff < 0) return date.toLocaleDateString(i18n.resolvedLanguage ?? i18n.language);
   const seconds = Math.floor(diff / 1000);
-  if (seconds < 60) return `${seconds}s ago`;
+  if (seconds < 60) return t("importVaultUi.secondsAgo", { count: seconds });
   const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}m ago`;
+  if (minutes < 60) return t("importVaultUi.minutesAgo", { count: minutes });
   const hours = Math.floor(minutes / 60);
-  if (hours < 48) return `${hours}h ago`;
+  if (hours < 48) return t("importVaultUi.hoursAgo", { count: hours });
   const days = Math.floor(hours / 24);
-  if (days < 30) return `${days}d ago`;
-  return date.toLocaleDateString();
+  if (days < 30) return t("importVaultUi.daysAgo", { count: days });
+  return date.toLocaleDateString(i18n.resolvedLanguage ?? i18n.language);
 }
 
 function readableErrorMessage(error: unknown): string {
   if (error instanceof ApiError) {
-    return error.message || `Request failed: ${error.status}`;
+    return error.message || t("importVaultUi.requestFailed", { status: error.status });
   }
   if (error instanceof Error) return error.message;
-  return "Unexpected error";
+  return t("importVaultUi.unexpectedError");
 }
 
 function apiErrorCode(error: ApiError): string | null {
@@ -270,34 +270,34 @@ function validateDraftRow(
   existing: CompanySecret[],
   otherDrafts: DraftSelection[],
 ): string | null {
-  if (!draft.name.trim()) return "Name is required.";
-  if (draft.name.length > 160) return "Name must be 160 characters or fewer.";
-  if (!draft.key.trim()) return "Key is required.";
+  if (!draft.name.trim()) return t("importVaultUi.nameIsRequired");
+  if (draft.name.length > 160) return t("importVaultUi.nameMustBe160CharactersOrFewer");
+  if (!draft.key.trim()) return t("importVaultUi.keyIsRequired");
   if (!KEY_PATTERN.test(draft.key)) {
-    return "Key may only contain lowercase letters, numbers, dot, underscore, or hyphen.";
+    return t("importVaultUi.keyMayOnlyContainLowercaseLettersNumbersDotUnderscoreOrHyphen");
   }
-  if (draft.key.length > 120) return "Key must be 120 characters or fewer.";
-  if (draft.description.length > 500) return "Description must be 500 characters or fewer.";
+  if (draft.key.length > 120) return t("importVaultUi.keyMustBe120CharactersOrFewer");
+  if (draft.description.length > 500) return t("importVaultUi.descriptionMustBe500CharactersOrFewer");
 
   const lowerName = draft.name.trim().toLowerCase();
   const lowerKey = draft.key.trim().toLowerCase();
 
   for (const existingSecret of existing) {
     if (existingSecret.name.trim().toLowerCase() === lowerName) {
-      return "A Paperclip secret already uses this name.";
+      return t("importVaultUi.aPaperclipSecretAlreadyUsesThisName");
     }
     if (existingSecret.key.trim().toLowerCase() === lowerKey) {
-      return "A Paperclip secret already uses this key.";
+      return t("importVaultUi.aPaperclipSecretAlreadyUsesThisKey");
     }
   }
 
   for (const other of otherDrafts) {
     if (other === draft) continue;
     if (other.name.trim().toLowerCase() === lowerName) {
-      return "Another row in this batch already uses this name.";
+      return t("importVaultUi.anotherRowInThisBatchAlreadyUsesThisName");
     }
     if (other.key.trim().toLowerCase() === lowerKey) {
-      return "Another row in this batch already uses this key.";
+      return t("importVaultUi.anotherRowInThisBatchAlreadyUsesThisKey");
     }
   }
 
@@ -338,6 +338,7 @@ export function ImportFromVaultDialog({
   onImportComplete,
   onManageVaults,
 }: ImportFromVaultDialogProps) {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const toast = useToastActions();
   const awsVaults = useMemo(() => awsVaultOptions(providerConfigs), [providerConfigs]);
@@ -461,7 +462,7 @@ export function ImportFromVaultDialog({
       if (error) errors.set(draft.candidate.externalRef, error);
     }
     return errors;
-  }, [draftList, existingSecrets]);
+  }, [draftList, existingSecrets, t]);
 
   const blockedReviewCount = reviewErrors.size;
   const readyReviewCount = draftList.length - blockedReviewCount;
@@ -477,21 +478,21 @@ export function ImportFromVaultDialog({
         awsVaults.find((vault) => vault.id === vaultId)?.displayName ?? "AWS";
       if (result.errorCount === draftList.length && result.errorCount > 0) {
         toast.pushToast({
-          title: "Import failed",
-          body: `No secrets were imported from ${vaultName}.`,
+          title: t("importVaultUi.importFailed"),
+          body: t("importVaultUi.noneImported", { vault: vaultName }),
           tone: "error",
         });
       } else {
         toast.pushToast({
-          title: result.errorCount > 0 ? "Import completed with errors" : "Import complete",
-          body: `${result.importedCount} created · ${result.skippedCount} skipped · ${result.errorCount} failed`,
+          title: result.errorCount > 0 ? t("importVaultUi.importCompletedWithErrors") : t("importVaultUi.importComplete"),
+          body: t("importVaultUi.resultSummary", { created: result.importedCount, skipped: result.skippedCount, failed: result.errorCount }),
           tone: result.errorCount > 0 ? "warn" : "success",
         });
       }
     },
     onError: (error) => {
       toast.pushToast({
-        title: "Import failed",
+        title: t("importVaultUi.importFailed"),
         body: readableErrorMessage(error),
         tone: "error",
       });
@@ -552,7 +553,7 @@ export function ImportFromVaultDialog({
       })
       .catch((error) => {
         toast.pushToast({
-          title: "Could not load more results",
+          title: t("importVaultUi.couldNotLoadMoreResults"),
           body: readableErrorMessage(error),
           tone: "error",
         });
@@ -614,7 +615,7 @@ export function ImportFromVaultDialog({
     if (importMutation.isPending) return;
     if (!force && step !== "result" && selection.size > 0 && !importResult) {
       const ok = window.confirm(
-        `Discard ${selection.size} pending import${selection.size === 1 ? "" : "s"}?`,
+        t("importVaultUi.discardPending", { count: selection.size }),
       );
       if (!ok) return;
     }
@@ -654,19 +655,15 @@ export function ImportFromVaultDialog({
       >
         <header className="flex items-start justify-between gap-3 border-b border-border/60 px-5 py-4">
           <div className="flex flex-col gap-1">
-            <DialogTitle className="text-base font-semibold">
-              Import from AWS Secrets Manager
-            </DialogTitle>
-            <DialogDescription className="text-xs text-muted-foreground">
-              Bring AWS-managed secrets into Paperclip as external references.
-            </DialogDescription>
+            <DialogTitle className="text-base font-semibold">{t("importVaultUi.importFromAWSSecretsManager")}</DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground">{t("importVaultUi.bringAWSmanagedSecretsIntoPaperclipAsExternalReferences")}</DialogDescription>
             <Stepper step={step} />
           </div>
           <button
             type="button"
             className="rounded-sm text-muted-foreground transition-opacity hover:opacity-100 opacity-70"
             onClick={() => handleClose()}
-            aria-label="Close import dialog"
+            aria-label={t("importVaultUi.closeImportDialog")}
           >
             <X className="h-4 w-4" />
           </button>
@@ -729,9 +726,7 @@ export function ImportFromVaultDialog({
           />
           <div className="flex items-center gap-2">
             {step !== "result" && (
-              <Button variant="ghost" size="sm" onClick={() => handleClose()}>
-                Cancel
-              </Button>
+              <Button variant="ghost" size="sm" onClick={() => handleClose()}>{t("importVaultUi.cancel")}</Button>
             )}
             {step === "review" && (
               <Button
@@ -739,18 +734,14 @@ export function ImportFromVaultDialog({
                 size="sm"
                 onClick={() => setStep("select")}
                 disabled={importMutation.isPending}
-              >
-                Back
-              </Button>
+              >{t("importVaultUi.back")}</Button>
             )}
             {step === "select" && (
               <Button
                 size="sm"
                 onClick={() => setStep("review")}
                 disabled={totalSelected === 0}
-              >
-                Continue → Review
-              </Button>
+              >{t("importVaultUi.continueReview")}</Button>
             )}
             {step === "review" && (
               <Button
@@ -764,17 +755,14 @@ export function ImportFromVaultDialog({
               >
                 {importMutation.isPending ? (
                   <>
-                    <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> Importing…
-                  </>
+                    <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />{" "}{t("importVaultUi.importing")}</>
                 ) : (
-                  `Import ${draftList.length}`
+                  t("importVaultUi.importCount", { count: draftList.length })
                 )}
               </Button>
             )}
             {step === "result" && (
-              <Button size="sm" onClick={() => handleClose(true)}>
-                Done
-              </Button>
+              <Button size="sm" onClick={() => handleClose(true)}>{t("importVaultUi.done")}</Button>
             )}
           </div>
         </footer>
@@ -784,10 +772,11 @@ export function ImportFromVaultDialog({
 }
 
 function Stepper({ step }: { step: Step }) {
+  const { t } = useTranslation();
   const steps: { id: Step; label: string }[] = [
-    { id: "select", label: "Select" },
-    { id: "review", label: "Review" },
-    { id: "result", label: "Result" },
+    { id: "select", label: t("importVaultUi.select") },
+    { id: "review", label: t("importVaultUi.review") },
+    { id: "result", label: t("importVaultUi.result") },
   ];
   const activeIndex = steps.findIndex((s) => s.id === step);
   return (
@@ -851,6 +840,7 @@ interface SelectStepProps {
 }
 
 function SelectStep(props: SelectStepProps) {
+  const { t } = useTranslation();
   const {
     awsVaults,
     eligible,
@@ -884,8 +874,8 @@ function SelectStep(props: SelectStepProps) {
       <div className="flex min-h-0 flex-1 items-center justify-center p-6" data-testid="select-empty-vaults">
         <EmptyState
           icon={Cloud}
-          message="No AWS provider vault configured. Add one to import secrets."
-          action={onManageVaults ? "Manage vaults" : undefined}
+          message={t("importVaultUi.noAWSProviderVaultConfiguredAddOneToImportSecrets")}
+          action={onManageVaults ? t("importVaultUi.manageVaults") : undefined}
           onAction={onManageVaults}
         />
       </div>
@@ -897,7 +887,7 @@ function SelectStep(props: SelectStepProps) {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex flex-wrap items-center gap-2 border-b border-border/60 px-5 py-3">
-        <label className="text-xs uppercase tracking-wide text-muted-foreground">Vault</label>
+        <label className="text-xs uppercase tracking-wide text-muted-foreground">{t("importVaultUi.vault")}</label>
         {awsVaults.length === 1 && eligible.length === 1 ? (
           <span className="text-xs font-medium" data-testid="vault-static-label">
             {eligible[0].displayName}
@@ -907,8 +897,8 @@ function SelectStep(props: SelectStepProps) {
             value={vaultId ?? undefined}
             onValueChange={onVaultChange}
           >
-            <SelectTrigger size="sm" className="text-xs" aria-label="Select AWS vault">
-              <SelectValue placeholder="Select an AWS vault" />
+            <SelectTrigger size="sm" className="text-xs" aria-label={t("importVaultUi.selectAWSVault")}>
+              <SelectValue placeholder={t("importVaultUi.selectAnAWSVault")} />
             </SelectTrigger>
             <SelectContent>
               {awsVaults.map((vault) => {
@@ -923,14 +913,14 @@ function SelectStep(props: SelectStepProps) {
                     <span className="flex items-center gap-2">
                       <span>{vault.displayName}</span>
                       {vault.isDefault && (
-                        <Badge variant="outline" className="px-1 py-0 text-(length:--text-nano)">default</Badge>
+                        <Badge variant="outline" className="px-1 py-0 text-(length:--text-nano)">{t("importVaultUi.default")}</Badge>
                       )}
                       {vault.status === "warning" && (
-                        <Badge variant="outline" className="px-1 py-0 text-(length:--text-nano) text-amber-500 border-amber-500/40">warning</Badge>
+                        <Badge variant="outline" className="px-1 py-0 text-(length:--text-nano) text-amber-500 border-amber-500/40">{t("importVaultUi.warning")}</Badge>
                       )}
                       {blocked && (
                         <Badge variant="outline" className="px-1 py-0 text-(length:--text-nano) text-muted-foreground">
-                          {vault.status === "coming_soon" ? "coming soon" : vault.status}
+                          {vault.status === "coming_soon" ? t("importVaultUi.comingSoon") : vault.status}
                         </Badge>
                       )}
                     </span>
@@ -946,9 +936,9 @@ function SelectStep(props: SelectStepProps) {
           <Input
             value={searchInput}
             onChange={(event) => onSearchInput(event.target.value)}
-            placeholder="Search by name, ARN, tag"
+            placeholder={t("importVaultUi.searchByNameARNTag")}
             className="pl-7 pr-7 text-xs"
-            aria-label="Search remote secrets"
+            aria-label={t("importVaultUi.searchRemoteSecrets")}
             data-testid="vault-search"
           />
           {showSearchSpinner && (
@@ -961,7 +951,7 @@ function SelectStep(props: SelectStepProps) {
           size="sm"
           onClick={onRefresh}
           disabled={previewLoading || !vaultId}
-          aria-label="Refresh remote secrets"
+          aria-label={t("importVaultUi.refreshRemoteSecrets")}
         >
           <RefreshCw className={cn("h-3.5 w-3.5", previewLoading && "animate-spin")} />
         </Button>
@@ -970,15 +960,14 @@ function SelectStep(props: SelectStepProps) {
       {selectedNotVisible > 0 && (
         <div className="flex items-center justify-between border-b border-border/60 bg-muted/20 px-5 py-1.5 text-xs text-muted-foreground">
           <span>
-            {selection.size} selected · {selectedNotVisible} not visible with current search
-          </span>
+            {selection.size}{" "}{t("importVaultUi.selected")}{" "}{selectedNotVisible}{" "}{t("importVaultUi.notVisibleWithCurrentSearch")}</span>
           <Button
             variant="ghost"
             size="sm"
             className="h-6 px-2 text-xs"
             onClick={() => onShowOnlySelectedChange(!showOnlySelected)}
           >
-            {showOnlySelected ? "Show all" : "Show selected"}
+            {showOnlySelected ? t("importVaultUi.showAll") : t("importVaultUi.showSelected")}
           </Button>
         </div>
       )}
@@ -998,15 +987,15 @@ function SelectStep(props: SelectStepProps) {
                   <Checkbox
                     checked={headerCheckboxState}
                     onCheckedChange={() => toggleAllLoaded()}
-                    aria-label={`Select all loaded (${selectableInLoaded.length})`}
+                    aria-label={t("importVaultUi.selectAllLoaded", { count: selectableInLoaded.length })}
                     disabled={selectableInLoaded.length === 0}
                   />
                 </th>
-                <th className="px-2 py-2 text-left font-medium">Remote name</th>
-                <th className="px-2 py-2 text-left font-medium">Reference</th>
-                <th className="px-2 py-2 text-left font-medium">Last changed</th>
-                <th className="px-2 py-2 text-left font-medium">Suggested name</th>
-                <th className="px-2 py-2 text-left font-medium">State</th>
+                <th className="px-2 py-2 text-left font-medium">{t("importVaultUi.remoteName")}</th>
+                <th className="px-2 py-2 text-left font-medium">{t("importVaultUi.reference")}</th>
+                <th className="px-2 py-2 text-left font-medium">{t("importVaultUi.lastChanged")}</th>
+                <th className="px-2 py-2 text-left font-medium">{t("importVaultUi.suggestedName")}</th>
+                <th className="px-2 py-2 text-left font-medium">{t("importVaultUi.state")}</th>
               </tr>
             </thead>
             <tbody data-testid="vault-table-body">
@@ -1038,7 +1027,7 @@ function SelectStep(props: SelectStepProps) {
                         checked={isSelected}
                         onCheckedChange={() => toggleRow(candidate)}
                         disabled={!candidate.importable}
-                        aria-label={`Select ${candidate.remoteName}`}
+                        aria-label={t("importVaultUi.selectNamed", { name: candidate.remoteName })}
                       />
                     </td>
                     <td className="px-2 py-2.5">
@@ -1061,9 +1050,7 @@ function SelectStep(props: SelectStepProps) {
                         <StatusBadge status={candidate.status} />
                         {candidate.status === "duplicate" &&
                           candidate.conflicts.find((c) => c.type === "exact_reference")?.existingSecretId && (
-                            <span className="text-(length:--text-micro) text-muted-foreground">
-                              Already imported
-                            </span>
+                            <span className="text-(length:--text-micro) text-muted-foreground">{t("importVaultUi.alreadyImported")}</span>
                           )}
                       </div>
                       {candidate.status === "conflict" && candidate.conflicts.length > 0 && (
@@ -1089,9 +1076,8 @@ function SelectStep(props: SelectStepProps) {
         {hasNextPage && !previewError && (
           <div className="flex items-center justify-between border-t border-border/60 px-5 py-2 text-xs text-muted-foreground">
             <span>
-              {candidates.length} loaded
-              {selectableInLoaded.length > 0 && (
-                <span> · {selectableInLoaded.length} selectable</span>
+              {candidates.length}{" "}{t("importVaultUi.loaded")}{selectableInLoaded.length > 0 && (
+                <span> · {selectableInLoaded.length}{" "}{t("importVaultUi.selectable")}</span>
               )}
             </span>
             <Button
@@ -1103,10 +1089,9 @@ function SelectStep(props: SelectStepProps) {
             >
               {pageLoading ? (
                 <>
-                  <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> Loading…
-                </>
+                  <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />{" "}{t("importVaultUi.loading")}</>
               ) : (
-                `Load ${PAGE_SIZE} more`
+                t("importVaultUi.loadMore", { count: PAGE_SIZE })
               )}
             </Button>
           </div>
@@ -1117,6 +1102,7 @@ function SelectStep(props: SelectStepProps) {
 }
 
 function PreviewErrorBanner({ error, onRetry }: { error: unknown; onRetry: () => void }) {
+  const { t } = useTranslation();
   const isPermission = isPermissionError(error);
   const isThrottling = isThrottlingError(error);
   const message = readableErrorMessage(error);
@@ -1130,28 +1116,26 @@ function PreviewErrorBanner({ error, onRetry }: { error: unknown; onRetry: () =>
       <div className="flex-1">
         <div className="font-medium">
           {isPermission
-            ? "AWS denied list access"
+            ? t("importVaultUi.aWSDeniedListAccess")
             : isThrottling
-              ? "AWS throttled the listing request"
-              : "Could not load remote secrets"}
+              ? t("importVaultUi.aWSThrottledTheListingRequest")
+              : t("importVaultUi.couldNotLoadRemoteSecrets")}
         </div>
         <div className="mt-1 text-xs leading-relaxed text-destructive/80">
           {isPermission
-            ? "The AWS principal behind this vault is missing secretsmanager:ListSecrets. Update IAM and try again."
+            ? t("importVaultUi.theAWSPrincipalBehindThisVaultIsMissingSecretsmanagerListSecretsUpdateIAMAndTryAgain")
             : message}
         </div>
         <div className="mt-2 flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={onRetry}>
-            <RefreshCw className="mr-1.5 h-3.5 w-3.5" /> Retry
-          </Button>
+            <RefreshCw className="mr-1.5 h-3.5 w-3.5" />{" "}{t("importVaultUi.retry")}</Button>
           {isPermission && (
             <a
               href="https://docs.aws.amazon.com/service-authorization/latest/reference/list_awssecretsmanager.html"
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center gap-1 text-xs font-medium underline"
-            >
-              IAM reference <ExternalLink className="h-3 w-3" />
+            >{t("importVaultUi.iAMReference")}{" "}<ExternalLink className="h-3 w-3" />
             </a>
           )}
         </div>
@@ -1161,6 +1145,7 @@ function PreviewErrorBanner({ error, onRetry }: { error: unknown; onRetry: () =>
 }
 
 function SkeletonRows({ rows }: { rows: number }) {
+  const { t } = useTranslation();
   return (
     <div className="flex flex-col gap-1.5 p-3">
       {Array.from({ length: rows }).map((_, idx) => (
@@ -1171,18 +1156,19 @@ function SkeletonRows({ rows }: { rows: number }) {
 }
 
 function EmptyCandidates({ query }: { query: string }) {
+  const { t } = useTranslation();
   if (query) {
     return (
       <EmptyState
         icon={Search}
-        message={`No remote secrets match "${query}".`}
+        message={t("importVaultUi.noMatch", { query })}
       />
     );
   }
   return (
     <EmptyState
       icon={Database}
-      message="No secrets visible to this vault."
+      message={t("importVaultUi.noSecretsVisibleToThisVault")}
     />
   );
 }
@@ -1196,12 +1182,13 @@ interface ReviewStepProps {
 }
 
 function ReviewStep({ drafts, reviewErrors, updateDraft, removeDraft, importing }: ReviewStepProps) {
+  const { t } = useTranslation();
   if (drafts.length === 0) {
     return (
       <div className="flex min-h-0 flex-1 items-center justify-center p-6">
         <EmptyState
           icon={Info}
-          message="No secrets selected. Go back to pick remote secrets to import."
+          message={t("importVaultUi.noSecretsSelectedGoBackToPickRemoteSecretsToImport")}
         />
       </div>
     );
@@ -1213,11 +1200,10 @@ function ReviewStep({ drafts, reviewErrors, updateDraft, removeDraft, importing 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex flex-wrap items-center gap-3 border-b border-border/60 bg-muted/20 px-5 py-3 text-xs">
-        <span className="font-medium">{ready} secrets ready to import</span>
+        <span className="font-medium">{ready}{" "}{t("importVaultUi.secretsReadyToImport")}</span>
         {blocked > 0 && (
           <span className="text-amber-600 dark:text-amber-400">
-            {blocked} need attention before import
-          </span>
+            {blocked}{" "}{t("importVaultUi.needAttentionBeforeImport")}</span>
         )}
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto" data-testid="review-list">
@@ -1245,7 +1231,7 @@ function ReviewStep({ drafts, reviewErrors, updateDraft, removeDraft, importing 
                   </div>
                   <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
                     <label className="flex flex-col gap-1 text-xs">
-                      <span className="text-muted-foreground">Paperclip name</span>
+                      <span className="text-muted-foreground">{t("importVaultUi.paperclipName")}</span>
                       <Input
                         value={draft.name}
                         onChange={(e) =>
@@ -1258,7 +1244,7 @@ function ReviewStep({ drafts, reviewErrors, updateDraft, removeDraft, importing 
                       />
                     </label>
                     <label className="flex flex-col gap-1 text-xs">
-                      <span className="text-muted-foreground">Key</span>
+                      <span className="text-muted-foreground">{t("importVaultUi.key")}</span>
                       <Input
                         value={draft.key}
                         onChange={(e) =>
@@ -1276,7 +1262,7 @@ function ReviewStep({ drafts, reviewErrors, updateDraft, removeDraft, importing 
                       />
                     </label>
                     <label className="flex flex-col gap-1 text-xs">
-                      <span className="text-muted-foreground">Description (optional)</span>
+                      <span className="text-muted-foreground">{t("importVaultUi.descriptionOptional")}</span>
                       <Input
                         value={draft.description}
                         onChange={(e) =>
@@ -1305,7 +1291,7 @@ function ReviewStep({ drafts, reviewErrors, updateDraft, removeDraft, importing 
                   variant="ghost"
                   size="icon"
                   onClick={() => removeDraft(draft.candidate.externalRef)}
-                  aria-label={`Remove ${draft.candidate.remoteName}`}
+                  aria-label={t("importVaultUi.removeNamed", { name: draft.candidate.remoteName })}
                   className="h-7 w-7"
                   disabled={importing}
                 >
@@ -1326,6 +1312,7 @@ interface ResultStepProps {
 }
 
 function ResultStep({ result, draftList }: ResultStepProps) {
+  const { t } = useTranslation();
   const grouped = useMemo(() => {
     const created: RemoteSecretImportRowResult[] = [];
     const skipped: RemoteSecretImportRowResult[] = [];
@@ -1346,30 +1333,30 @@ function ResultStep({ result, draftList }: ResultStepProps) {
 
   const heading =
     result.errorCount === result.results.length && result.errorCount > 0
-      ? "Import failed"
+      ? t("importVaultUi.importFailed")
       : result.errorCount === 0 && result.skippedCount === 0
-        ? `All ${result.importedCount} secrets imported`
-        : "Import complete";
+        ? t("importVaultUi.allImported", { count: result.importedCount })
+        : t("importVaultUi.importComplete");
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="border-b border-border/60 px-5 py-3" data-testid="result-summary">
         <h3 className="text-sm font-semibold">{heading}</h3>
         <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-          <span className="text-emerald-600 dark:text-emerald-400">✓ {result.importedCount} created</span>
-          <span>⊘ {result.skippedCount} skipped</span>
-          <span className="text-destructive">⨯ {result.errorCount} failed</span>
+          <span className="text-emerald-600 dark:text-emerald-400">✓ {result.importedCount}{" "}{t("importVaultUi.createdText")}</span>
+          <span>⊘ {result.skippedCount}{" "}{t("importVaultUi.skippedText")}</span>
+          <span className="text-destructive">⨯ {result.errorCount}{" "}{t("importVaultUi.failedText")}</span>
         </div>
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto">
         {grouped.created.length > 0 && (
-          <ResultGroup label="Created" rows={grouped.created} draftLookup={draftLookup} />
+          <ResultGroup label={t("importVaultUi.created")} rows={grouped.created} draftLookup={draftLookup} />
         )}
         {grouped.skipped.length > 0 && (
-          <ResultGroup label="Skipped" rows={grouped.skipped} draftLookup={draftLookup} />
+          <ResultGroup label={t("importVaultUi.skipped")} rows={grouped.skipped} draftLookup={draftLookup} />
         )}
         {grouped.failed.length > 0 && (
-          <ResultGroup label="Failed" rows={grouped.failed} draftLookup={draftLookup} />
+          <ResultGroup label={t("importVaultUi.failed")} rows={grouped.failed} draftLookup={draftLookup} />
         )}
       </div>
     </div>
@@ -1385,6 +1372,7 @@ function ResultGroup({
   rows: RemoteSecretImportRowResult[];
   draftLookup: Map<string, DraftSelection>;
 }) {
+  const { t } = useTranslation();
   return (
     <section>
       <header className="bg-muted/30 px-5 py-1.5 text-xs uppercase tracking-wide text-muted-foreground">
@@ -1451,23 +1439,22 @@ function FooterStatus({
   blockedReviewCount,
   result,
 }: FooterStatusProps) {
+  const { t } = useTranslation();
   if (step === "select") {
     return (
       <div className="text-xs text-muted-foreground">
         {totalSelected === 0
-          ? "Select remote secrets to import"
-          : `${totalSelected} selected`}
+          ? t("importVaultUi.selectRemoteSecretsToImport")
+          : t("importVaultUi.selectedCount", { count: totalSelected })}
       </div>
     );
   }
   if (step === "review") {
     return (
       <div className="text-xs text-muted-foreground">
-        {readyReviewCount} ready
-        {blockedReviewCount > 0 && (
+        {readyReviewCount}{" "}{t("importVaultUi.readyText")}{blockedReviewCount > 0 && (
           <span className="ml-2 text-amber-600 dark:text-amber-400">
-            · {blockedReviewCount} blocked
-          </span>
+            · {blockedReviewCount}{" "}{t("importVaultUi.blocked")}</span>
         )}
       </div>
     );
@@ -1475,9 +1462,9 @@ function FooterStatus({
   if (result) {
     return (
       <div className="flex items-center gap-3 text-xs text-muted-foreground">
-        <span>{result.importedCount} created</span>
-        <span>{result.skippedCount} skipped</span>
-        <span>{result.errorCount} failed</span>
+        <span>{result.importedCount}{" "}{t("importVaultUi.createdText")}</span>
+        <span>{result.skippedCount}{" "}{t("importVaultUi.skippedText")}</span>
+        <span>{result.errorCount}{" "}{t("importVaultUi.failedText")}</span>
       </div>
     );
   }

@@ -152,7 +152,7 @@ export function CompanySettings() {
       // still makes sense (another active company, the Cloud portfolio, or
       // the companies list), with a toast naming what happened.
       const archived = companies.find((company) => company.id === companyId);
-      const archivedName = archived?.name ?? "Organization";
+      const archivedName = archived?.name ?? t("companyPagesUi.organization");
       const departure = resolveCompanyArchiveDeparture({
         archivedCompanyId: companyId,
         companies,
@@ -167,8 +167,8 @@ export function CompanySettings() {
       }
       if (departure.kind === "company") {
         toastActions?.pushToast({
-          title: `${archivedName} is archived`,
-          body: `Switched to ${departure.company.name}.`,
+          title: t("companyPagesUi.archived", { name: archivedName }),
+          body: t("companyPagesUi.switched", { name: departure.company.name }),
           tone: "info",
           dedupeKey: `company-archive-departure:${companyId}`,
         });
@@ -176,8 +176,8 @@ export function CompanySettings() {
         navigate(`/${departure.company.issuePrefix}/dashboard`, { replace: true });
       } else {
         toastActions?.pushToast({
-          title: `${archivedName} is archived`,
-          body: "You can unarchive it from this list.",
+          title: t("companyPagesUi.archived", { name: archivedName }),
+          body: t("companyPagesUi.unarchiveHint"),
           tone: "info",
           dedupeKey: `company-archive-departure:${companyId}`,
         });
@@ -194,16 +194,14 @@ export function CompanySettings() {
 
   useEffect(() => {
     setBreadcrumbs([
-      { label: selectedCompany?.name ?? "Company", href: "/dashboard" },
-      { label: "Settings" }
+      { label: selectedCompany?.name ?? t("companyPagesUi.company"), href: "/dashboard" },
+      { label: t("companyPagesUi.settings") }
     ]);
-  }, [setBreadcrumbs, selectedCompany?.name]);
+  }, [setBreadcrumbs, selectedCompany?.name, t]);
 
   if (!selectedCompany) {
     return (
-      <div className="text-sm text-muted-foreground">
-        No organization selected. Select an organization from the switcher above.
-      </div>
+      <div className="text-sm text-muted-foreground">{t("companyPagesUi.none")}</div>
     );
   }
 
@@ -223,11 +221,9 @@ export function CompanySettings() {
 
       {/* General */}
       <div className="max-w-2xl space-y-4">
-        <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-          General
-        </div>
+        <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("companyPagesUi.general")}</div>
         <div className="space-y-3">
-          <Field label={t("companySettings.organizationName")} hint="The display name for your organization.">
+          <Field label={t("companySettings.organizationName")} hint={t("companyPagesUi.nameHint")}>
             <input
               className="w-full rounded-md border border-border bg-transparent px-2.5 py-1.5 text-sm outline-none"
               type="text"
@@ -236,14 +232,13 @@ export function CompanySettings() {
             />
             {isCloudManaged && (
               <p className="mt-1 text-xs text-muted-foreground">
-                Renaming can change this company's task ID prefix. Existing task IDs are
-                renumbered and old task links stop resolving.
+                {t("companyPagesUi.renameHint")}
               </p>
             )}
           </Field>
           <Field
             label={t("common.description")}
-            hint="Optional description shown in the organization profile."
+            hint={t("companyPagesUi.descriptionHint")}
           >
             <input
               className="w-full rounded-md border border-border bg-transparent px-2.5 py-1.5 text-sm outline-none"
@@ -258,9 +253,7 @@ export function CompanySettings() {
 
       {/* Appearance */}
       <div className="max-w-2xl space-y-4">
-        <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-          Appearance
-        </div>
+        <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("skillStudioUi.appearance")}</div>
         <div className="space-y-3">
           <div className="flex items-start gap-4">
             <div className="shrink-0">
@@ -273,7 +266,7 @@ export function CompanySettings() {
             <div className="flex-1 space-y-3">
               <Field
                 label={t("companySettings.logo")}
-                hint="Upload a PNG, JPEG, WEBP, GIF, or SVG logo image."
+                hint={t("companyPagesUi.logoHint")}
               >
                 <div className="space-y-2">
                   <input
@@ -290,7 +283,7 @@ export function CompanySettings() {
                         onClick={handleClearLogo}
                         disabled={clearLogoMutation.isPending}
                       >
-                        {clearLogoMutation.isPending ? "Removing..." : "Remove logo"}
+                        {clearLogoMutation.isPending ? t("companyPagesUi.removing") : t("companyPagesUi.removeLogo")}
                       </Button>
                     </div>
                   )}
@@ -299,7 +292,7 @@ export function CompanySettings() {
                       {logoUploadError ??
                         (logoUploadMutation.error instanceof Error
                           ? logoUploadMutation.error.message
-                          : "Logo upload failed")}
+                          : t("companyPagesUi.logoFailed"))}
                     </span>
                   )}
                   {clearLogoMutation.isError && (
@@ -325,7 +318,7 @@ export function CompanySettings() {
             onClick={handleSaveGeneral}
             disabled={generalMutation.isPending || !companyName.trim()}
           >
-            {generalMutation.isPending ? "Saving..." : "Save changes"}
+            {generalMutation.isPending ? t("companyPagesUi.saving") : t("companyPagesUi.save")}
           </Button>
           {generalMutation.isSuccess && (
             <span className="text-xs text-muted-foreground">{t("companySettings.saved")}</span>
@@ -334,7 +327,7 @@ export function CompanySettings() {
             <span className="text-xs text-destructive">
               {generalMutation.error instanceof Error
                   ? generalMutation.error.message
-                  : "Failed to save"}
+                  : t("companyPagesUi.saveFailed")}
             </span>
           )}
         </div>
@@ -342,13 +335,11 @@ export function CompanySettings() {
 
       {/* Hiring */}
       <div className="max-w-2xl space-y-4" data-testid="company-settings-team-section">
-        <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-          Hiring
-        </div>
+        <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("companyPagesUi.hiring")}</div>
         <div>
           <ToggleField
             label={t("companySettings.requireBoardApprovalNewHires")}
-            hint="New agent hires stay pending until approved by board."
+            hint={t("companyPagesUi.hiringHint")}
             checked={!!selectedCompany.requireBoardApprovalForNewAgents}
             onChange={(v) => settingsMutation.mutate(v)}
             toggleTestId="company-settings-team-approval-toggle"
@@ -365,7 +356,7 @@ export function CompanySettings() {
           governanceMutation.isError
             ? governanceMutation.error instanceof Error
               ? governanceMutation.error.message
-              : "Failed to save interaction governance"
+              : t("companyPagesUi.governanceFailed")
             : null
         }
       />
@@ -374,13 +365,10 @@ export function CompanySettings() {
 
       {/* Danger Zone */}
       <div className="space-y-4">
-        <div className="text-xs font-medium text-destructive uppercase tracking-wide">
-          Danger Zone
-        </div>
+        <div className="text-xs font-medium text-destructive uppercase tracking-wide">{t("companyPagesUi.danger")}</div>
         <div className="space-y-3 bg-destructive/5 px-4 py-4">
           <p className="text-sm text-muted-foreground">
-            Archive this organization to hide it from the sidebar. This persists in
-            the database.
+            {t("companyPagesUi.archiveHint")}
           </p>
           <div className="flex items-center gap-2">
             <Button
@@ -393,23 +381,23 @@ export function CompanySettings() {
               onClick={() => {
                 if (!selectedCompanyId) return;
                 const confirmed = window.confirm(
-                  `Archive organization "${selectedCompany.name}"? It will be hidden from the sidebar.`
+                  t("companyPagesUi.archiveConfirm", { name: selectedCompany.name })
                 );
                 if (!confirmed) return;
                 archiveMutation.mutate({ companyId: selectedCompanyId });
               }}
             >
               {archiveMutation.isPending
-                ? "Archiving..."
+                ? t("companyPagesUi.archiving")
                 : selectedCompany.status === "archived"
-                ? "Already archived"
-                : "Archive organization"}
+                ? t("companyPagesUi.alreadyArchived")
+                : t("companyPagesUi.archive")}
             </Button>
             {archiveMutation.isError && (
               <span className="text-xs text-destructive">
                 {archiveMutation.error instanceof Error
                   ? archiveMutation.error.message
-                  : "Failed to archive organization"}
+                  : t("companyPagesUi.archiveFailed")}
               </span>
             )}
           </div>

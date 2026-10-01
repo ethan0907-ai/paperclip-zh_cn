@@ -1,3 +1,4 @@
+import { i18n, t, useTranslation } from "@/i18n";
 import { useId, useState } from "react";
 import { completedActivitySummary } from "./completed-activity-summary";
 import {
@@ -22,7 +23,7 @@ import {
   hasTaskChatProtocolActivityDetails,
 } from "./TaskChatProtocolActivityRow";
 import { TaskChatUsageReadout } from "./TaskChatUsageReadout";
-import { toolActivityPresentation } from "./tool-taxonomy";
+import { toolActivityPresentation, taskActivityDisplayLabel } from "./tool-taxonomy";
 
 type Activity = TaskChatActivityPhaseItem["items"][number];
 
@@ -36,14 +37,14 @@ function presentation(item: Activity, active: boolean) {
       active && (item.status === "pending" || item.status === "in_progress");
     return {
       icon: tool.icon,
-      label:
+      label: taskActivityDisplayLabel(
         item.status === "failed"
           ? tool.failedLabel
           : item.status === "interrupted"
             ? tool.interruptedLabel
             : running
               ? tool.runningLabel
-              : tool.completedLabel,
+              : tool.completedLabel, true),
       target: item.target,
       mono: true,
       running,
@@ -53,7 +54,7 @@ function presentation(item: Activity, active: boolean) {
     const running = active && Boolean(item.streaming);
     return {
       icon: Brain,
-      label: running ? "Thinking" : "Thought",
+      label: running ? t("taskTimeline.thinking") : t("taskTimeline.thought"),
       target: item.lines
         .filter((line) => line.trim())
         .at(-1)
@@ -84,10 +85,10 @@ function presentation(item: Activity, active: boolean) {
   const { used, size, inputTokens, outputTokens, costUsd } = item.usage;
   const usage = [
     size > 0
-      ? `${used.toLocaleString()}/${size.toLocaleString()} ctx`
+      ? t("taskTimeline.context_usage", { used: used.toLocaleString(i18n.language), size: size.toLocaleString(i18n.language) })
       : undefined,
     inputTokens != null || outputTokens != null
-      ? `↑${(inputTokens ?? 0).toLocaleString()} ↓${(outputTokens ?? 0).toLocaleString()}`
+      ? `↑${(inputTokens ?? 0).toLocaleString(i18n.language)} ↓${(outputTokens ?? 0).toLocaleString(i18n.language)}`
       : undefined,
     costUsd != null ? `$${costUsd.toFixed(4)}` : undefined,
   ]
@@ -95,7 +96,7 @@ function presentation(item: Activity, active: boolean) {
     .join(" · ");
   return {
     icon: Gauge,
-    label: item.label ?? "Token usage",
+    label: item.label ?? t("taskTimeline.token_usage"),
     target: usage || item.detail,
     mono: false,
     running: false,
@@ -109,6 +110,7 @@ function ActivityContent({
   item: Activity;
   active: boolean;
 }) {
+  useTranslation();
   const row = presentation(item, active);
   if (!row) return null;
   const Icon = row.icon;
@@ -163,6 +165,7 @@ function RollingActivity({
   item: Activity;
   active: boolean;
 }) {
+  useTranslation();
   const reducedMotion = useReducedMotion();
   const [frame, setFrame] = useState({
     current: item,
@@ -208,6 +211,7 @@ function RollingActivity({
 }
 
 function ActivityDetails({ item }: { item: Activity }) {
+  useTranslation();
   if (item.kind === "thinking")
     return <MarkdownBody softBreaks>{item.lines.join("\n")}</MarkdownBody>;
   if (item.kind === "usage") return <TaskChatUsageReadout item={item} />;
@@ -229,7 +233,9 @@ function ActivityDetails({ item }: { item: Activity }) {
           {item.detail}
         </pre>
       ) : null}
-      {item.decision ? <p>Permission {item.decision}</p> : null}
+      {item.decision ? <p>{t("taskSmallTail.permission")} {item.decision === "allowed"
+        ? t("taskSmallTail.allowed")
+        : item.decision === "rejected" ? t("taskSmallTail.rejected") : item.decision}</p> : null}
       {item.diff ? (
         <p className="break-all font-mono">
           {item.diff.path} · +{item.diff.added} −{item.diff.removed}
@@ -263,6 +269,7 @@ function ExpandedActivity({
   item: Activity;
   active: boolean;
 }) {
+  useTranslation();
   const [open, setOpen] = useTaskChatExpansion(
     `runner-detail:${item.id}`,
     false,
@@ -312,6 +319,7 @@ export function TaskChatRunnerActivityGroup({
   item: TaskChatActivityPhaseItem;
   defaultExpanded?: boolean;
 }) {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useTaskChatExpansion(
     item.id,
     defaultExpanded,
@@ -323,7 +331,7 @@ export function TaskChatRunnerActivityGroup({
   const latest = activities.at(-1);
   const summary = completedActivitySummary(activities);
   const SummaryIcon = summary.icon;
-  const countLabel = `${activities.length} ${activities.length === 1 ? "activity" : "activities"}`;
+  const countLabel = t("taskTimeline.activity_count", { count: activities.length });
   return (
     <section
       className="flex min-w-0 flex-col gap-2"
@@ -350,7 +358,7 @@ export function TaskChatRunnerActivityGroup({
             onClick={() => setExpanded(!expanded)}
             aria-expanded={expanded}
             aria-controls={expanded ? historyId : undefined}
-            aria-label={`${expanded ? "Collapse" : "Expand"} ${item.active ? countLabel : `${summary.fullLabel.toLowerCase()} (${countLabel})`}`}
+            aria-label={`${expanded ? t("taskTimeline.collapse") : t("taskTimeline.expand")} ${item.active ? countLabel : `${summary.fullLabel.toLowerCase()} (${countLabel})`}`}
           >
             {!item.active ? (
               <span
@@ -386,7 +394,7 @@ export function TaskChatRunnerActivityGroup({
             <ol
               id={historyId}
               className="flex min-w-0 flex-col gap-1"
-              aria-label="Activity history"
+              aria-label={t("taskTimeline.activity_history")}
               data-testid="task-chat-runner-activity-list"
             >
               {activities.map((activity, index) => (

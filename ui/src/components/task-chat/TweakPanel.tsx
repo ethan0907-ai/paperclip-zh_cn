@@ -1,3 +1,4 @@
+import { t, useTranslation } from "@/i18n";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { useCopyAction } from "@/lib/use-copy-action";
@@ -44,6 +45,7 @@ function saveSession(key: string, value: unknown) {
  * one file, one dev guard, trivial to strip out later.
  */
 export function TweakPanel() {
+  const { t } = useTranslation();
   const [pos, setPos] = useState<{ x: number; y: number }>(() =>
     loadSession(POS_KEY, { x: 24, y: 24 }),
   );
@@ -139,14 +141,14 @@ export function TweakPanel() {
         onPointerUp={onHeaderPointerUp}
       >
         <GripHorizontal className="h-3.5 w-3.5 text-muted-foreground" />
-        <span>Motion tweak panel</span>
+        <span>{t("taskTail.motion_tweak_panel")}</span>
         <div className="ml-auto flex items-center gap-1">
-          <button type="button" title="Reset all" onClick={resetAll} className="rounded p-0.5 hover:bg-accent">
+          <button type="button" title={t("taskTail.reset_all")} onClick={resetAll} className="rounded p-0.5 hover:bg-accent">
             <RotateCcw className="h-3.5 w-3.5" />
           </button>
           <button
             type="button"
-            title={minimized ? "Expand" : "Minimize"}
+            title={minimized ? t("taskTail.expand") : t("taskTail.minimize")}
             onClick={() => setMinimized((m) => !m)}
             className="rounded p-0.5 hover:bg-accent"
           >
@@ -159,40 +161,40 @@ export function TweakPanel() {
         <div className="max-h-(--sz-tweak-panel-max) overflow-y-auto p-2">
           {MOTION_TOKEN_GROUPS.map((group) => (
             <div key={group} className="mb-3">
-              <p className="mb-1 text-(length:--text-nano) font-semibold uppercase tracking-wide text-muted-foreground">{group}</p>
+              <p className="mb-1 text-(length:--text-nano) font-semibold uppercase tracking-wide text-muted-foreground">{group === "Easing" ? t("taskTail.easing") : group === "Durations" ? t("taskTail.durations") : group === "States" ? t("taskTail.states") : group}</p>
               <div className="flex flex-col gap-2">
-                {grouped[group].map((t) => (
-                  <div key={t.name} data-token={t.name} className="flex flex-col gap-1">
+{grouped[group].map((token) => (
+                  <div key={token.name} data-token={token.name} className="flex flex-col gap-1">
                     <div className="flex items-center justify-between text-(length:--text-micro)">
-                      <span className="truncate font-mono text-muted-foreground">{t.name.replace("--motion-", "")}</span>
+                      <span className="truncate font-mono text-muted-foreground">{token.name.replace("--motion-", "")}</span>
                       <span className="ml-2 shrink-0 tabular-nums">
-                        {t.kind === "time" ? `${Math.round(parseCssTimeMs(values[t.name] ?? "0"))}ms` : ""}
+                        {token.kind === "time" ? `${Math.round(parseCssTimeMs(values[token.name] ?? "0"))}ms` : ""}
                       </span>
                     </div>
-                    {t.kind === "time" ? (
+                    {token.kind === "time" ? (
                       <input
                         type="range"
-                        aria-label={t.name}
-                        min={t.min ?? 0}
-                        max={t.max ?? 1000}
-                        step={t.step ?? 10}
-                        value={Math.round(parseCssTimeMs(values[t.name] ?? "0"))}
-                        onChange={(e) => setToken(t.name, `${e.target.value}ms`)}
+                        aria-label={token.name}
+                        min={token.min ?? 0}
+                        max={token.max ?? 1000}
+                        step={token.step ?? 10}
+                        value={Math.round(parseCssTimeMs(values[token.name] ?? "0"))}
+                        onChange={(e) => setToken(token.name, `${e.target.value}ms`)}
                         className="h-1.5 w-full"
                       />
                     ) : (
                       <select
-                        aria-label={t.name}
-                        value={values[t.name] ?? ""}
-                        onChange={(e) => setToken(t.name, e.target.value)}
+                        aria-label={token.name}
+                        value={values[token.name] ?? ""}
+                        onChange={(e) => setToken(token.name, e.target.value)}
                         className="w-full rounded border border-border bg-background px-1 py-0.5 text-(length:--text-micro)"
                       >
-                        {EASING_PRESETS.every((p) => p.value !== (values[t.name] ?? "")) && values[t.name] ? (
-                          <option value={values[t.name]}>{values[t.name]}</option>
+                        {EASING_PRESETS.every((p) => p.value !== (values[token.name] ?? "")) && values[token.name] ? (
+                          <option value={values[token.name]}>{values[token.name]}</option>
                         ) : null}
                         {EASING_PRESETS.map((p) => (
                           <option key={p.value} value={p.value}>
-                            {p.label}
+                            {p.label === "ease-out-expo (house)" ? t("taskTail.ease_out_expo_house") : p.label === "standard (house)" ? t("taskTail.standard_house") : p.label === "ease-out" ? t("taskTail.ease_out") : p.label === "ease-in-out" ? t("taskTail.ease_in_out") : p.label === "linear" ? t("taskTail.linear") : p.label}
                           </option>
                         ))}
                       </select>
@@ -209,9 +211,7 @@ export function TweakPanel() {
               onClick={buildExport}
               className="flex flex-1 items-center justify-center gap-1 rounded border border-border px-2 py-1 text-xs hover:bg-accent"
             >
-              <Copy className="h-3.5 w-3.5" />
-              Copy as @theme
-            </button>
+              <Copy className="h-3.5 w-3.5" />{t("taskTail.copy_as_theme")}</button>
           </div>
 
           {exportText ? (
@@ -229,10 +229,10 @@ export function TweakPanel() {
               {/* Focusing the box copies it silently; say so, or the click looks inert. */}
               <p className="mt-1 text-(length:--text-nano) text-muted-foreground" aria-live="polite">
                 {exportCopy.copied
-                  ? "Copied to clipboard"
+                  ? t("taskTail.copied_to_clipboard")
                   : exportCopy.failed
-                    ? "Copy failed — select the text and copy it manually"
-                    : "Click the box to copy"}
+                    ? t("taskTail.copy_failed_select_the_text_and_copy_it_manually")
+                    : t("taskTail.click_the_box_to_copy")}
               </p>
             </>
           ) : null}

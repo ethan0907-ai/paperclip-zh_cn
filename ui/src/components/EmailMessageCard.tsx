@@ -1,3 +1,4 @@
+import { t, useTranslation } from "@/i18n";
 import { createContext, useContext, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Mail, Paperclip } from "lucide-react";
@@ -19,6 +20,7 @@ export function EmailThreadProvider({
   issueId: string;
   children: ReactNode;
 }) {
+  useTranslation();
   const { enabled } = useChatConnectorsEnabled();
   const thread = useQuery({
     queryKey: ["email-thread", companyId, issueId],
@@ -54,6 +56,7 @@ export function EmailMessageCard({
   publication?: EmailPublicationSummary;
   issueId: string;
 }) {
+  const { t, i18n } = useTranslation();
   const attachments = useQuery({
     queryKey: ["email-attachments", issueId],
     queryFn: () => issuesApi.listAttachments(issueId),
@@ -62,40 +65,38 @@ export function EmailMessageCard({
   return (
     <article
       aria-label={
-        message.direction === "inbound" ? "Email received" : "Email sent"
+        message.direction === "inbound" ? t("chatSidePanels.email_received") : t("chatSidePanels.email_sent")
       }
       className="space-y-4 rounded-xl border border-border bg-card p-5"
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
         <span className="flex items-center gap-2 text-sm font-semibold">
           <Mail className="size-4" />
-          {message.direction === "inbound" ? "Email received" : "Email sent"}
+          {message.direction === "inbound" ? t("chatSidePanels.email_received") : t("chatSidePanels.email_sent")}
         </span>
         <span className="text-xs text-muted-foreground">
-          {new Date(message.timestamp).toLocaleString()}
+          {new Date(message.timestamp).toLocaleString(i18n.language)}
         </span>
       </div>
       <div className="space-y-1">
         <p className="text-sm font-medium">
           {message.from}
           {message.direction === "inbound" && (
-            <span className="ml-2 rounded-md bg-muted px-2 py-1 text-xs text-muted-foreground">
-              External
-            </span>
+            <span className="ml-2 rounded-md bg-muted px-2 py-1 text-xs text-muted-foreground">{t("chatSidePanels.external")}</span>
           )}
         </p>
         <p className="break-words text-xs text-muted-foreground">
-          To: {message.to.join(", ")}
+          {t("chatSidePanels.email_to", { addresses: message.to.join(", ") })}
         </p>
         {!!message.cc?.length && (
           <p className="break-words text-xs text-muted-foreground">
-            Cc: {message.cc.join(", ")}
+            {t("chatSidePanels.email_cc", { addresses: message.cc.join(", ") })}
           </p>
         )}
         <p className="text-sm font-semibold">{message.subject}</p>
       </div>
       <div className="whitespace-pre-wrap break-words text-sm">
-        {message.text || "(No text body)"}
+        {message.text || t("chatSidePanels.no_text_body")}
       </div>
       {!!message.attachmentIds.length && (
         <div className="flex flex-wrap gap-2">
@@ -110,17 +111,17 @@ export function EmailMessageCard({
                 className="flex items-center gap-2 rounded-md border border-border px-3 py-2 text-xs"
               >
                 <Paperclip className="size-3.5" />
-                {attachment?.originalFilename ?? "Open attachment"}
+                {attachment?.originalFilename ?? t("chatSidePanels.open_attachment")}
               </a>
             );
           })}
         </div>
       )}
       <details className="text-xs text-muted-foreground">
-        <summary className="cursor-pointer">Email details</summary>
+        <summary className="cursor-pointer">{t("chatSidePanels.email_details")}</summary>
         <div className="space-y-2 pt-3">
-          {!!message.bcc?.length && <p>Bcc: {message.bcc.join(", ")}</p>}
-          <p className="break-all">Message ID: {message.providerMessageId}</p>
+          {!!message.bcc?.length && <p>{t("chatSidePanels.email_bcc", { addresses: message.bcc.join(", ") })}</p>}
+          <p className="break-all">{t("chatSidePanels.email_id", { id: message.providerMessageId })}</p>
           {message.fullText !== message.text && (
             <div className="whitespace-pre-wrap break-words">
               {message.fullText}
@@ -131,21 +132,19 @@ export function EmailMessageCard({
       {publication && (
         <p className="border-t border-border pt-3 text-xs text-muted-foreground">
           {publication.outcome === "delivered"
-            ? "Delivered"
+            ? t("chatSidePanels.delivered")
             : publication.outcome === "failed"
-              ? "Delivery failed"
+              ? t("chatSidePanels.delivery_failed")
               : publication.outcome === "uncertain"
-                ? "Delivery uncertain"
+                ? t("chatSidePanels.delivery_uncertain")
                 : publication.outcome === "queued"
-                  ? "Queued"
-                  : "Sent"}
+                  ? t("chatSidePanels.queued")
+                  : t("chatSidePanels.sent")}
           {publication.error ? ` · ${publication.error}` : ""}
         </p>
       )}
       {attachments.error && (
-        <p role="alert" className="text-xs text-destructive">
-          Attachments could not be loaded.
-        </p>
+        <p role="alert" className="text-xs text-destructive">{t("chatSidePanels.attachments_could_not_be_loaded")}</p>
       )}
     </article>
   );

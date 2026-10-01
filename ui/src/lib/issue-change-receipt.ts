@@ -1,3 +1,4 @@
+import { t, i18n } from "@/i18n";
 import type { IssueChangeReceiptEntry } from "@paperclipai/shared";
 import { formatReviewPolicyValue } from "./review-policy";
 
@@ -17,28 +18,33 @@ import { formatReviewPolicyValue } from "./review-policy";
 
 /** Field names whose raw ids carry no meaning in a scannable summary. */
 const FIELD_LABELS: Record<string, string> = {
-  assigneeAgentId: "Assignee",
-  assigneeUserId: "Assignee (user)",
-  responsibleUserId: "Responsible user",
-  blockedByIssueIds: "Blockers",
-  labelIds: "Labels",
-  parentId: "Parent",
-  projectId: "Project",
-  goalId: "Goal",
-  workMode: "Work mode",
-  reviewPolicy: "Who can approve",
-  billingCode: "Billing code",
-  checkoutRunId: "Checkout run",
-  executionRunId: "Execution run",
-  hiddenAt: "Hidden",
-  startedAt: "Started",
-  completedAt: "Completed",
-  cancelledAt: "Cancelled",
-  requestDepth: "Request depth",
-  sourceTrust: "Source trust",
-  executionPolicy: "Execution policy",
-  executionWorkspaceId: "Execution workspace",
-  projectWorkspaceId: "Project workspace",
+  get title() { return t("taskDisplayTail.title"); },
+  get description() { return t("taskDisplayTail.description"); },
+  get identifier() { return t("taskDisplayTail.identifier"); },
+  get status() { return t("taskDisplayTail.status"); },
+  get priority() { return t("taskDisplayTail.priority"); },
+  get assigneeAgentId() { return t("taskDisplayTail.fieldAssignee"); },
+  get assigneeUserId() { return t("taskDisplayTail.fieldAssigneeUser"); },
+  get responsibleUserId() { return t("taskDisplayTail.responsibleUser"); },
+  get blockedByIssueIds() { return t("taskDisplayTail.blockers"); },
+  get labelIds() { return t("taskDisplayTail.labels"); },
+  get parentId() { return t("taskDisplayTail.parent"); },
+  get projectId() { return t("taskDisplayTail.project"); },
+  get goalId() { return t("taskDisplayTail.goal"); },
+  get workMode() { return t("taskDisplayTail.workMode"); },
+  get reviewPolicy() { return t("taskDisplayTail.reviewPolicy"); },
+  get billingCode() { return t("taskDisplayTail.billingCode"); },
+  get checkoutRunId() { return t("taskDisplayTail.checkoutRun"); },
+  get executionRunId() { return t("taskDisplayTail.executionRun"); },
+  get hiddenAt() { return t("taskDisplayTail.hidden"); },
+  get startedAt() { return t("taskDisplayTail.started"); },
+  get completedAt() { return t("taskDisplayTail.completed"); },
+  get cancelledAt() { return t("taskDisplayTail.cancelled"); },
+  get requestDepth() { return t("taskDisplayTail.requestDepth"); },
+  get sourceTrust() { return t("taskDisplayTail.sourceTrust"); },
+  get executionPolicy() { return t("taskDisplayTail.executionPolicy"); },
+  get executionWorkspaceId() { return t("taskDisplayTail.executionWorkspace"); },
+  get projectWorkspaceId() { return t("taskDisplayTail.projectWorkspace"); },
 };
 
 /** Human label for a changed field, e.g. `assigneeAgentId` → "Assignee". */
@@ -56,6 +62,31 @@ export function issueChangeFieldLabel(field: string): string {
 
 const VALUE_PREVIEW_BUDGET = 72;
 
+const VALUE_LABEL_KEYS: Record<string, Record<string, string>> = {
+  status: {
+    backlog: "sharedFeedTail.statusBacklog",
+    todo: "sharedFeedTail.statusTodo",
+    in_progress: "sharedFeedTail.statusInProgress",
+    in_review: "sharedFeedTail.statusInReview",
+    blocked: "sharedFeedTail.statusBlocked",
+    done: "sharedFeedTail.statusDone",
+    cancelled: "sharedFeedTail.statusCancelled",
+    idle: "sharedFeedTail.statusIdle",
+  },
+  priority: {
+    critical: "sharedFeedTail.priorityCritical",
+    high: "sharedFeedTail.priorityHigh",
+    medium: "sharedFeedTail.priorityMedium",
+    low: "sharedFeedTail.priorityLow",
+  },
+  workMode: {
+    standard: "taskDisplayTail.modeStandard",
+    ask: "taskDisplayTail.modeAsk",
+    planning: "taskDisplayTail.modePlanning",
+    skill_test: "taskDisplayTail.modeSkillTest",
+  },
+};
+
 /**
  * Render one side of a change for display. Never returns an empty string, so a
  * receipt row always reads as "from → to" rather than trailing into nothing.
@@ -69,24 +100,24 @@ export function formatIssueChangeValue(
   // `reviewPolicy` is nullable-by-default: a cleared column means "anyone can
   // approve", not "no value" (PAP-16506), so it resolves before the null branch.
   if (options.field === "reviewPolicy") return formatReviewPolicyValue(value);
-  if (value === null || value === undefined || value === "") return "none";
-  if (typeof value === "boolean") return value ? "yes" : "no";
+  if (value === null || value === undefined || value === "") return t("taskDisplayTail.none");
+  if (typeof value === "boolean") return value ? t("taskDisplayTail.yes") : t("taskDisplayTail.no");
   if (typeof value === "number") return String(value);
 
   if (Array.isArray(value)) {
-    if (value.length === 0) return "none";
+    if (value.length === 0) return t("taskDisplayTail.none");
     const strings = value.filter((entry): entry is string => typeof entry === "string");
-    if (strings.length !== value.length) return `${value.length} items`;
+    if (strings.length !== value.length) return t("taskDisplayTail.itemsCount", { count: value.length });
     return strings.length <= 3
       ? strings.map((id) => shortenId(id)).join(", ")
-      : `${strings.length} items`;
+      : t("taskDisplayTail.itemsCount", { count: strings.length });
   }
 
-  if (value instanceof Date) return value.toLocaleString();
+  if (value instanceof Date) return value.toLocaleString(i18n.language);
 
   if (typeof value === "string") {
     const trimmed = value.trim();
-    if (!trimmed) return "none";
+    if (!trimmed) return t("taskDisplayTail.none");
     // Ids resolve to names when the directory is loaded; otherwise they shorten.
     const resolved = options.field?.toLowerCase().includes("agent")
       ? options.resolveAgentLabel?.(trimmed)
@@ -94,7 +125,9 @@ export function formatIssueChangeValue(
         ? options.resolveUserLabel?.(trimmed)
         : null;
     if (resolved) return resolved;
-    if (isIsoTimestamp(trimmed)) return new Date(trimmed).toLocaleString();
+    const labelKeys = options.field ? VALUE_LABEL_KEYS[options.field] : undefined;
+    if (labelKeys && Object.hasOwn(labelKeys, trimmed)) return t(labelKeys[trimmed]);
+    if (isIsoTimestamp(trimmed)) return new Date(trimmed).toLocaleString(i18n.language);
     if (looksLikeId(trimmed)) return shortenId(trimmed);
     const humanized = trimmed.includes(" ") ? trimmed : trimmed.replace(/_/g, " ");
     return truncate(humanized);
@@ -102,7 +135,7 @@ export function formatIssueChangeValue(
 
   // Objects (execution policy, workspace settings) are structural — the receipt
   // records that they moved, and the audit log holds the full value.
-  return "updated";
+  return t("taskDisplayTail.updated");
 }
 
 function truncate(value: string): string {
@@ -165,17 +198,17 @@ export function readIssueChangeReceipt(
 
 /** Authorization reasons, as recorded by the server's write-policy decision. */
 const AUTHORIZATION_REASON_LABELS: Record<string, string> = {
-  allow_visible_issue_write: "default-open write on a visible task",
-  allow_scoped_agent_write: "scoped agent write",
-  allow_board_actor: "board actor",
-  allow_self: "own task",
-  allow_issue_mention_grant: "mention grant",
-  allow_direct_parent_report: "direct parent report",
-  allow_low_trust_boundary: "low-trust boundary allowance",
-  allow_explicit_grant: "explicit permission grant",
-  allow_instance_admin: "instance admin",
-  allow_local_board: "local board",
-  internal_agent_write: "internal agent write",
+  get allow_visible_issue_write() { return t("taskDisplayTail.visibleWrite"); },
+  get allow_scoped_agent_write() { return t("taskDisplayTail.scopedAgentWrite"); },
+  get allow_board_actor() { return t("taskDisplayTail.boardActor"); },
+  get allow_self() { return t("taskDisplayTail.ownTask"); },
+  get allow_issue_mention_grant() { return t("taskDisplayTail.mentionGrant"); },
+  get allow_direct_parent_report() { return t("taskDisplayTail.parentReport"); },
+  get allow_low_trust_boundary() { return t("taskDisplayTail.lowTrustAllowance"); },
+  get allow_explicit_grant() { return t("taskDisplayTail.explicitGrant"); },
+  get allow_instance_admin() { return t("taskDisplayTail.instanceAdmin"); },
+  get allow_local_board() { return t("taskDisplayTail.localBoard"); },
+  get internal_agent_write() { return t("taskDisplayTail.internalAgentWrite"); },
 };
 
 /**

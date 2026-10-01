@@ -1,3 +1,4 @@
+import { t, useTranslation } from "@/i18n";
 import type {
   FeedbackDataSharingPreference,
   FeedbackVoteValue,
@@ -32,8 +33,9 @@ export function TaskChatBubbleActions({
   copyText: string;
   feedback?: TaskChatBubbleFeedback | null;
 }) {
+  const { t } = useTranslation();
   const { copied, failed, copy } = useCopyAction(2000);
-  const label = failed ? "Couldn’t copy message" : "Copy message";
+  const label = failed ? t("taskChatDisplay.couldn_t_copy_message") : t("taskChatDisplay.copy_message");
 
   return (
     <div className="flex items-center gap-0.5" data-testid="task-chat-bubble-actions">

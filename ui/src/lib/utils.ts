@@ -2,6 +2,7 @@ import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { deriveAgentUrlKey, deriveProjectUrlKey, normalizeProjectUrlKey, hasNonAsciiContent } from "@paperclipai/shared";
 import type { BillingType, FinanceDirection, FinanceEventKind } from "@paperclipai/shared";
+import { i18n, t } from "../i18n";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -34,11 +35,11 @@ export function asFiniteNumber(value: unknown, fallback: number) {
 }
 
 export function formatCents(cents: number): string {
-  return `$${(cents / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  return `$${(cents / 100).toLocaleString(i18n.language, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 export function formatNumber(n: number): string {
-  return n.toLocaleString("en-US");
+  return n.toLocaleString(i18n.language);
 }
 
 /**
@@ -47,11 +48,11 @@ export function formatNumber(n: number): string {
  */
 export function formatProjectBudget(budget: { amountCents: number; windowKind: string }): string {
   const amount = formatCents(budget.amountCents);
-  return budget.windowKind === "calendar_month_utc" ? `${amount}/mo` : amount;
+  return budget.windowKind === "calendar_month_utc" ? t("format.monthlyBudget", { amount }) : amount;
 }
 
 export function formatDate(date: Date | string): string {
-  return new Date(date).toLocaleDateString("en-US", {
+  return new Date(date).toLocaleDateString(i18n.language, {
     month: "short",
     day: "numeric",
     year: "numeric",
@@ -62,7 +63,7 @@ export function formatDateTime(
   date: Date | string,
   options: { includeSeconds?: boolean } = {},
 ): string {
-  return new Date(date).toLocaleString("en-US", {
+  return new Date(date).toLocaleString(i18n.language, {
     month: "short",
     day: "numeric",
     year: "numeric",
@@ -73,7 +74,7 @@ export function formatDateTime(
 }
 
 export function formatShortDate(date: Date | string): string {
-  return new Date(date).toLocaleString("en-US", {
+  return new Date(date).toLocaleString(i18n.language, {
     month: "short",
     day: "numeric",
   });
@@ -83,13 +84,13 @@ export function relativeTime(date: Date | string): string {
   const now = Date.now();
   const then = new Date(date).getTime();
   const diffSec = Math.round((now - then) / 1000);
-  if (diffSec < 60) return "just now";
+  if (diffSec < 60) return t("format.time.justNow");
   const diffMin = Math.round(diffSec / 60);
-  if (diffMin < 60) return `${diffMin}m ago`;
+  if (diffMin < 60) return t("format.time.minutesAgo", { count: diffMin });
   const diffHr = Math.round(diffMin / 60);
-  if (diffHr < 24) return `${diffHr}h ago`;
+  if (diffHr < 24) return t("format.time.hoursAgo", { count: diffHr });
   const diffDay = Math.round(diffHr / 24);
-  if (diffDay < 30) return `${diffDay}d ago`;
+  if (diffDay < 30) return t("format.time.daysAgo", { count: diffDay });
   return formatDate(date);
 }
 
@@ -102,20 +103,20 @@ export function formatTokens(n: number): string {
 
 /** Humanize a millisecond duration into a compact `1h 2m`, `45m 12s`, `12s` string. */
 export function formatDurationMs(ms: number): string {
-  if (!Number.isFinite(ms) || ms <= 0) return "0s";
+  if (!Number.isFinite(ms) || ms <= 0) return `0${t("format.unit.second")}`;
   const totalSeconds = Math.round(ms / 1000);
-  if (totalSeconds < 60) return `${totalSeconds}s`;
+  if (totalSeconds < 60) return `${totalSeconds}${t("format.unit.second")}`;
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
-  if (minutes < 60) return seconds > 0 ? `${minutes}m ${seconds}s` : `${minutes}m`;
+  if (minutes < 60) return seconds > 0 ? `${minutes}${t("format.unit.minute")} ${seconds}${t("format.unit.second")}` : `${minutes}${t("format.unit.minute")}`;
   const hours = Math.floor(minutes / 60);
   const remainingMinutes = minutes % 60;
   if (hours < 24) {
-    return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}m` : `${hours}h`;
+    return remainingMinutes > 0 ? `${hours}${t("format.unit.hour")} ${remainingMinutes}${t("format.unit.minute")}` : `${hours}${t("format.unit.hour")}`;
   }
   const days = Math.floor(hours / 24);
   const remainingHours = hours % 24;
-  return remainingHours > 0 ? `${days}d ${remainingHours}h` : `${days}d`;
+  return remainingHours > 0 ? `${days}${t("format.unit.day")} ${remainingHours}${t("format.unit.hour")}` : `${days}${t("format.unit.day")}`;
 }
 
 /** Map a raw provider slug to a display-friendly name. */
@@ -142,7 +143,7 @@ export function billingTypeDisplayName(billingType: BillingType): string {
     fixed: "Fixed",
     unknown: "Unknown",
   };
-  return map[billingType];
+  return t(`format.billing.${billingType}`, { defaultValue: map[billingType] });
 }
 
 export function quotaSourceDisplayName(source: string): string {
@@ -150,7 +151,7 @@ export function quotaSourceDisplayName(source: string): string {
     "anthropic-oauth": "Anthropic OAuth",
     "claude-cli": "Claude CLI",
     "bedrock": "AWS Bedrock",
-    "codex-rpc": "Codex app server",
+    "codex-rpc": t("finalSharedAuditUi.codexAppServer"),
     "codex-wham": "ChatGPT WHAM",
   };
   return map[source] ?? source;
@@ -205,11 +206,11 @@ export function financeEventKindDisplayName(eventKind: FinanceEventKind): string
     custom_model_storage_charge: "Custom model storage",
     manual_adjustment: "Manual adjustment",
   };
-  return map[eventKind];
+  return t(`format.financeEvent.${eventKind}`, { defaultValue: map[eventKind] });
 }
 
 export function financeDirectionDisplayName(direction: FinanceDirection): string {
-  return direction === "credit" ? "Credit" : "Debit";
+  return t(direction === "credit" ? "format.credit" : "format.debit");
 }
 
 /** Build an issue URL using the human-readable identifier when available. */

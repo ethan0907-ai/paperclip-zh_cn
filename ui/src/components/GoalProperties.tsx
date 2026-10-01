@@ -1,3 +1,4 @@
+import { useTranslation, t } from "@/i18n";
 import { useState } from "react";
 import { Link } from "@/lib/router";
 import { useQuery } from "@tanstack/react-query";
@@ -28,7 +29,10 @@ function PropertyRow({ label, children }: { label: string; children: React.React
 }
 
 function label(s: string): string {
-  return s.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+  const fallback = s.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+  return GOAL_LEVELS.includes(s as typeof GOAL_LEVELS[number])
+    ? t("goalUiTail." + s, { defaultValue: fallback })
+    : t("statusBadge." + s, { defaultValue: fallback });
 }
 
 function PickerButton({
@@ -42,6 +46,7 @@ function PickerButton({
   onChange: (value: string) => void;
   children: React.ReactNode;
 }) {
+  useTranslation();
   const [open, setOpen] = useState(false);
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -71,6 +76,7 @@ function PickerButton({
 }
 
 export function GoalProperties({ goal, onUpdate }: GoalPropertiesProps) {
+  const { t } = useTranslation();
   const { selectedCompanyId } = useCompany();
 
   const { data: agents } = useQuery({
@@ -96,7 +102,7 @@ export function GoalProperties({ goal, onUpdate }: GoalPropertiesProps) {
   return (
     <div className="space-y-4">
       <div className="space-y-1">
-        <PropertyRow label="Status">
+        <PropertyRow label={t("goalUiTail.status")}>
           {onUpdate ? (
             <PickerButton
               current={goal.status}
@@ -110,21 +116,21 @@ export function GoalProperties({ goal, onUpdate }: GoalPropertiesProps) {
           )}
         </PropertyRow>
 
-        <PropertyRow label="Level">
+        <PropertyRow label={t("goalUiTail.level")}>
           {onUpdate ? (
             <PickerButton
-              current={goal.level}
+              current={t("goalUiTail." + goal.level, { defaultValue: goal.level })}
               options={GOAL_LEVELS}
               onChange={(level) => onUpdate({ level })}
             >
-              <span className="text-sm capitalize">{goal.level}</span>
+              <span className="text-sm capitalize">{t("goalUiTail." + goal.level, { defaultValue: goal.level })}</span>
             </PickerButton>
           ) : (
-            <span className="text-sm capitalize">{goal.level}</span>
+            <span className="text-sm capitalize">{t("goalUiTail." + goal.level, { defaultValue: goal.level })}</span>
           )}
         </PropertyRow>
 
-        <PropertyRow label="Owner">
+        <PropertyRow label={t("goalUiTail.owner")}>
           {ownerAgent ? (
             <Link
               to={agentUrl(ownerAgent)}
@@ -133,12 +139,12 @@ export function GoalProperties({ goal, onUpdate }: GoalPropertiesProps) {
               {ownerAgent.name}
             </Link>
           ) : (
-            <span className="text-sm text-muted-foreground">None</span>
+            <span className="text-sm text-muted-foreground">{t("goalUiTail.none")}</span>
           )}
         </PropertyRow>
 
         {goal.parentId && (
-          <PropertyRow label="Parent Goal">
+          <PropertyRow label={t("goalUiTail.parentLabel")}>
             <Link
               to={`/goals/${goal.parentId}`}
               className="text-sm hover:underline"
@@ -152,10 +158,10 @@ export function GoalProperties({ goal, onUpdate }: GoalPropertiesProps) {
       <Separator />
 
       <div className="space-y-1">
-        <PropertyRow label="Created">
+        <PropertyRow label={t("goalUiTail.created")}>
           <span className="text-sm">{formatDate(goal.createdAt)}</span>
         </PropertyRow>
-        <PropertyRow label="Updated">
+        <PropertyRow label={t("goalUiTail.updated")}>
           <span className="text-sm">{formatDate(goal.updatedAt)}</span>
         </PropertyRow>
       </div>

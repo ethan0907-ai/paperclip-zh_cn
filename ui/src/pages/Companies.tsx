@@ -1,3 +1,4 @@
+import { useTranslation } from "@/i18n";
 import { useState, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCompany } from "../context/CompanyContext";
@@ -33,6 +34,7 @@ import {
 } from "lucide-react";
 
 export function Companies() {
+  const { t } = useTranslation();
   const {
     companies,
     selectedCompanyId,
@@ -89,8 +91,8 @@ export function Companies() {
   });
 
   useEffect(() => {
-    setBreadcrumbs([{ label: "Organizations" }]);
-  }, [setBreadcrumbs]);
+    setBreadcrumbs([{ label: t("companyPagesUi.organizations") }]);
+  }, [setBreadcrumbs, t]);
 
   function startEdit(companyId: string, currentName: string) {
     setEditingId(companyId);
@@ -112,14 +114,12 @@ export function Companies() {
       <div className="flex items-center justify-end">
         {isCloud ? null : (
           <Button size="sm" onClick={() => openOnboarding()}>
-            <Plus className="h-3.5 w-3.5 mr-1.5" />
-            New Organization
-          </Button>
+            <Plus className="h-3.5 w-3.5 mr-1.5" />{t("companyPagesUi.new")}</Button>
         )}
       </div>
 
       <div className="h-6">
-        {loading && <p className="text-sm text-muted-foreground">Loading organizations...</p>}
+        {loading && <p className="text-sm text-muted-foreground">{t("companyPagesUi.loading")}</p>}
         {error && <p className="text-sm text-destructive">{error.message}</p>}
       </div>
 
@@ -197,7 +197,7 @@ export function Companies() {
                               : "bg-muted text-muted-foreground"
                         }`}
                       >
-                        {company.status}
+                        {t("statusBadge." + company.status, { defaultValue: company.status })}
                       </Badge>
                       <Button
                         variant="ghost"
@@ -235,26 +235,20 @@ export function Companies() {
                       <DropdownMenuItem
                         onClick={() => startEdit(company.id, company.name)}
                       >
-                        <Pencil className="h-3.5 w-3.5" />
-                        Rename
-                      </DropdownMenuItem>
+                        <Pencil className="h-3.5 w-3.5" />{t("companyPagesUi.rename")}</DropdownMenuItem>
                       {company.status === "archived" && (
                         <DropdownMenuItem
                           disabled={unarchiveMutation.isPending}
                           onClick={() => unarchiveMutation.mutate(company.id)}
                         >
-                          <ArchiveRestore className="h-3.5 w-3.5" />
-                          Unarchive
-                        </DropdownMenuItem>
+                          <ArchiveRestore className="h-3.5 w-3.5" />{t("companyPagesUi.unarchive")}</DropdownMenuItem>
                       )}
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
                         variant="destructive"
                         onClick={() => setConfirmDeleteId(company.id)}
                       >
-                        <Trash2 className="h-3.5 w-3.5" />
-                        Delete Organization
-                      </DropdownMenuItem>
+                        <Trash2 className="h-3.5 w-3.5" />{t("companyPagesUi.deleteOrganization")}</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
@@ -265,13 +259,13 @@ export function Companies() {
                 <div className="flex items-center gap-1.5">
                   <Users className="h-3.5 w-3.5" />
                   <span>
-                    {agentCount} {agentCount === 1 ? "agent" : "agents"}
+                    {t("companyPagesUi.agents", { count: agentCount })}
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <CircleDot className="h-3.5 w-3.5" />
                   <span>
-                    {issueCount} {issueCount === 1 ? "task" : "tasks"}
+                    {t("companyPagesUi.tasks", { count: issueCount })}
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5 tabular-nums">
@@ -280,12 +274,12 @@ export function Companies() {
                     {formatCents(company.spentMonthlyCents)}
                     {company.budgetMonthlyCents > 0
                       ? <> / {formatCents(company.budgetMonthlyCents)} <span className="text-xs">({budgetPct}%)</span></>
-                      : <span className="text-xs ml-1">Unlimited budget</span>}
+                      : <span className="text-xs ml-1">{t("companyPagesUi.unlimited")}</span>}
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5 ml-auto">
                   <Calendar className="h-3.5 w-3.5" />
-                  <span>Created {relativeTime(company.createdAt)}</span>
+                  <span>{t("companyPagesUi.created", { time: relativeTime(company.createdAt) })}</span>
                 </div>
               </div>
 
@@ -295,25 +289,21 @@ export function Companies() {
                   className="mt-4 flex items-center justify-between bg-destructive/5 border border-destructive/20 rounded-md px-4 py-3"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <p className="text-sm text-destructive font-medium">
-                    Delete this organization and all its data? This cannot be undone.
-                  </p>
+                  <p className="text-sm text-destructive font-medium">{t("companyPagesUi.deleteConfirm")}</p>
                   <div className="flex items-center gap-2 ml-4 shrink-0">
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => setConfirmDeleteId(null)}
                       disabled={deleteMutation.isPending}
-                    >
-                      Cancel
-                    </Button>
+                    >{t("companyPagesUi.cancel")}</Button>
                     <Button
                       variant="destructive"
                       size="sm"
                       onClick={() => deleteMutation.mutate(company.id)}
                       disabled={deleteMutation.isPending}
                     >
-                      {deleteMutation.isPending ? "Deleting…" : "Delete"}
+                      {deleteMutation.isPending ? t("companyPagesUi.deleting") : t("companyPagesUi.delete")}
                     </Button>
                   </div>
                 </div>

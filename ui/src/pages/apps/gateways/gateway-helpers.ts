@@ -1,3 +1,4 @@
+import { t } from "@/i18n";
 import type {
   ToolApplication,
   ToolConnection,
@@ -77,23 +78,29 @@ export function formatScope(
 ): string {
   if (gateway.contextScopeType !== "none" && gateway.contextScopeId) {
     if (gateway.contextScopeType === "project") {
-      return `Project · ${projectNames.get(gateway.contextScopeId) ?? shortId(gateway.contextScopeId)}`;
+      return t("appsGatewayCore.scopeProject", { name: projectNames.get(gateway.contextScopeId) ?? shortId(gateway.contextScopeId) });
     }
     if (gateway.contextScopeType === "agent") {
-      return `Agent · ${agentNames.get(gateway.contextScopeId) ?? shortId(gateway.contextScopeId)}`;
+      return t("appsGatewayCore.scopeAgent", { name: agentNames.get(gateway.contextScopeId) ?? shortId(gateway.contextScopeId) });
     }
-    return `${gateway.contextScopeType} · ${shortId(gateway.contextScopeId)}`;
+    const scopeKeys: Record<string, string> = {
+      company: "appsGatewayCore.scopeCompany",
+      routine: "appsGatewayCore.scopeRoutine",
+      issue: "appsGatewayCore.scopeIssue",
+    };
+    const scopeKey = scopeKeys[gateway.contextScopeType];
+    return scopeKey ? t(scopeKey, { id: shortId(gateway.contextScopeId) }) : `${gateway.contextScopeType} · ${shortId(gateway.contextScopeId)}`;
   }
-  if (gateway.projectId) return `Project · ${projectNames.get(gateway.projectId) ?? shortId(gateway.projectId)}`;
-  if (gateway.agentId) return `Agent · ${agentNames.get(gateway.agentId) ?? shortId(gateway.agentId)}`;
-  return "Organization";
+  if (gateway.projectId) return t("appsGatewayCore.scopeProject", { name: projectNames.get(gateway.projectId) ?? shortId(gateway.projectId) });
+  if (gateway.agentId) return t("appsGatewayCore.scopeAgent", { name: agentNames.get(gateway.agentId) ?? shortId(gateway.agentId) });
+  return t("appsGatewayCore.organization");
 }
 
 export function formatOwner(gateway: ToolMcpGatewayWithTokens, agentNames: Map<string, string>): string {
   if (gateway.createdByAgentId) {
-    return agentNames.get(gateway.createdByAgentId) ?? `Agent ${shortId(gateway.createdByAgentId)}`;
+    return agentNames.get(gateway.createdByAgentId) ?? t("appsGatewayCore.agentId", { id: shortId(gateway.createdByAgentId) });
   }
-  return "Board";
+  return t("appsGatewayCore.board");
 }
 
 /** Whether the gateway is exposing tools to clients right now. */
@@ -103,14 +110,14 @@ export function isGatewayOn(gateway: ToolMcpGatewayWithTokens): boolean {
 
 /** Human summary of how many tools a profile allows. */
 export function allowedToolsLabel(profile: ToolProfileWithDetails | undefined): string {
-  if (!profile) return "Profile unavailable";
+  if (!profile) return t("appsGatewayCore.profileUnavailable");
   const { accessMode, allowedToolCount, totalToolCount, excludedToolCount } = profile.summary;
   const count =
     accessMode === "all_except"
       ? Math.max(totalToolCount - excludedToolCount, 0)
       : allowedToolCount;
-  if (count === 0) return "No tools allowed";
-  return `${count} ${count === 1 ? "tool" : "tools"}`;
+  if (count === 0) return t("appsGatewayCore.noToolsAllowed");
+  return t("appsGatewayCore.toolsCount", { count });
 }
 
 export type GatewayAppRow = {
@@ -175,7 +182,7 @@ export function deriveGatewayApps(
       toolCount: toolCountByApp.get(applicationId) ?? 0,
       needsAttention: Boolean(attentionConnection),
       attentionReason: attentionConnection
-        ? "Sign-in expired — reconnect to restore access."
+        ? "appsGatewayPages.signInExpired"
         : null,
     });
   }

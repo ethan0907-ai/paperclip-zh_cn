@@ -1,7 +1,9 @@
 import { Brain, CirclePause, Gauge, Layers3 } from "lucide-react";
+import { t } from "@/i18n";
 import type { TaskChatActivityPhaseItem } from "./task-chat-model";
 import {
   toolActivityPresentation,
+  taskActivityDisplayLabel,
   type ToolFamily,
   type ToolIcon,
 } from "./tool-taxonomy";
@@ -120,11 +122,11 @@ export function completedActivitySummary(items: Activity[]) {
     parts
       .map((p, i) => (i ? p.charAt(0).toLowerCase() + p.slice(1) : p))
       .join(", ");
-  const fullLabel = join(values.map((v) => v.label));
+  const fullLabel = join(values.map((v) => taskActivityDisplayLabel(v.label)));
   return {
     label:
       values.length > 3
-        ? `${join(values.slice(0, 2).map((v) => v.label))}, and more`
+        ? t("taskActivity.and_more", { summary: join(values.slice(0, 2).map((v) => taskActivityDisplayLabel(v.label))) })
         : fullLabel,
     fullLabel,
     icon: values.length === 1 ? values[0].icon : Layers3,

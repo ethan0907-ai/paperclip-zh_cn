@@ -1,3 +1,4 @@
+import { t, useTranslation } from "@/i18n";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -31,6 +32,7 @@ export interface AiConnectionAuthProps {
 
 /** No provider calls or polling here: live hosts keep the existing login controllers. */
 export function AiConnectionAuth(props: AiConnectionAuthProps) {
+  const { t } = useTranslation();
   // Remount private input state when the provider, method, or attempt changes phase.
   return (
     <AuthAttempt
@@ -49,6 +51,7 @@ function AuthAttempt({
   onCancel,
   onDone,
 }: AiConnectionAuthProps) {
+  const { t } = useTranslation();
   const [value, setValue] = useState("");
   const info = AI_PROVIDERS[provider];
   const busy = state.phase === "starting" || state.phase === "submitting";
@@ -63,21 +66,19 @@ function AuthAttempt({
   };
   return (
     <section
-      aria-label={`Connect ${info.name}`}
+      aria-label={t("aiConnectionsRestUi.connectProvider", { provider: info.name })}
       className="flex flex-col gap-4"
     >
       <div className="flex flex-col gap-1">
-        <h3 className="text-sm font-semibold">Connect {info.name}</h3>
+        <h3 className="text-sm font-semibold">{t("aiConnectionsRestUi.connectProvider", { provider: info.name })}</h3>
         <p className="text-xs text-muted-foreground">
           {aiMethodLabel(provider, method)}
         </p>
       </div>
       {state.phase === "connected" ? (
         <>
-          <p role="status" className="text-sm">
-            Connected. This account is saved in Connections and can be reused.
-          </p>
-          <Button onClick={onDone}>Use connection</Button>
+          <p role="status" className="text-sm">{t("aiConnectionsRestUi.text41")}</p>
+          <Button onClick={onDone}>{t("aiConnectionsRestUi.text42")}</Button>
         </>
       ) : (
         <>
@@ -85,7 +86,7 @@ function AuthAttempt({
             <p role="status" className="text-sm text-muted-foreground">
               {state.phase === "unsupported"
                 ? state.message
-                : "This provider does not offer a subscription connection."}
+                : t("aiConnectionsRestUi.text43")}
             </p>
           ) : (
             <>
@@ -95,9 +96,7 @@ function AuthAttempt({
                 </p>
               )}
               {state.phase === "cancelled" && (
-                <p role="status" className="text-sm text-muted-foreground">
-                  Sign-in cancelled. No connection was created.
-                </p>
+                <p role="status" className="text-sm text-muted-foreground">{t("aiConnectionsRestUi.text44")}</p>
               )}
               {method === "api_key" ? (
                 <ProviderApiKeyCard
@@ -105,7 +104,7 @@ function AuthAttempt({
                   value={value}
                   onChange={setValue}
                   onSubmit={submit}
-                  placeholder="Enter API key here"
+                  placeholder={t("aiConnectionsRestUi.text3")}
                   disabled={busy}
                   autoFocus
                 />
@@ -142,8 +141,7 @@ function AuthAttempt({
                   )}
                 </ProviderSubscriptionCard>
               ) : (
-                <p className="text-sm text-muted-foreground">
-                  Sign in with your {info.subscriptionName}.
+                <p className="text-sm text-muted-foreground">{t("aiConnectionsRestUi.signInSubscription", { subscription: info.subscriptionName })}
                 </p>
               )}
             </>
@@ -155,31 +153,25 @@ function AuthAttempt({
                 setValue("");
                 onCancel();
               }}
-            >
-              Cancel
-            </Button>
+            >{t("common.cancel")}</Button>
             {!unsupported &&
               (method === "api_key" ? (
                 <Button disabled={busy || !value.trim()} onClick={submit}>
-                  {busy ? "Connecting…" : "Connect"}
+                  {busy ? t("aiConnectionsRestUi.text29") : t("aiConnectionsRestUi.text30")}
                 </Button>
               ) : state.phase === "waiting" ? (
                 provider === "anthropic" ? (
-                  <Button disabled={!value.trim()} onClick={submit}>
-                    Submit code
-                  </Button>
+                  <Button disabled={!value.trim()} onClick={submit}>{t("aiConnectionsRestUi.text46")}</Button>
                 ) : (
-                  <span role="status" className="text-sm text-muted-foreground">
-                    Waiting for sign-in…
-                  </span>
+                  <span role="status" className="text-sm text-muted-foreground">{t("aiConnectionsRestUi.text47")}</span>
                 )
               ) : (
                 <Button disabled={busy} onClick={onStart}>
                   {busy
-                    ? "Preparing sign-in…"
+                    ? t("aiConnectionsRestUi.text28")
                     : state.phase === "idle"
-                      ? "Sign in"
-                      : "Try again"}
+                      ? t("agentConfigForm.signIn")
+                      : t("aiConnectionsRestUi.text49")}
                 </Button>
               ))}
           </div>

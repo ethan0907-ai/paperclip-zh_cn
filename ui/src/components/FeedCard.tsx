@@ -1,3 +1,4 @@
+import { t, useTranslation } from "@/i18n";
 import { AgentAvatar } from "@/components/AgentAvatar";
 import { Link } from "@/lib/router";
 import { timeAgo } from "../lib/timeAgo";
@@ -34,6 +35,33 @@ function humanize(value: unknown): string {
   return typeof value === "string" ? value.replace(/_/g, " ") : String(value ?? "");
 }
 
+const STATUS_LABEL_KEYS: Record<string, string> = {
+  backlog: "sharedFeedTail.statusBacklog",
+  todo: "sharedFeedTail.statusTodo",
+  in_progress: "sharedFeedTail.statusInProgress",
+  in_review: "sharedFeedTail.statusInReview",
+  blocked: "sharedFeedTail.statusBlocked",
+  done: "sharedFeedTail.statusDone",
+  cancelled: "sharedFeedTail.statusCancelled",
+  idle: "sharedFeedTail.statusIdle",
+};
+const PRIORITY_LABEL_KEYS: Record<string, string> = {
+  critical: "sharedFeedTail.priorityCritical",
+  high: "sharedFeedTail.priorityHigh",
+  medium: "sharedFeedTail.priorityMedium",
+  low: "sharedFeedTail.priorityLow",
+};
+const APPROVAL_LABEL_KEYS: Record<string, string> = {
+  hire_agent: "sharedFeedTail.approvalHireAgent",
+  approve_ceo_strategy: "sharedFeedTail.approvalStrategy",
+  budget_override_required: "sharedFeedTail.approvalBudgetOverride",
+  request_board_approval: "sharedFeedTail.approvalBoardRequest",
+};
+
+function activityValueLabel(value: string, keys: Record<string, string>) {
+  return Object.hasOwn(keys, value) ? t(keys[value]) : humanize(value);
+}
+
 /** One verb per action. Pinned context (Tier 0) swaps a couple of verbs to
  *  emphasize that user action is needed. */
 function formatVerb(
@@ -43,86 +71,86 @@ function formatVerb(
 ): string {
   switch (action) {
     case "issue.created":
-      return "opened";
+      return t("sharedFeedTail.opened");
     case "issue.updated": {
       const status = details?.status;
-      if (status === "in_review" && details?.externalConversationState === "waiting") return "moved to idle";
-      if (typeof status === "string") return `moved to ${humanize(status)}`;
+      if (status === "in_review" && details?.externalConversationState === "waiting") return t("sharedFeedTail.movedToIdle");
+      if (typeof status === "string") return t("sharedFeedTail.movedTo", { status: activityValueLabel(status, STATUS_LABEL_KEYS) });
       const priority = details?.priority;
-      if (typeof priority === "string") return `set priority to ${humanize(priority)} on`;
-      return "updated";
+      if (typeof priority === "string") return t("sharedFeedTail.priorityChanged", { priority: activityValueLabel(priority, PRIORITY_LABEL_KEYS) });
+      return t("sharedFeedTail.updated");
     }
     case "issue.document_created":
-      return "wrote doc on";
+      return t("sharedFeedTail.wroteDocOn");
     case "issue.document_updated":
-      return "edited doc on";
+      return t("sharedFeedTail.editedDocOn");
     case "issue.document_deleted":
-      return "deleted doc from";
+      return t("sharedFeedTail.deletedDocFrom");
     case "issue.work_product_created":
-      return "delivered work on";
+      return t("sharedFeedTail.deliveredWorkOn");
     case "issue.work_product_updated":
-      return "updated work on";
+      return t("sharedFeedTail.updatedWorkOn");
     case "issue.work_product_deleted":
-      return "removed work from";
+      return t("sharedFeedTail.removedWorkFrom");
     case "issue.checked_out":
-      return "picked up";
+      return t("sharedFeedTail.pickedUp");
     case "issue.released":
-      return "released";
+      return t("sharedFeedTail.released");
     case "issue.commented":
     case "issue.comment_added":
-      return "commented on";
+      return t("sharedFeedTail.commentedOn");
     case "issue.attachment_added":
-      return "attached a file to";
+      return t("sharedFeedTail.attachedFileTo");
     case "issue.attachment_removed":
-      return "removed attachment from";
+      return t("sharedFeedTail.removedAttachment");
     case "issue.deleted":
-      return "deleted";
+      return t("sharedFeedTail.deleted");
 
     case "approval.created":
-      return context === "pinned" ? "needs approval on" : "requested approval on";
+      return context === "pinned" ? t("sharedFeedTail.needsApproval") : t("sharedFeedTail.requestedApproval");
     case "approval.approved":
-      return "approved";
+      return t("sharedFeedTail.approved");
     case "approval.rejected":
-      return "rejected";
+      return t("sharedFeedTail.rejected");
     case "approval.revision_requested":
-      return "requested changes on";
+      return t("sharedFeedTail.requestedChanges");
 
     case "agent.created":
-      return context === "pinned" ? "wants to hire" : "hired";
+      return context === "pinned" ? t("sharedFeedTail.wantsToHire") : t("sharedFeedTail.hired");
     case "agent.paused":
-      return "paused";
+      return t("sharedFeedTail.paused");
     case "agent.resumed":
-      return "resumed";
+      return t("sharedFeedTail.resumed");
     case "agent.updated":
-      return "updated";
+      return t("sharedFeedTail.updated");
     case "agent.terminated":
-      return "terminated";
+      return t("sharedFeedTail.terminated");
 
     case "heartbeat.invoked":
-      return "started a run on";
+      return t("sharedFeedTail.startedRun");
     case "heartbeat.cancelled":
-      return "cancelled a run on";
+      return t("sharedFeedTail.cancelledRun");
 
     case "project.created":
-      return "created project";
+      return t("sharedFeedTail.createdProject");
     case "project.updated":
-      return "updated project";
+      return t("sharedFeedTail.updatedProject");
     case "project.deleted":
-      return "deleted project";
+      return t("sharedFeedTail.deletedProject");
     case "goal.created":
-      return "created goal";
+      return t("sharedFeedTail.createdGoal");
     case "goal.updated":
-      return "updated goal";
+      return t("sharedFeedTail.updatedGoal");
     case "goal.deleted":
-      return "deleted goal";
+      return t("sharedFeedTail.deletedGoal");
     case "company.created":
-      return "created organization";
+      return t("sharedFeedTail.createdOrganization");
     case "company.updated":
-      return "updated organization";
+      return t("sharedFeedTail.updatedOrganization");
     case "company.archived":
-      return "archived organization";
+      return t("sharedFeedTail.archivedOrganization");
     case "company.budget_updated":
-      return "updated organization budget";
+      return t("sharedFeedTail.updatedOrganizationBudget");
 
     default:
       return action.replace(/[._]/g, " ");
@@ -295,10 +323,10 @@ function resolveContent(
   const actorName =
     actor?.name ??
     (event.actorType === "system"
-      ? "System"
+      ? t("sharedFeedTail.system")
       : event.actorType === "user"
-        ? "Board"
-        : event.actorId || "Unknown");
+        ? t("sharedFeedTail.board")
+        : event.actorId || t("sharedFeedTail.unknown"));
 
   const entityTitle = entityTitleMap?.get(`${event.entityType}:${event.entityId}`) ?? null;
 
@@ -353,7 +381,7 @@ function resolveContent(
     if (approvalAgentName) {
       identifier = approvalAgentName;
     } else {
-      identifier = approvalType ? humanize(approvalType) : "approval";
+      identifier = approvalType ? activityValueLabel(approvalType, APPROVAL_LABEL_KEYS) : t("sharedFeedTail.approval");
       identifierMono = false;
     }
     title = entityTitle;
@@ -425,6 +453,7 @@ export function FeedCard({
   isPinned = false,
   className,
 }: FeedCardProps) {
+  const { t } = useTranslation();
   const details = event.details as Record<string, unknown> | null;
   const content = resolveContent(event, agentMap, entityNameMap, entityTitleMap);
   const verb = formatVerb(event.action, details, isPinned ? "pinned" : "chronological");
@@ -468,7 +497,7 @@ export function FeedCard({
         )}
       </span>
       {isPinned && (
-        <span className="shrink-0 text-xs text-muted-foreground">Review →</span>
+        <span className="shrink-0 text-xs text-muted-foreground">{t("sharedFeedTail.review")}</span>
       )}
       <span data-fc="time" className="shrink-0 text-muted-foreground">
         {timeAgo(event.createdAt)}

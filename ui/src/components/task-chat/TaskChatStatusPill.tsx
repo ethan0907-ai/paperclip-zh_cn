@@ -1,8 +1,9 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/i18n";
 import { ChevronRight, Loader2, ShieldQuestion, OctagonX, Ban, Scissors } from "lucide-react";
 import type { TaskChatStatusItem } from "./task-chat-model";
-import { statusLabelIcon, toolTaxonomy } from "./tool-taxonomy";
+import { statusLabelIcon, toolTaxonomy, taskActivityDisplayLabel } from "./tool-taxonomy";
 import { isGenericStatusLabel, whimsyWord } from "./status-whimsy";
 import { parseCssTimeMs } from "./motion-tokens";
 
@@ -289,6 +290,7 @@ export function TaskChatStatusPill({
   chevronOpen,
   onToggle,
 }: TaskChatStatusPillProps) {
+  const { t } = useTranslation();
   const { Icon, spin, tone } = CONFIG[item.status];
   const awaiting = item.status === "awaiting_approval";
   const live = item.status === "running" || item.status === "working";
@@ -344,7 +346,7 @@ export function TaskChatStatusPill({
             float above the label's baseline. */}
         <span className="flex min-w-0 flex-1 items-baseline gap-2">
           <span className="shimmer-text shimmer-text-muted shrink-0 font-medium">
-            {label}…
+            {taskActivityDisplayLabel(label, Boolean(item.toolName))}…
           </span>
           {liveElapsed ? (
             <span className="shrink-0 font-mono tabular-nums text-(length:--text-micro)">
@@ -356,7 +358,7 @@ export function TaskChatStatusPill({
           ) : null}
           {item.tokens ? (
             <span className="ml-auto shrink-0 font-mono text-(length:--text-micro)">
-              {item.tokens.used.toLocaleString()}/{item.tokens.size.toLocaleString()} ctx
+              {t("taskTimeline.context_usage", { used: item.tokens.used.toLocaleString(), size: item.tokens.size.toLocaleString() })}
             </span>
           ) : null}
         </span>
@@ -417,12 +419,12 @@ export function TaskChatStatusPill({
     >
       <div className="flex min-w-0 items-center gap-2">
         <Icon className={cn("h-4 w-4 shrink-0", tone, spin && "animate-spin")} />
-        <span className="min-w-0 truncate font-medium">{item.label}</span>
+        <span className="min-w-0 truncate font-medium">{taskActivityDisplayLabel(item.label, Boolean(item.toolName))}</span>
         <span className="ml-auto flex shrink-0 items-center gap-2 text-xs text-muted-foreground">
           {elapsed ? <span>{elapsed}</span> : null}
           {item.tokens ? (
             <span>
-              {item.tokens.used.toLocaleString()}/{item.tokens.size.toLocaleString()} ctx
+              {t("taskTimeline.context_usage", { used: item.tokens.used.toLocaleString(), size: item.tokens.size.toLocaleString() })}
             </span>
           ) : null}
         </span>

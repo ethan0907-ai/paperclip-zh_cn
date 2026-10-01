@@ -1,3 +1,4 @@
+import { i18n, t, useTranslation } from "@/i18n";
 import { useState } from "react";
 import { ChevronRight } from "lucide-react";
 import type { ActivityEvent } from "@paperclipai/shared";
@@ -7,7 +8,7 @@ export type RoutineActivityEvent = Pick<ActivityEvent, "id" | "action" | "detail
 
 function formatTime(value: string | Date): string {
   try {
-    return new Date(value).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    return new Date(value).toLocaleTimeString(i18n.language, { hour: "2-digit", minute: "2-digit" });
   } catch {
     return String(value);
   }
@@ -15,16 +16,28 @@ function formatTime(value: string | Date): string {
 
 function summarizeEvent(event: RoutineActivityEvent): string {
   const details = event.details;
-  if (event.action === "routine.webhook_test_received") return "Connection working · No run or task created";
-  if (event.action === "routine.webhook_test_rejected") return "Update the key in your app and resend";
-  if (event.action === "routine.webhook_received") return "Authentication passed";
-  if (event.action === "routine.webhook_rejected") return "Check the key in your sending app";
+  if (event.action === "routine.webhook_test_received") return t("routineActivity.connection_working_no_run_or_task_created");
+  if (event.action === "routine.webhook_test_rejected") return t("routineActivity.update_the_key_in_your_app_and_resend");
+  if (event.action === "routine.webhook_received") return t("routineActivity.authentication_passed");
+  if (event.action === "routine.webhook_rejected") return t("routineActivity.check_the_key_in_your_sending_app");
   if (!details) return "";
   if (typeof details.changeSummary === "string") return details.changeSummary;
-  if (event.action === "routine.run_triggered") return `${details.source === "webhook" ? "Webhook" : details.source === "schedule" ? "Schedule" : "Manual"} · ${details.status === "issue_created" ? "Task created" : String(details.status ?? "").replaceAll("_", " ")}`;
+  if (event.action === "routine.run_triggered") return `${details.source === "webhook" ? "Webhook" : details.source === "schedule" ? t("routineActivity.schedule") : t("routineActivity.manual")} · ${routineActivityStatusLabel(String(details.status ?? ""))}`;
   return Object.entries(details).filter(([key]) => !/id$/i.test(key)).slice(0, 3)
     .map(([key, value]) => `${key.replace(/([a-z])([A-Z])/g, "$1 $2").replaceAll("_", " ").toLowerCase()}: ${formatDetailValue(value)}`)
     .join(" · ");
+}
+
+function routineActivityStatusLabel(status: string): string {
+  switch (status) {
+    case "issue_created": return t("routineActivity.task_created");
+    case "received": return t("routineActivity.received");
+    case "coalesced": return t("routineActivity.coalesced");
+    case "skipped": return t("routineActivity.skipped");
+    case "completed": return t("routineActivity.completed");
+    case "failed": return t("routineActivity.failed");
+    default: return status.replaceAll("_", " ");
+  }
 }
 
 function formatDetailValue(value: unknown): string {
@@ -40,21 +53,22 @@ function formatDetailValue(value: unknown): string {
 }
 
 const actionLabels: Record<string, string> = {
-  "routine.webhook_test_received": "Connection test passed",
-  "routine.webhook_test_rejected": "Connection test rejected",
-  "routine.webhook_received": "Webhook event received",
-  "routine.webhook_rejected": "Webhook authentication failed",
-  "routine.created": "Routine created", "routine.updated": "Routine updated",
-  "routine.trigger_created": "Trigger added", "routine.trigger_updated": "Trigger updated",
-  "routine.trigger_deleted": "Trigger removed", "routine.trigger_removed": "Trigger removed", "routine.trigger_restored": "Trigger restored", "routine.trigger_setup_finished": "Webhook setup finished", "routine.trigger_secret_rotated": "Webhook key replaced",
-  "routine.run_triggered": "Routine started", "routine.run_created": "Run created",
+  get "routine.webhook_test_received"() { return t("routineActivity.connection_test_passed"); },
+  get "routine.webhook_test_rejected"() { return t("routineActivity.connection_test_rejected"); },
+  get "routine.webhook_received"() { return t("routineActivity.webhook_event_received"); },
+  get "routine.webhook_rejected"() { return t("routineActivity.webhook_authentication_failed"); },
+  get "routine.created"() { return t("routineActivity.routine_created"); }, get "routine.updated"() { return t("routineActivity.routine_updated"); },
+  get "routine.trigger_created"() { return t("routineActivity.trigger_added"); }, get "routine.trigger_updated"() { return t("routineActivity.trigger_updated"); },
+  get "routine.trigger_deleted"() { return t("routineActivity.trigger_removed"); }, get "routine.trigger_removed"() { return t("routineActivity.trigger_removed"); }, get "routine.trigger_restored"() { return t("routineActivity.trigger_restored"); }, get "routine.trigger_setup_finished"() { return t("routineActivity.webhook_setup_finished"); }, get "routine.trigger_secret_rotated"() { return t("routineActivity.webhook_key_replaced"); },
+  get "routine.run_triggered"() { return t("routineActivity.routine_started"); }, get "routine.run_created"() { return t("routineActivity.run_created"); },
 };
-function actionLabel(action: string) {
+export function routineActivityActionLabel(action: string) {
   return actionLabels[action] ?? action.replace(/^routine[._]/, "").replaceAll("_", " ").replaceAll(".", " ").replace(/^./, (char) => char.toUpperCase());
 }
 
 /** Activity log row with an expandable JSON payload (§3.7). */
 export function RoutineActivityRow({ event }: { event: RoutineActivityEvent }) {
+  useTranslation();
   const [expanded, setExpanded] = useState(false);
   const hasPayload = event.details != null && Object.keys(event.details).length > 0;
 
@@ -74,7 +88,7 @@ export function RoutineActivityRow({ event }: { event: RoutineActivityEvent }) {
           {formatTime(event.createdAt)}
         </span>
         <span title={event.action} className="min-w-0 max-w-1/2 shrink-0 truncate font-medium text-foreground">
-          {actionLabel(event.action)}
+          {routineActivityActionLabel(event.action)}
         </span>
         <span title={summarizeEvent(event)} className="min-w-0 flex-1 truncate text-muted-foreground">
           {summarizeEvent(event)}

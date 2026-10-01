@@ -1,3 +1,4 @@
+import { t } from "@/i18n";
 import type {
   IssueCommentMetadata,
   IssueCommentMetadataRow,
@@ -11,16 +12,35 @@ import type {
 } from "../components/SystemNotice";
 
 const TONE_LABEL: Record<SystemNoticeTone, string> = {
-  neutral: "System notice",
-  info: "System notice",
-  success: "System notice",
-  warning: "System warning",
-  danger: "System alert",
+  get neutral() { return t("taskSystemNotice.system_notice"); },
+  get info() { return t("taskSystemNotice.system_notice"); },
+  get success() { return t("taskSystemNotice.system_notice"); },
+  get warning() { return t("taskSystemNotice.system_warning"); },
+  get danger() { return t("taskSystemNotice.system_alert"); },
 };
+
+/** Known product labels only; custom titles and backend detail text remain intact. */
+export function systemNoticeDisplayLabel(label: string): string {
+  switch (label) {
+    case "System update": return t("taskSystemNotice.system_update");
+    case "System notice": return t("taskSystemNotice.system_notice");
+    case "System warning": return t("taskSystemNotice.system_warning");
+    case "System alert": return t("taskSystemNotice.system_alert");
+    case "Detail": return t("taskSystemNotice.detail");
+    case "Code": return t("taskSystemNotice.code");
+    case "Task": return t("taskSystemNotice.task");
+    case "Agent": return t("taskSystemNotice.agent");
+    case "Run": return t("taskSystemNotice.run");
+    case "Workspace": return t("taskSystemNotice.workspace");
+    case "Workspace ready": return t("taskSystemNotice.workspace_ready");
+    case "No live execution path": return t("taskSystemNotice.no_live_execution_path");
+    default: return label;
+  }
+}
 
 function metadataRowText(row: { label?: string | null }, fallback: string) {
   const label = row.label?.trim();
-  return label && label.length > 0 ? label : fallback;
+  return label && label.length > 0 ? systemNoticeDisplayLabel(label) : fallback;
 }
 
 function mapMetadataRow(
@@ -29,19 +49,19 @@ function mapMetadataRow(
 ): SystemNoticeMetadataRow | null {
   switch (row.type) {
     case "text":
-      return { kind: "text", label: metadataRowText(row, "Detail"), value: row.text };
+      return { kind: "text", label: metadataRowText(row, t("taskSystemNotice.detail")), value: row.text };
     case "code":
-      return { kind: "code", label: metadataRowText(row, "Code"), value: row.code };
+      return { kind: "code", label: metadataRowText(row, t("taskSystemNotice.code")), value: row.code };
     case "key_value":
-      return { kind: "text", label: row.label, value: row.value };
+      return { kind: "text", label: systemNoticeDisplayLabel(row.label), value: row.value };
     case "issue_link": {
       const identifier = row.identifier ?? null;
       if (!identifier) {
-        return { kind: "text", label: metadataRowText(row, "Task"), value: row.title ?? "unknown" };
+        return { kind: "text", label: metadataRowText(row, t("taskSystemNotice.task")), value: row.title ?? t("taskSystemNotice.unknown") };
       }
       return {
         kind: "issue",
-        label: metadataRowText(row, "Task"),
+        label: metadataRowText(row, t("taskSystemNotice.task")),
         identifier,
         href: `/issues/${identifier}`,
         title: row.title ?? undefined,
@@ -51,7 +71,7 @@ function mapMetadataRow(
       const name = row.name?.trim() || row.agentId.slice(0, 8);
       return {
         kind: "agent",
-        label: metadataRowText(row, "Agent"),
+        label: metadataRowText(row, t("taskSystemNotice.agent")),
         name,
         href: `/agents/${row.agentId}`,
       };
@@ -61,7 +81,7 @@ function mapMetadataRow(
       const href = runAgentId ? `/agents/${runAgentId}/runs/${row.runId}` : undefined;
       return {
         kind: "run",
-        label: metadataRowText(row, "Run"),
+        label: metadataRowText(row, t("taskSystemNotice.run")),
         runId: row.runId,
         href,
         status: row.title ?? undefined,
@@ -75,7 +95,7 @@ function mapMetadataRow(
 export function mapCommentMetadataToSystemNoticeSections(
   metadata: IssueCommentMetadata | null | undefined,
   ctx: { runAgentId?: string | null } = {},
-): SystemNoticeMetadataSection[] {
+): Array<SystemNoticeMetadataSection & { rawTitle?: string }> {
   if (!metadata || !Array.isArray(metadata.sections)) return [];
   return metadata.sections
     .map((section) => {
@@ -83,11 +103,14 @@ export function mapCommentMetadataToSystemNoticeSections(
         .map((row) => mapMetadataRow(row, ctx))
         .filter((r): r is SystemNoticeMetadataRow => r !== null);
       if (rows.length === 0) return null;
-      const out: SystemNoticeMetadataSection = { rows };
-      if (section.title) out.title = section.title;
+      const out: SystemNoticeMetadataSection & { rawTitle?: string } = { rows };
+      if (section.title) {
+        out.rawTitle = section.title;
+        out.title = systemNoticeDisplayLabel(section.title);
+      }
       return out;
     })
-    .filter((s): s is SystemNoticeMetadataSection => s !== null);
+    .filter((s): s is SystemNoticeMetadataSection & { rawTitle?: string } => s !== null);
 }
 
 export function systemNoticeLabelForTone(
@@ -95,7 +118,7 @@ export function systemNoticeLabelForTone(
   presentationTitle?: string | null,
 ): string {
   const trimmed = presentationTitle?.trim();
-  if (trimmed && trimmed.length > 0) return trimmed;
+  if (trimmed && trimmed.length > 0) return systemNoticeDisplayLabel(trimmed);
   return TONE_LABEL[tone];
 }
 

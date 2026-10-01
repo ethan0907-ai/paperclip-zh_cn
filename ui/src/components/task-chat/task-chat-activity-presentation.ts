@@ -1,3 +1,4 @@
+import { t } from "@/i18n";
 import {
   AlertTriangle,
   BookOpen,
@@ -28,8 +29,106 @@ import {
   isGenericToolName,
   mcpToolIdentity,
   toolActivityPresentation,
+  taskActivityDisplayLabel,
   type ToolIcon,
 } from "./tool-taxonomy";
+
+/** Display known protocol metadata without changing labels used for classification. */
+export function protocolDetailDisplayLabel(label: string): string {
+  const key = ({
+    "Revision": "taskProtocol.field_revision",
+    "Sync Status": "taskProtocol.field_sync_status",
+    "Document Revision": "taskProtocol.field_document_revision",
+    "Complete": "taskProtocol.field_complete",
+    "Transport": "taskProtocol.field_transport",
+    "Operation": "taskProtocol.field_operation",
+    "Name": "taskProtocol.field_name",
+    "Target": "taskProtocol.field_target",
+    "Namespace": "taskProtocol.field_namespace",
+    "Read Only": "taskProtocol.field_read_only",
+    "Status": "taskProtocol.field_status",
+    "Progress": "taskProtocol.field_progress",
+    "Duration Ms": "taskProtocol.field_duration_ms",
+    "Exit Code": "taskProtocol.field_exit_code",
+    "Output Bytes": "taskProtocol.field_output_bytes",
+    "Action": "taskProtocol.field_action",
+    "Query": "taskProtocol.field_query",
+    "Pattern": "taskProtocol.field_pattern",
+    "URL": "taskProtocol.field_url",
+    "Provider": "taskProtocol.field_provider",
+    "Requested Model": "taskProtocol.field_requested_model",
+    "From Model": "taskProtocol.field_from_model",
+    "Effective Model": "taskProtocol.field_effective_model",
+    "Reason": "taskProtocol.field_reason",
+    "Buffering": "taskProtocol.field_buffering",
+    "Summary": "taskProtocol.field_summary",
+    "Pre Tokens": "taskProtocol.field_pre_tokens",
+    "Post Tokens": "taskProtocol.field_post_tokens",
+    "Same Session": "taskProtocol.field_same_session",
+    "Reference": "taskProtocol.field_reference",
+    "Media Type": "taskProtocol.field_media_type",
+    "Title": "taskProtocol.field_title",
+    "Registered": "taskProtocol.field_registered",
+    "Transparent Background": "taskProtocol.field_transparent_background",
+    "Failure": "taskProtocol.field_failure",
+    "State": "taskProtocol.field_state",
+    "Scope": "taskProtocol.field_scope",
+    "Event": "taskProtocol.field_event",
+    "Blocking": "taskProtocol.field_blocking",
+    "Label": "taskProtocol.field_label",
+    "Available": "taskProtocol.field_available",
+    "Decision": "taskProtocol.field_decision",
+    "Target Execution Id": "taskProtocol.field_target_execution_id",
+    "Origin": "taskProtocol.field_origin",
+    "Input Class": "taskProtocol.field_input_class",
+    "Byte Count": "taskProtocol.field_byte_count",
+    "Planned Duration Ms": "taskProtocol.field_planned_duration_ms",
+    "Elapsed Duration Ms": "taskProtocol.field_elapsed_duration_ms",
+    "Severity": "taskProtocol.field_severity",
+    "Category": "taskProtocol.field_category",
+    "Recoverable": "taskProtocol.field_recoverable",
+    "User Actionable": "taskProtocol.field_user_actionable",
+  } as Record<string, string>)[label];
+  return key ? t(key) : label;
+}
+
+export function protocolStateDisplayLabel(state: string): string {
+  const key = ({
+    "pending": "taskProtocol.state_pending",
+    "running": "taskProtocol.state_running",
+    "in_progress": "taskProtocol.state_in_progress",
+    "waiting": "taskProtocol.state_waiting",
+    "failed": "taskProtocol.state_failed",
+    "blocked": "taskProtocol.state_blocked",
+    "denied": "taskProtocol.state_denied",
+    "cancelled": "taskProtocol.state_cancelled",
+    "interrupted": "taskProtocol.state_interrupted",
+    "completed": "taskProtocol.state_completed",
+    "done": "taskProtocol.state_done",
+    "succeeded": "taskProtocol.state_succeeded",
+    "passed": "taskProtocol.state_passed",
+    "resolved": "taskProtocol.state_resolved",
+    "expired": "taskProtocol.state_expired",
+    "informational": "taskProtocol.state_informational",
+    "stopped": "taskProtocol.state_stopped",
+    "active": "taskProtocol.state_active",
+    "queued": "taskProtocol.state_queued",
+    "timed_out": "taskProtocol.state_timed_out",
+    "added": "taskProtocol.state_added",
+    "modified": "taskProtocol.state_modified",
+    "deleted": "taskProtocol.state_deleted",
+    "renamed": "taskProtocol.state_renamed",
+    "copied": "taskProtocol.state_copied",
+    "created": "taskProtocol.state_created",
+    "unchanged": "taskProtocol.state_unchanged",
+    "applied": "taskProtocol.state_applied",
+    "rejected": "taskProtocol.state_rejected",
+    "not_run": "taskProtocol.state_not_run",
+    "needs_input": "taskProtocol.state_needs_input",
+    "needs_review": "taskProtocol.state_needs_review",
+  } as Record<string, string>)[state];
+  return key ? t(key) : state.replaceAll("_", " ");
+}
 
 export interface TaskChatActivityPresentation {
   icon: ToolIcon;
@@ -184,9 +283,9 @@ export function protocolActivityIsRunning(item: TaskChatProtocolItem): boolean {
 
 export function protocolActivityLabel(item: TaskChatProtocolItem, presentation: TaskChatActivityPresentation): string {
   if (item.surface !== "provider_activity") {
-    return protocolActivityIsRunning(item) ? presentation.runningLabel : presentation.completedLabel;
+    return taskActivityDisplayLabel(protocolActivityIsRunning(item) ? presentation.runningLabel : presentation.completedLabel, true);
   }
-  if (item.status === "failed") return presentation.failedLabel ?? `${presentation.completedLabel} · failed`;
-  if (item.status === "interrupted") return presentation.interruptedLabel ?? `${presentation.completedLabel} · interrupted`;
-  return item.status === "running" ? presentation.runningLabel : presentation.completedLabel;
+  if (item.status === "failed") return taskActivityDisplayLabel(presentation.failedLabel ?? `${presentation.completedLabel} · failed`, true);
+  if (item.status === "interrupted") return taskActivityDisplayLabel(presentation.interruptedLabel ?? `${presentation.completedLabel} · interrupted`, true);
+  return taskActivityDisplayLabel(item.status === "running" ? presentation.runningLabel : presentation.completedLabel, true);
 }

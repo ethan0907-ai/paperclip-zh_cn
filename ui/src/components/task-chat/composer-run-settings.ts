@@ -1,3 +1,4 @@
+import { t } from "@/i18n";
 import { codexLocalReasoningEffortsForModel, isCodexLocalFastModeSupported, isCodexLocalKnownModel } from "@paperclipai/adapter-codex-local";
 import { claudeLocalReasoningEffortsForModel } from "@paperclipai/adapter-claude-local";
 import { DEFAULT_GROK_LOCAL_MODEL, grokLocalReasoningEffortsForModel } from "@paperclipai/adapter-grok-local";
@@ -12,8 +13,8 @@ export interface ComposerRunSettings {
 
 export const DEFAULT_COMPOSER_RUN_SETTINGS: ComposerRunSettings = { model: null, effort: null, fast: false };
 export const EFFORT_LABELS: Record<string, string> = {
-  off: "Off", minimal: "Minimal", low: "Low", medium: "Medium", high: "High",
-  xhigh: "Extra High", max: "Max", ultra: "Ultra",
+  get off() { return t("taskChatForms.off"); }, get minimal() { return t("taskChatForms.minimal"); }, get low() { return t("taskChatForms.low"); }, get medium() { return t("taskChatForms.medium"); }, get high() { return t("taskChatForms.high"); },
+  get xhigh() { return t("taskChatForms.extra_high"); }, get max() { return t("taskChatForms.max"); }, get ultra() { return t("taskChatForms.ultra"); },
 };
 
 const MODEL_ADAPTERS = new Set([

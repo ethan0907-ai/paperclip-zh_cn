@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { AgentCharacter } from "../AgentCharacter";
 import { useState } from "react";
 import { MotionConfig } from "motion/react";
@@ -62,7 +63,7 @@ const MODEL_SOURCES: ModelSource[] = [
  * behaviour, kept side by side so they can be compared rather than argued
  * about:
  *
- * `checkbox` is the Figma frames — a ticked box reading "Use API keys instead",
+ * `checkbox` is the Figma frames — a ticked box reading t("layoutServerTail.apiKeys"),
  * which shows the current state plainly and costs a row of chrome.
  *
  * `link` is a line of text that renames itself on press. Lighter, and it turns
@@ -80,6 +81,7 @@ export function ConnectModelPreview({
   initialUseApiKeys?: boolean;
   control?: CredentialControl;
 }) {
+  const { t } = useTranslation();
   const [selectedId, setSelectedId] = useState<string | null>(initialSourceId);
   const [useApiKeys, setUseApiKeys] = useState(initialUseApiKeys);
   const mode: CredentialMode = useApiKeys ? "api" : "subscription";
@@ -106,14 +108,14 @@ export function ConnectModelPreview({
         <div className="pt-6">
           <OnboardingHeading
             center
-            title="Connect a model"
-            lede="Paperclip works with your existing subscription or API keys."
+            title={t("layoutServerTail.connectModel")}
+            lede={t("layoutServerTail.connectHelp")}
           />
         </div>
 
         <div className="space-y-2 pt-12">
           <ModelSourceTiles
-            label="Model source"
+            label={t("layoutServerTail.modelSource")}
             sources={MODEL_SOURCES}
             mode={mode}
             selectedId={selectedId}
@@ -133,7 +135,7 @@ export function ConnectModelPreview({
                 onCheckedChange={(checked) => setUseApiKeys(checked === true)}
               />
               <span className="text-sm font-medium text-foreground">
-                Use API keys instead
+                {t("layoutServerTail.apiKeys")}
               </span>
             </label>
           )}
@@ -143,7 +145,7 @@ export function ConnectModelPreview({
             disabled rather than failing on press. */}
         <FooterNav
           onBack={() => {}}
-          primaryLabel="Connect"
+          primaryLabel={t("layoutServerTail.connect")}
           primaryDisabled={selectedId === null}
           onPrimary={() => {}}
         />

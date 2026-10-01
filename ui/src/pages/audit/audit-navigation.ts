@@ -3,13 +3,14 @@ export type AuditSection = "activity" | "runs" | "costs" | "budgets" | "timeline
 export const AUDIT_SECTIONS: ReadonlyArray<{
   value: AuditSection;
   label: string;
+  labelKey: string;
   href: string;
 }> = [
-  { value: "activity", label: "Activity", href: "/activity" },
-  { value: "runs", label: "Runs", href: "/activity/runs" },
-  { value: "costs", label: "Costs", href: "/activity/costs" },
-  { value: "budgets", label: "Budgets", href: "/activity/budgets" },
-  { value: "timeline", label: "Timeline", href: "/activity/timeline" },
+  { value: "activity", label: "Activity", labelKey: "auditFeed.activity", href: "/activity" },
+  { value: "runs", label: "Runs", labelKey: "auditFeed.runs", href: "/activity/runs" },
+  { value: "costs", label: "Costs", labelKey: "auditFeed.costs", href: "/activity/costs" },
+  { value: "budgets", label: "Budgets", labelKey: "auditFeed.budgets", href: "/activity/budgets" },
+  { value: "timeline", label: "Timeline", labelKey: "auditFeed.timeline", href: "/activity/timeline" },
 ];
 
 export interface AuditLinkScope {

@@ -1,3 +1,4 @@
+import { t, useTranslation } from "@/i18n";
 import {
   SMOKE_RUN_STEP_PATHS,
   type SmokeRun,
@@ -19,13 +20,13 @@ import {
  */
 
 export const SMOKE_PATH_LABELS: Record<SmokeRunStepPath, { title: string; detail: string }> = {
-  P1: { title: "Remote HTTP · OAuth", detail: "HTTP MCP fixture behind the fake OAuth provider" },
-  P2: { title: "Remote HTTP · API key", detail: "HTTP MCP fixture with a static bearer key" },
-  P3: { title: "Local stdio (template)", detail: "stdio fixture via the runtime supervisor" },
-  P4: { title: "Plugin integration", detail: "plugin-provided catalog entry + install flow" },
-  P5: { title: "Paste-a-config import", detail: "prosumer import via Advanced setup" },
-  P6: { title: "Token broker / gateway", detail: "run-scoped connection token, TTL + scope checks" },
-  P7: { title: "Governance surfaces", detail: "profiles, ask-first rules, quarantine" },
+  P1: { get title() { return t("toolsRestUi.remoteHTTPOAuth"); }, get detail() { return t("toolsRestUi.hTTPMCPFixtureBehindTheFakeOAuthProvider"); } },
+  P2: { get title() { return t("toolsRestUi.remoteHTTPAPIKey"); }, get detail() { return t("toolsRestUi.hTTPMCPFixtureWithAStaticBearerKey"); } },
+  P3: { get title() { return t("toolsRestUi.localStdioTemplate"); }, get detail() { return t("toolsRestUi.stdioFixtureViaTheRuntimeSupervisor"); } },
+  P4: { get title() { return t("toolsRestUi.pluginIntegration"); }, get detail() { return t("toolsRestUi.pluginprovidedCatalogEntryInstallFlow"); } },
+  P5: { get title() { return t("toolsRestUi.pasteaconfigImport"); }, get detail() { return t("toolsRestUi.prosumerImportViaAdvancedSetup"); } },
+  P6: { get title() { return t("toolsRestUi.tokenBrokerGateway"); }, get detail() { return t("toolsRestUi.runscopedConnectionTokenTTLScopeChecks"); } },
+  P7: { get title() { return t("toolsRestUi.governanceSurfaces"); }, get detail() { return t("toolsRestUi.profilesAskfirstRulesQuarantine"); } },
 };
 
 export interface LifecycleStage {
@@ -37,14 +38,14 @@ export interface LifecycleStage {
 
 /** The PAP-12373 governed lifecycle, in order (plan §3). */
 export const LIFECYCLE_STAGES: LifecycleStage[] = [
-  { key: "connect", label: "Connect", match: ["connect", "oauth", "login", "auth"] },
-  { key: "discover", label: "Discover catalog", match: ["discover", "catalog", "list-tools"] },
-  { key: "read", label: "Allowed read", match: ["read", "allowed"] },
-  { key: "write", label: "Ask-first write", match: ["write", "approve", "ask-first", "askfirst", "review"] },
-  { key: "deny", label: "Denied call", match: ["deny", "denied", "block", "forbidden"] },
-  { key: "quarantine", label: "Schema-change quarantine", match: ["quarantine", "schema"] },
-  { key: "revoke", label: "Revoke", match: ["revoke"] },
-  { key: "audit", label: "Audit evidence", match: ["audit", "activity", "evidence"] },
+  { key: "connect", get label() { return t("toolsRestUi.connect"); }, match: ["connect", "oauth", "login", "auth"] },
+  { key: "discover", get label() { return t("toolsRestUi.discoverCatalog"); }, match: ["discover", "catalog", "list-tools"] },
+  { key: "read", get label() { return t("toolsRestUi.allowedRead"); }, match: ["read", "allowed"] },
+  { key: "write", get label() { return t("toolsRestUi.askfirstWrite"); }, match: ["write", "approve", "ask-first", "askfirst", "review"] },
+  { key: "deny", get label() { return t("toolsRestUi.deniedCall"); }, match: ["deny", "denied", "block", "forbidden"] },
+  { key: "quarantine", get label() { return t("toolsRestUi.schemachangeQuarantine"); }, match: ["quarantine", "schema"] },
+  { key: "revoke", get label() { return t("toolsRestUi.revoke"); }, match: ["revoke"] },
+  { key: "audit", get label() { return t("toolsRestUi.auditEvidence"); }, match: ["audit", "activity", "evidence"] },
 ];
 
 /** Fold a free-form scenario step onto a canonical lifecycle stage, or null. */

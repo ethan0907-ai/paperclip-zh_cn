@@ -1,3 +1,4 @@
+import { t, useTranslation } from "@/i18n";
 import {
   useEffect,
   useMemo,
@@ -53,6 +54,7 @@ function SortableSidePanelTab({
   onAuxClick,
   onKeyDown,
 }: SortableSidePanelTabProps) {
+  useTranslation();
   const sortable = useSortable({ id: tab.id, disabled: tab.disabled });
   return (
     <div
@@ -130,10 +132,11 @@ export function SidePanelTabs({
   onReorderTabs,
   onAddTab,
   addControl,
-  addLabel = "Open a new tab",
+  addLabel = t("chatSidePanels.open_a_new_tab"),
   appearance = "default",
   className,
 }: SidePanelTabsProps) {
+  const { t } = useTranslation();
   const [announcement, setAnnouncement] = useState("");
   const [showEndFade, setShowEndFade] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -201,7 +204,7 @@ export function SidePanelTabs({
     const index = tabIds.indexOf(tabId);
     const nextFocus = tabIds[index + 1] ?? tabIds[index - 1] ?? null;
     onCloseTab(tabId);
-    setAnnouncement(nextFocus ? "Tab closed." : "Last tab closed. Choose something to open.");
+    setAnnouncement(nextFocus ? t("chatSidePanels.tab_closed") : t("chatSidePanels.last_tab_closed_choose_something_to_open"));
     focusTab(nextFocus);
   }
 
@@ -217,7 +220,7 @@ export function SidePanelTabs({
       const [moved] = ordered.splice(index, 1);
       ordered.splice(target, 0, moved!);
       onReorderTabs(ordered);
-      setAnnouncement(`Moved ${tabs[index]?.label ?? "tab"} to position ${target + 1} of ${tabs.length}.`);
+      setAnnouncement(t("chatSidePanels.tab_moved", { label: tabs[index]?.label ?? t("chatSidePanels.tab"), position: target + 1, total: tabs.length }));
       focusTab(tabId);
       return;
     }
@@ -246,7 +249,7 @@ export function SidePanelTabs({
     const [moved] = ordered.splice(from, 1);
     ordered.splice(to, 0, moved!);
     onReorderTabs(ordered);
-    setAnnouncement(`Moved ${tabs[from]?.label ?? "tab"} to position ${to + 1} of ${tabs.length}.`);
+    setAnnouncement(t("chatSidePanels.tab_moved", { label: tabs[from]?.label ?? t("chatSidePanels.tab"), position: to + 1, total: tabs.length }));
   }
 
   return (

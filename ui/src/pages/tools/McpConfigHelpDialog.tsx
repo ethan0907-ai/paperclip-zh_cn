@@ -1,3 +1,4 @@
+import { t, useTranslation } from "@/i18n";
 import { useEffect, useRef, useState } from "react";
 import { Check, Copy, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,7 @@ const COPIED_RESET_MS = 2_000;
  * anything the operator has typed.
  */
 export function McpConfigHelpDialog() {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [copyState, setCopyState] = useState<"idle" | "copied" | "failed">("idle");
   const resetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -57,30 +59,27 @@ export function McpConfigHelpDialog() {
           variant="ghost"
           size="icon"
           className="h-6 w-6 shrink-0 text-muted-foreground hover:text-foreground"
-          aria-label="Get help creating an MCP config"
+          aria-label={t("toolsRestUi.getHelpCreatingAnMCPConfig")}
         >
           <HelpCircle className="h-4 w-4" />
         </Button>
       </DialogTrigger>
       <DialogContent className="max-h-(--sz-85vh) overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Ask an agent for an MCP config</DialogTitle>
+          <DialogTitle>{t("toolsRestUi.askAnAgentForAnMCPConfig")}</DialogTitle>
           <DialogDescription>
-            Don't know the URL or headers a tool needs? Hand this request to an agent and paste back what it
-            gives you.
+            {t("toolsRestUi.dontKnowTheURLOrHeadersAToolNeedsHandThisRequestToAnAgentAndPasteBackWhatItGivesYou")}
           </DialogDescription>
         </DialogHeader>
 
         <ol className="list-decimal space-y-1.5 pl-5 text-sm text-muted-foreground">
-          {MCP_CONFIG_HELP_INSTRUCTIONS.map((instruction) => (
-            <li key={instruction}>{instruction}</li>
+          {MCP_CONFIG_HELP_INSTRUCTIONS.map((instruction, index) => (
+            <li key={instruction}>{t(`toolsRestUi.helpStep${index}`, { defaultValue: instruction })}</li>
           ))}
         </ol>
 
         <div className="space-y-2">
-          <label htmlFor="mcp-config-help-prompt" className="text-sm font-medium text-foreground">
-            Prompt to send
-          </label>
+          <label htmlFor="mcp-config-help-prompt" className="text-sm font-medium text-foreground">{t("toolsRestUi.promptToSend")}</label>
           <Textarea
             id="mcp-config-help-prompt"
             readOnly
@@ -94,16 +93,14 @@ export function McpConfigHelpDialog() {
 
         <div className="flex flex-wrap items-center gap-3">
           <Button type="button" onClick={() => void copyPrompt()}>
-            {copyState === "copied" ? <Check className="mr-2 h-4 w-4" /> : <Copy className="mr-2 h-4 w-4" />}
-            Copy prompt
-          </Button>
+            {copyState === "copied" ? <Check className="mr-2 h-4 w-4" /> : <Copy className="mr-2 h-4 w-4" />}{t("toolsRestUi.copyPrompt")}</Button>
           {/* aria-live so a screen reader hears the outcome without moving focus
               off the button the operator just pressed. */}
           <span aria-live="polite" className="text-xs text-muted-foreground">
             {copyState === "copied"
-              ? "Copied to clipboard."
+              ? t("toolsRestUi.copiedToClipboardText")
               : copyState === "failed"
-                ? "Couldn't copy automatically — select the text above and copy it."
+                ? t("toolsRestUi.couldntCopyAutomaticallySelectTheTextAboveAndCopyIt")
                 : null}
           </span>
         </div>

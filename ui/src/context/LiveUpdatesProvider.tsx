@@ -1,3 +1,4 @@
+import { t, useTranslation } from "@/i18n";
 import { getPageVisibility, usePageVisibility } from "../lib/page-visibility";
 import {
   createContext,
@@ -181,14 +182,14 @@ function resolveActorLabel(
   if (actorType === "agent" && actorId) {
     return (
       resolveAgentName(queryClient, companyId, actorId) ??
-      `Agent ${shortId(actorId)}`
+      t("lastHelpersUi.agentId", { id: shortId(actorId) })
     );
   }
-  if (actorType === "system") return "System";
+  if (actorType === "system") return t("lastHelpersUi.system");
   if (actorType === "user" && actorId) {
-    return resolveUserName(queryClient, companyId, actorId) ?? "Board";
+    return resolveUserName(queryClient, companyId, actorId) ?? t("lastHelpersUi.board");
   }
-  return "Someone";
+  return t("lastHelpersUi.someone");
 }
 
 interface IssueToastContext {
@@ -271,7 +272,7 @@ function resolveIssueToastContext(
     readString(details?.identifier) ??
     readString(details?.issueIdentifier) ??
     cachedIssue?.identifier ??
-    `Task ${shortId(issueId)}`;
+    t("lastHelpersUi.taskId", { id: shortId(issueId) });
   const title =
     readString(details?.title) ??
     readString(details?.issueTitle) ??
@@ -883,29 +884,29 @@ function describeIssueUpdate(
   if (!details) return null;
   const changes: string[] = [];
   if (typeof details.status === "string")
-    changes.push(`status -> ${details.status.replace(/_/g, " ")}`);
+    changes.push(t("lastHelpersUi.statusChange", { status: t(`statusBadge.${details.status}`, { defaultValue: details.status.replace(/_/g, " ") }) }));
   if (typeof details.priority === "string")
-    changes.push(`priority -> ${details.priority}`);
+    changes.push(t("lastHelpersUi.priorityChange", { priority: t("sharedFeedTail.priority" + details.priority.charAt(0).toUpperCase() + details.priority.slice(1), { defaultValue: details.priority }) }));
   if (
     typeof details.assigneeAgentId === "string" ||
     typeof details.assigneeUserId === "string"
   ) {
-    changes.push("reassigned");
+    changes.push(t("lastHelpersUi.reassigned"));
   } else if (
     details.assigneeAgentId === null ||
     details.assigneeUserId === null
   ) {
-    changes.push("unassigned");
+    changes.push(t("lastHelpersUi.unassigned"));
   }
   if (details.reopened === true) {
     const from = readString(details.reopenedFrom);
     changes.push(
-      from ? `reopened from ${from.replace(/_/g, " ")}` : "reopened",
+      from ? t("lastHelpersUi.reopenedFrom", { status: t(`statusBadge.${from}`, { defaultValue: from.replace(/_/g, " ") }) }) : t("lastHelpersUi.reopened"),
     );
   }
-  if (typeof details.title === "string") changes.push("title changed");
+  if (typeof details.title === "string") changes.push(t("lastHelpersUi.titleChanged"));
   if (typeof details.description === "string")
-    changes.push("description changed");
+    changes.push(t("lastHelpersUi.descriptionChanged"));
   if (changes.length > 0) return changes.join(", ");
   return null;
 }
@@ -950,10 +951,10 @@ function buildActivityToast(
 
   if (action === "issue.created") {
     return {
-      title: `${actor} created ${issue.ref}`,
+      title: t("lastHelpersUi.actorCreated", { actor, ref: issue.ref }),
       body: issue.title ? truncate(issue.title, 96) : undefined,
       tone: "success",
-      action: { label: `View ${issue.ref}`, href: issue.href },
+      action: { label: t("lastHelpersUi.viewIssue", { ref: issue.ref }), href: issue.href },
       dedupeKey: `activity:${action}:${entityId}`,
     };
   }
@@ -972,10 +973,10 @@ function buildActivityToast(
         ? truncate(issue.title, 96)
         : issue.label;
     return {
-      title: `${actor} updated ${issue.ref}`,
+      title: t("lastHelpersUi.actorUpdated", { actor, ref: issue.ref }),
       body: truncate(body, 100),
       tone: "info",
-      action: { label: `View ${issue.ref}`, href: issue.href },
+      action: { label: t("lastHelpersUi.viewIssue", { ref: issue.ref }), href: issue.href },
       dedupeKey: `activity:${action}:${entityId}`,
     };
   }
@@ -987,14 +988,14 @@ function buildActivityToast(
   const reopenedFrom = readString(details?.reopenedFrom);
   const reopenedLabel = reopened
     ? reopenedFrom
-      ? `reopened from ${reopenedFrom.replace(/_/g, " ")}`
-      : "reopened"
+      ? t("lastHelpersUi.reopenedFrom", { status: t(`statusBadge.${reopenedFrom}`, { defaultValue: reopenedFrom.replace(/_/g, " ") }) })
+      : t("lastHelpersUi.reopened")
     : null;
   const title = reopened
-    ? `${actor} reopened and commented on ${issue.ref}`
+    ? t("lastHelpersUi.actorReopenedComment", { actor, ref: issue.ref })
     : updated
-      ? `${actor} commented and updated ${issue.ref}`
-      : `${actor} commented on ${issue.ref}`;
+      ? t("lastHelpersUi.actorCommentUpdate", { actor, ref: issue.ref })
+      : t("lastHelpersUi.actorComment", { actor, ref: issue.ref });
   const body = bodySnippet
     ? reopenedLabel
       ? `${reopenedLabel} - ${bodySnippet.replace(/^#+\s*/m, "").replace(/\n/g, " ")}`
@@ -1008,7 +1009,7 @@ function buildActivityToast(
     title,
     body: body ? truncate(body, 96) : undefined,
     tone: "info",
-    action: { label: `View ${issue.ref}`, href: issue.href },
+    action: { label: t("lastHelpersUi.viewIssue", { ref: issue.ref }), href: issue.href },
     dedupeKey: `activity:${action}:${entityId}:${commentId ?? "na"}`,
   };
 }
@@ -1026,13 +1027,13 @@ function buildJoinRequestToast(
     return null;
 
   const requestType = readString(details?.requestType);
-  const label = requestType === "agent" ? "Agent" : "Someone";
+  const label = requestType === "agent" ? t("lastHelpersUi.agent") : t("lastHelpersUi.someone");
 
   return {
-    title: `${label} wants to join`,
-    body: "A new join request is waiting for approval.",
+    title: t("lastHelpersUi.wantsToJoin", { name: label }),
+    body: t("lastHelpersUi.joinPending"),
     tone: "info",
-    action: { label: "View inbox", href: "/inbox/mine" },
+    action: { label: t("lastHelpersUi.viewInbox"), href: "/inbox/mine" },
     dedupeKey: `join-request:${entityId}`,
   };
 }
@@ -1048,8 +1049,8 @@ function buildAgentStatusToast(
   if (!agentId || !status || !AGENT_TOAST_STATUSES.has(status)) return null;
 
   const tone = status === "error" ? "error" : "info";
-  const name = nameOf(agentId) ?? `Agent ${shortId(agentId)}`;
-  const title = status === "running" ? `${name} started` : `${name} errored`;
+  const name = nameOf(agentId) ?? t("lastHelpersUi.agentId", { id: shortId(agentId) });
+  const title = status === "running" ? t("lastHelpersUi.agentStarted", { name }) : t("lastHelpersUi.agentErrored", { name });
 
   const agents = queryClient.getQueryData<Agent[]>(
     queryKeys.agents.list(companyId),
@@ -1061,7 +1062,7 @@ function buildAgentStatusToast(
     title,
     body,
     tone,
-    action: { label: "View agent", href: `/agents/${agentId}` },
+    action: { label: t("lastHelpersUi.viewAgent"), href: `/agents/${agentId}` },
     dedupeKey: `agent-status:${agentId}:${status}`,
   };
 }
@@ -1085,18 +1086,18 @@ function buildRunStatusToast(
   if (errorCode === "workspace_busy") return null;
   const contextSource = readString(payload.contextSource);
   const triggerDetail = readString(payload.triggerDetail);
-  const name = nameOf(agentId) ?? "Agent";
+  const name = nameOf(agentId) ?? t("lastHelpersUi.agent");
   if (
     status === "failed" &&
     errorCode === "low_trust_isolation_unavailable" &&
     contextSource?.startsWith("chat:")
   ) {
     return {
-      title: `${name} couldn't start this chat`,
-      body: "This external chat identity isn't linked, and isolated guest workspaces are disabled. Link the identity in Connectors or enable isolated workspaces, then start a new task.",
+      title: t("lastHelpersUi.chatStartFailed", { name }),
+      body: t("lastHelpersUi.chatIdentityUnlinked"),
       tone: "warn",
       ttlMs: 10_000,
-      action: { label: "Open chat connections", href: "/apps" },
+      action: { label: t("lastHelpersUi.openChatConnections"), href: "/apps" },
       dedupeKey: `run-status:${runId}:${status}`,
     };
   }
@@ -1108,19 +1109,19 @@ function buildRunStatusToast(
         : "error";
   const statusLabel =
     status === "succeeded"
-      ? "succeeded"
+      ? t("lastHelpersUi.runSucceeded")
       : status === "failed"
-        ? "failed"
+        ? t("lastHelpersUi.runFailed")
         : status === "timed_out"
-          ? "timed out"
-          : "cancelled";
-  const title = `${name} run ${statusLabel}`;
+          ? t("lastHelpersUi.runTimedOut")
+          : t("lastHelpersUi.runCancelled");
+  const title = t("lastHelpersUi.runStatus", { name, status: statusLabel });
 
   let body: string | undefined;
   if (error) {
     body = truncate(error, 100);
   } else if (triggerDetail) {
-    body = `Trigger: ${triggerDetail}`;
+    body = t("lastHelpersUi.trigger", { trigger: triggerDetail });
   }
 
   return {
@@ -1128,7 +1129,7 @@ function buildRunStatusToast(
     body,
     tone,
     ttlMs: status === "succeeded" ? 5000 : 7000,
-    action: { label: "View run", href: `/agents/${agentId}/runs/${runId}` },
+    action: { label: t("lastHelpersUi.viewRun"), href: `/agents/${agentId}/runs/${runId}` },
     dedupeKey: `run-status:${runId}:${status}`,
   };
 }
@@ -1854,6 +1855,7 @@ function canUseLiveSession(sessionStatus: string, hasSession: boolean, deploymen
 }
 
 export function LiveUpdatesProvider({ children }: { children: ReactNode }) {
+  useTranslation();
   const { visible } = usePageVisibility();
   const wasHidden = useRef(!visible);
   const { selectedCompanyId, selectedCompany } = useCompany();

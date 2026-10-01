@@ -1,3 +1,4 @@
+import { t, useTranslation } from "@/i18n";
 import { useEffect } from "react";
 import { useParams } from "@/lib/router";
 import { useBreadcrumbs } from "@/context/BreadcrumbContext";
@@ -7,22 +8,23 @@ import { ToolsAdminGate } from "./ToolsAdminGate";
 import { ProfileDetail } from "./ProfileDetail";
 
 export function ProfileDetailRoute() {
+  const { t } = useTranslation();
   const { selectedCompany, selectedCompanyId } = useCompany();
   const { setBreadcrumbs } = useBreadcrumbs();
   const params = useParams<{ profileId?: string }>();
 
   useEffect(() => {
     setBreadcrumbs([
-      { label: selectedCompany?.name ?? "Company", href: "/dashboard" },
-      { label: "Apps", href: "/apps" },
-      { label: "Access profiles", href: advancedTabHref("profiles") },
-      { label: "Profile detail" },
+      { label: selectedCompany?.name ?? t("toolsProfilesUi.company"), href: "/dashboard" },
+      { get label() { return t("toolsProfilesUi.apps"); }, href: "/apps" },
+      { get label() { return t("toolsProfilesUi.accessProfiles"); }, href: advancedTabHref("profiles") },
+      { get label() { return t("toolsProfilesUi.profileDetail"); } },
     ]);
     return () => setBreadcrumbs([]);
-  }, [setBreadcrumbs, selectedCompany?.name]);
+  }, [setBreadcrumbs, selectedCompany?.name, t]);
 
   if (!selectedCompanyId || !params.profileId) {
-    return <div className="p-6 text-sm text-muted-foreground">Select an organization and profile.</div>;
+    return <div className="p-6 text-sm text-muted-foreground">{t("toolsProfilesUi.selectAnOrganizationAndProfile")}</div>;
   }
 
   return (

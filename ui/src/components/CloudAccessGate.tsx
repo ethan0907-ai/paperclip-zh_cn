@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useEffect, useRef, useState } from "react";
 import { RefreshCw } from "lucide-react";
 import { Navigate, Outlet, useLocation } from "@/lib/router";
@@ -26,12 +27,13 @@ export function CloudAccessError({
   retrying: boolean;
   onRetry: () => void;
 }) {
+  const { t } = useTranslation();
   return (
     <div className="mx-auto flex max-w-xl flex-col gap-4 px-4 py-16">
       <RefreshCw className="size-6 text-muted-foreground" aria-hidden="true" />
       <div className="flex flex-col gap-2" role="status">
         <h1 className="text-xl font-semibold">
-          {temporary ? "Reconnecting to Paperclip" : "Unable to load Paperclip"}
+          {temporary ? t("gateTail.reconnecting") : t("gateTail.load")}
         </h1>
         <p className="text-sm text-muted-foreground">
           {temporary
@@ -41,7 +43,7 @@ export function CloudAccessError({
       </div>
       <div>
         <Button variant="outline" onClick={onRetry} disabled={retrying}>
-          {retrying ? "Connecting…" : "Try again"}
+          {retrying ? "Connecting…" : t("gateTail.retry")}
         </Button>
       </div>
     </div>
@@ -49,16 +51,16 @@ export function CloudAccessError({
 }
 
 function NoBoardAccessPage() {
+  const { t } = useTranslation();
   return (
     <div className="mx-auto max-w-xl py-10">
       <Card className="block p-6">
-        <h1 className="text-xl font-semibold">No organization access</h1>
+        <h1 className="text-xl font-semibold">{t("gateTail.noAccess")}</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          This account is signed in, but it does not have an active organization membership or instance-admin access on
-          this Paperclip instance.
+          {t("gateTail.noAccessBody")}
         </p>
         <p className="mt-2 text-sm text-muted-foreground">
-          Use an organization invite or sign in with an account that already belongs to this org.
+          {t("gateTail.invite")}
         </p>
       </Card>
     </div>
@@ -66,6 +68,7 @@ function NoBoardAccessPage() {
 }
 
 export function CloudAccessGate({ allowMembershipRequest = false }: { allowMembershipRequest?: boolean } = {}) {
+  const { t } = useTranslation();
   const location = useLocation();
   const queryClient = useQueryClient();
   const [hasOpenedBoard, setHasOpenedBoard] = useState(false);
@@ -214,7 +217,7 @@ export function CloudAccessGate({ allowMembershipRequest = false }: { allowMembe
     <>
       {isReconnecting && (
         <div role="status" className="bg-muted px-4 py-2 text-center text-sm text-muted-foreground">
-          Connection interrupted. Reconnecting automatically…
+          {t("gateTail.interrupted")}
         </div>
       )}
       <Outlet />

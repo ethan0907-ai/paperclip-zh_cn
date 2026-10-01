@@ -1,3 +1,4 @@
+import { t, useTranslation } from "@/i18n";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type { IssueDocument } from "@paperclipai/shared";
@@ -19,6 +20,7 @@ export function TaskDocumentPanel({
   documentKey: string;
   initialDocument?: IssueDocument;
 }) {
+  const { t, i18n } = useTranslation();
   const location = useLocation();
   const [annotationPanelOpen, setAnnotationPanelOpen] = useState(false);
   const query = useQuery<IssueDocument | null>({
@@ -37,16 +39,12 @@ export function TaskDocumentPanel({
   if (query.isLoading) {
     return (
       <div className="flex items-center gap-2 py-8 text-sm text-muted-foreground" role="status">
-        <Loader2 className="size-4 animate-spin" aria-hidden />
-        Loading document…
-      </div>
+        <Loader2 className="size-4 animate-spin" aria-hidden />{t("chatSidePanels.loading_document")}</div>
     );
   }
   if (query.isError) {
     return (
-      <div className="py-8 text-sm text-muted-foreground" role="alert">
-        The document could not be loaded. Retry from the tab launcher or refresh the task.
-      </div>
+      <div className="py-8 text-sm text-muted-foreground" role="alert">{t("chatSidePanels.the_document_could_not_be_loaded_retry_from_the_tab_launcher_or_refresh_the_task")}</div>
     );
   }
   const document = query.data;
@@ -55,10 +53,8 @@ export function TaskDocumentPanel({
       <div className="flex items-start gap-3 py-8 text-sm" role="status">
         <FileQuestion className="mt-0.5 size-5 shrink-0 text-muted-foreground" aria-hidden />
         <div className="space-y-1">
-          <p className="font-medium">Document no longer available</p>
-          <p className="text-muted-foreground">
-            This tab is preserved so the missing resource is explicit. Close it or choose another document.
-          </p>
+          <p className="font-medium">{t("chatSidePanels.document_no_longer_available")}</p>
+          <p className="text-muted-foreground">{t("chatSidePanels.this_tab_is_preserved_so_the_missing_resource_is_explicit_close_it_or_choose_another_document")}</p>
         </div>
       </div>
     );
@@ -69,9 +65,9 @@ export function TaskDocumentPanel({
       <header className="space-y-1">
         <h2 className="text-lg font-semibold">{documentDisplayTitle(document)}</h2>
         <div className="flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
-          <span>{`Revision ${document.latestRevisionNumber ?? 1}`}</span>
+          <span>{t("chatSidePanels.revision", { revision: document.latestRevisionNumber ?? 1 })}</span>
           <span aria-hidden>·</span>
-          <span>{`Updated ${new Date(document.updatedAt).toLocaleString()}`}</span>
+          <span>{t("chatSidePanels.updated_time", { time: new Date(document.updatedAt).toLocaleString(i18n.language) })}</span>
           <DocumentAnnotationsCountChip
             issueId={issueId}
             docKey={document.key}
@@ -96,7 +92,7 @@ export function TaskDocumentPanel({
           <MarkdownBody>{document.body}</MarkdownBody>
         </IssueDocumentAnnotations>
       ) : (
-        <p className="text-sm text-muted-foreground">Document is empty.</p>
+        <p className="text-sm text-muted-foreground">{t("chatSidePanels.document_is_empty")}</p>
       )}
     </article>
   );

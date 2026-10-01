@@ -1,3 +1,4 @@
+import { t } from "@/i18n";
 import { formatDateTime } from "./utils";
 
 type RetryAwareRun = {
@@ -19,12 +20,12 @@ export type RunRetryStateSummary = {
 };
 
 const RETRY_REASON_LABELS: Record<string, string> = {
-  transient_failure: "Transient failure",
-  missing_issue_comment: "Missing task comment",
-  process_lost: "Process lost",
-  assignment_recovery: "Assignment recovery",
-  issue_continuation_needed: "Continuation needed",
-  max_turns_continuation: "Max-turn continuation",
+  get transient_failure() { return t("agentDetailHelpUi.transientFailure"); },
+  get missing_issue_comment() { return t("agentDetailHelpUi.missingIssueComment"); },
+  get process_lost() { return t("agentDetailHelpUi.processLost"); },
+  get assignment_recovery() { return t("agentDetailHelpUi.assignmentRecovery"); },
+  get issue_continuation_needed() { return t("agentDetailHelpUi.continuationNeeded"); },
+  get max_turns_continuation() { return t("agentDetailHelpUi.maxTurnContinuation"); },
 };
 
 function readNonEmptyString(value: unknown) {
@@ -47,7 +48,7 @@ export function describeRunRetryState(run: RetryAwareRun): RunRetryStateSummary 
     typeof run.scheduledRetryAttempt === "number" && Number.isFinite(run.scheduledRetryAttempt) && run.scheduledRetryAttempt > 0
       ? run.scheduledRetryAttempt
       : null;
-  const attemptLabel = attempt ? `Attempt ${attempt}` : null;
+  const attemptLabel = attempt ? t("agentDetailHelpUi.attempt", { count: attempt }) : null;
   const reasonLabel = formatRetryReason(run.scheduledRetryReason);
   const retryOfRunId = readNonEmptyString(run.retryOfRunId);
   const exhaustedReason = readNonEmptyString(run.retryExhaustedReason);
@@ -65,12 +66,12 @@ export function describeRunRetryState(run: RetryAwareRun): RunRetryStateSummary 
   if (run.status === "scheduled_retry") {
     return {
       kind: "scheduled",
-      badgeLabel: isMaxTurnContinuation ? "Continuation scheduled" : "Retry scheduled",
+      badgeLabel: isMaxTurnContinuation ? t("agentDetailHelpUi.continuationScheduled") : t("agentDetailHelpUi.retryScheduled"),
       tone: "border-blue-500/30 bg-blue-500/10 text-blue-700 dark:text-blue-300",
       detail: joinFragments([attemptLabel, reasonLabel]),
       secondary: dueAt
-        ? `${isMaxTurnContinuation ? "Next continuation" : "Next retry"} ${dueAt}`
-        : `${isMaxTurnContinuation ? "Next continuation" : "Next retry"} pending schedule`,
+        ? t("agentDetailHelpUi.due", { label: isMaxTurnContinuation ? t("agentDetailHelpUi.nextContinuation") : t("agentDetailHelpUi.nextRetry"), time: dueAt })
+        : t("agentDetailHelpUi.pending", { label: isMaxTurnContinuation ? t("agentDetailHelpUi.nextContinuation") : t("agentDetailHelpUi.nextRetry") }),
       retryOfRunId,
     };
   }
@@ -78,19 +79,19 @@ export function describeRunRetryState(run: RetryAwareRun): RunRetryStateSummary 
   if (exhaustedReason) {
     return {
       kind: "exhausted",
-      badgeLabel: isMaxTurnContinuation ? "Continuation exhausted" : "Retry exhausted",
+      badgeLabel: isMaxTurnContinuation ? t("agentDetailHelpUi.continuationExhausted") : t("agentDetailHelpUi.retryExhausted"),
       tone: "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300",
-      detail: joinFragments([attemptLabel, reasonLabel, "Automatic retries exhausted"]),
+      detail: joinFragments([attemptLabel, reasonLabel, t("agentDetailHelpUi.automaticRetriesExhausted")]),
       secondary: exhaustedReason.includes("Manual intervention required")
         ? exhaustedReason
-        : `${exhaustedReason} Manual intervention required.`,
+        : t("agentDetailHelpUi.manualIntervention", { reason: exhaustedReason }),
       retryOfRunId,
     };
   }
 
   return {
     kind: "attempted",
-    badgeLabel: isMaxTurnContinuation ? "Continued run" : "Retried run",
+    badgeLabel: isMaxTurnContinuation ? t("agentDetailHelpUi.continuedRun") : t("agentDetailHelpUi.retriedRun"),
     tone: "border-slate-500/20 bg-slate-500/10 text-slate-700 dark:text-slate-300",
     detail: joinFragments([attemptLabel, reasonLabel]),
     secondary: null,

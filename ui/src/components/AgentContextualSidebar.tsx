@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useTranslation } from "@/i18n";
+import { t, useTranslation } from "@/i18n";
 import {
   Activity,
   BadgeDollarSign,
@@ -43,10 +43,10 @@ const localIcons = {
 } satisfies Record<AgentLocalDetailView, typeof Sparkles>;
 
 const auditItems = [
-  { section: "activity", label: "Activity", icon: Activity },
-  { section: "runs", label: "Runs", icon: PlayCircle },
-  { section: "costs", label: "Costs", icon: ReceiptText },
-  { section: "budgets", label: "Budgets", icon: BadgeDollarSign },
+  { section: "activity", get label() { return t("taskSmallTail.activity"); }, icon: Activity },
+  { section: "runs", get label() { return t("taskSmallTail.runs"); }, icon: PlayCircle },
+  { section: "costs", get label() { return t("taskSmallTail.costs"); }, icon: ReceiptText },
+  { section: "budgets", get label() { return t("taskSmallTail.budgets"); }, icon: BadgeDollarSign },
 ] as const;
 
 export function AgentContextualSidebar({
@@ -68,7 +68,7 @@ export function AgentContextualSidebar({
     enabled: shouldResolveAgent && Boolean(agentRef && selectedCompanyId),
   });
   const resolvedId = agentId ?? resolvedAgent?.id;
-  const resolvedName = agentName ?? resolvedAgent?.name ?? "Agent";
+  const resolvedName = agentName ?? resolvedAgent?.name ?? t("taskSmallTail.agent");
 
   return (
     <ContextualSidebarFrame
@@ -79,7 +79,7 @@ export function AgentContextualSidebar({
       className="border-r border-border bg-background"
     >
       <nav
-        aria-label={`${resolvedName} navigation`}
+        aria-label={t("taskSmallTail.agentNavigation", { name: resolvedName })}
         data-slot="contextual-sidebar-nav"
         className={contextualSidebarStyles.nav}
       >
@@ -129,7 +129,7 @@ export function AgentContextualSidebar({
                 icon={item.icon}
               />
             )) : (
-              <p className="px-2 py-1.5 text-xs text-muted-foreground">Loading audit links…</p>
+              <p className="px-2 py-1.5 text-xs text-muted-foreground">{t("taskSmallTail.loadingAuditLinks")}</p>
             )}
           </div>
         </div>

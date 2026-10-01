@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslation } from "@/i18n";
 
 import { copyTextToClipboard } from "./clipboard";
 import { useOptionalToastActions } from "../context/ToastContext";
@@ -74,29 +75,30 @@ export function useCopyAction(resetMs: number = RESET_MS) {
  * the success toast waits for the write to resolve.
  */
 export function useCopyToast() {
+  const { t } = useTranslation();
   const toastActions = useOptionalToastActions();
   const pushToast = toastActions?.pushToast;
 
   return useCallback(
-    async (text: string, copiedTitle = "Copied") => {
+    async (text: string, copiedTitle?: string) => {
       try {
         await copyTextToClipboard(text);
         pushToast?.({
-          title: copiedTitle,
+          title: copiedTitle ?? t("common.copied"),
           tone: "success",
-          dedupeKey: `copy:${copiedTitle}`,
+          dedupeKey: `copy:${copiedTitle ?? "Copied"}`,
         });
         return true;
       } catch {
         pushToast?.({
-          title: "Couldn’t copy to clipboard",
-          body: "Select and copy the value manually.",
+          title: t("common.clipboardCopyFailed"),
+          body: t("common.manualCopyHint"),
           tone: "error",
           dedupeKey: "copy-failed",
         });
         return false;
       }
     },
-    [pushToast],
+    [pushToast, t],
   );
 }

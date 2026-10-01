@@ -1,4 +1,5 @@
 import type { ActivityEvent } from "@paperclipai/shared";
+import { useTranslation } from "@/i18n";
 import { Plus, Minus } from "lucide-react";
 import { IssueReferencePill } from "./IssueReferencePill";
 
@@ -15,16 +16,18 @@ function readIssueReferences(details: Record<string, unknown> | null | undefined
 }
 
 function Section({
-  label,
+  labelKey,
   icon,
   items,
   strikethrough,
 }: {
-  label: string;
+  labelKey: string;
   icon: React.ReactNode;
   items: ActivityIssueReference[];
   strikethrough?: boolean;
 }) {
+  const { t } = useTranslation();
+  const label = t(labelKey);
   if (items.length === 0) return null;
   return (
     <div className="flex flex-wrap items-center gap-1.5">
@@ -37,7 +40,7 @@ function Section({
       </span>
       {items.map((issue) => (
         <IssueReferencePill
-          key={`${label}:${issue.id}`}
+          key={`${labelKey}:${issue.id}`}
           strikethrough={strikethrough}
           issue={{
             id: issue.id,
@@ -58,12 +61,12 @@ export function IssueReferenceActivitySummary({ event }: { event: Pick<ActivityE
   return (
     <div className="mt-2 space-y-1">
       <Section
-        label="Added references"
+        labelKey="finalAria.addedReferences"
         icon={<Plus className="h-3 w-3 text-green-600 dark:text-green-400" aria-hidden="true" />}
         items={added}
       />
       <Section
-        label="Removed references"
+        labelKey="finalAria.removedReferences"
         icon={<Minus className="h-3 w-3 text-red-600 dark:text-red-400" aria-hidden="true" />}
         items={removed}
         strikethrough

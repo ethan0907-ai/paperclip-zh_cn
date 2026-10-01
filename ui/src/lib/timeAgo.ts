@@ -1,4 +1,4 @@
-import { i18n } from "@/i18n";
+import { t } from "@/i18n";
 
 const MINUTE = 60;
 const HOUR = 60 * MINUTE;
@@ -10,25 +10,24 @@ export function timeAgo(date: Date | string): string {
   const now = Date.now();
   const then = new Date(date).getTime();
   const seconds = Math.round((now - then) / 1000);
-  const zh = (i18n.language ?? "en").startsWith("zh");
 
-  if (seconds < MINUTE) return zh ? "刚刚" : "just now";
+  if (seconds < MINUTE) return t("format.time.justNow");
   if (seconds < HOUR) {
     const m = Math.floor(seconds / MINUTE);
-    return zh ? `${m} 分钟前` : `${m}m ago`;
+    return t("format.time.minutesAgo", { count: m });
   }
   if (seconds < DAY) {
     const h = Math.floor(seconds / HOUR);
-    return zh ? `${h} 小时前` : `${h}h ago`;
+    return t("format.time.hoursAgo", { count: h });
   }
   if (seconds < WEEK) {
     const d = Math.floor(seconds / DAY);
-    return zh ? `${d} 天前` : `${d}d ago`;
+    return t("format.time.daysAgo", { count: d });
   }
   if (seconds < MONTH) {
     const w = Math.floor(seconds / WEEK);
-    return zh ? `${w} 周前` : `${w}w ago`;
+    return t("format.time.weeksAgo", { count: w });
   }
   const mo = Math.floor(seconds / MONTH);
-  return zh ? `${mo} 个月前` : `${mo}mo ago`;
+  return t("format.time.monthsAgo", { count: mo });
 }

@@ -1,3 +1,4 @@
+import { useTranslation } from "@/i18n";
 /**
  * Plugin bridge initialization.
  *
@@ -356,6 +357,7 @@ function PluginSdkAssigneePicker({
   className,
   onConfirm,
 }: PluginAssigneePickerProps) {
+  const { t } = useTranslation();
   const hostContext = useHostContext();
   const resolvedCompanyId = companyId ?? hostContext.companyId ?? null;
   const { data: session } = useQuery({
@@ -400,7 +402,7 @@ function PluginSdkAssigneePicker({
         searchText: `${agent.name} ${agent.role} ${agent.title ?? ""}`,
       })),
     ],
-    [companyMembers?.users, currentUserId, includeUsers, sortedAgents],
+    [companyMembers?.users, currentUserId, includeUsers, sortedAgents, t],
   );
   const selectedAssignee = parseAssigneeValue(value);
   const selectedAgent = selectedAssignee.assigneeAgentId

@@ -181,10 +181,10 @@ function AwaitingJoinApprovalPanel({
           </p>
           <div className="border border-zinc-800 p-3">
             <p className="text-xs text-zinc-500 mb-1">{t("inviteLanding.approvalPage")}</p>
-            <p className="text-sm text-zinc-200">Settings → Members</p>
+            <p className="text-sm text-zinc-200">{t("inviteLanding.settingsMembers")}</p>
           </div>
           <p className="text-sm text-zinc-400">
-            {t("inviteLanding.askToApprove")} <span className="text-zinc-200">Settings → Members</span> {t("inviteLanding.toApproveRequest")}
+            {t("inviteLanding.askToApprove")} <span className="text-zinc-200">{t("inviteLanding.settingsMembers")}</span> {t("inviteLanding.toApproveRequest")}
           </p>
           <p className="text-xs text-zinc-500">
             {t("inviteLanding.refreshAfterApproval")}
@@ -192,14 +192,14 @@ function AwaitingJoinApprovalPanel({
         </div>
         {claimSecret && claimApiKeyPath ? (
           <div className="mt-4 space-y-1 border border-zinc-800 p-3 text-xs text-zinc-400">
-            <div className="text-zinc-200">Claim secret</div>
+            <div className="text-zinc-200">{t("inviteLanding.claimSecret")}</div>
             <div className="font-mono break-all">{claimSecret}</div>
             <div className="font-mono break-all">POST {claimApiKeyPath}</div>
           </div>
         ) : null}
         {onboardingTextUrl ? (
           <div className="mt-4 text-xs text-zinc-400">
-            Onboarding: <span className="font-mono break-all">{onboardingTextUrl}</span>
+            {t("inviteLanding.onboardingLabel")}: <span className="font-mono break-all">{onboardingTextUrl}</span>
           </div>
         ) : null}
       </div>
@@ -434,7 +434,7 @@ export function InviteLandingPage() {
     if (invite.inviteType === "bootstrap_ceo") return t("inviteLanding.acceptInvite");
     if (showsAgentForm) return t("inviteLanding.submitRequest");
     return sessionQuery.data ? t("inviteLanding.acceptInvite") : t("inviteLanding.continue");
-  }, [invite, isCurrentMember, sessionQuery.data, showsAgentForm]);
+  }, [invite, isCurrentMember, sessionQuery.data, showsAgentForm, t]);
 
   if (!token) {
     return <div className="mx-auto max-w-xl py-10 text-sm text-destructive">{t("inviteLanding.invalidToken")}</div>;

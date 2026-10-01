@@ -1,3 +1,4 @@
+import { t } from "@/i18n";
 import type {
   WorkspaceOperation,
   WorkspaceReadiness,
@@ -75,11 +76,11 @@ function timestampMs(value: Date | string | null | undefined): number | null {
 function failedRepairNotice(repair: WorkspaceOperation): WorkspaceAccessNotice {
   const phase = typeof repair.metadata?.repairPhase === "string" ? repair.metadata.repairPhase : null;
   return {
-    title: "Repair failed",
+    title: t("workspaceRemainingUi.text9"),
     description: phase
-      ? `The repair stopped during ${phase}. The pre-repair backup was kept.`
-      : "The repair stopped before the workspace became usable. The pre-repair backup was kept.",
-    action: { kind: "view_logs", label: "View repair log" },
+      ? t("workspaceRemainingUi.repairPhase", { phase })
+      : t("workspaceRemainingUi.text10"),
+    action: { kind: "view_logs", label: t("workspaceRemainingUi.text11") },
   };
 }
 
@@ -88,32 +89,30 @@ function failedProvisionNotice(provision: WorkspaceOperation): WorkspaceAccessNo
     ? provision.metadata.seedFailurePhase
     : null;
   return {
-    title: "Database provisioning failed",
+    title: t("workspaceRemainingUi.text12"),
     description: phase
-      ? `The earlier clone attempt failed during ${phase}. The workspace later became usable.`
-      : "An earlier clone attempt failed, but the workspace later became usable.",
-    action: { kind: "view_logs", label: "View provisioning log" },
+      ? t("workspaceRemainingUi.provisionPhase", { phase })
+      : t("workspaceRemainingUi.text13"),
+    action: { kind: "view_logs", label: t("workspaceRemainingUi.text14") },
   };
 }
 
 const HANDOFF_REASON_COPY: Record<string, string> = {
-  handoff_not_configured:
-    "This instance has no workspace login handoff configured, so opening the board falls back to snapshot-local credentials.",
-  no_board_identity:
-    "Your session has no cloned user to sign in as, so opening the board falls back to snapshot-local credentials.",
-  runtime_not_running: "No healthy runtime service is publishing a URL for this workspace yet.",
-  runtime_url_unusable: "The runtime row is publishing a URL Paperclip cannot open.",
-  workspace_not_ready: "The cloned database is not ready to accept a login yet.",
+  get handoff_not_configured() { return t("workspaceRemainingUi.text15"); },
+  get no_board_identity() { return t("workspaceRemainingUi.text16"); },
+  get runtime_not_running() { return t("workspaceRemainingUi.text17"); },
+  get runtime_url_unusable() { return t("workspaceRemainingUi.text18"); },
+  get workspace_not_ready() { return t("workspaceRemainingUi.text19"); },
 };
 
 const READINESS_FAILURE_COPY: Record<string, string> = {
-  database_unreachable: "The isolated database is not answering.",
-  clone_data_missing: "The clone restored no organization or issue rows.",
-  clone_data_unreadable: "The cloned product tables could not be read.",
-  cloned_membership_missing: "No cloned user has an active organization membership.",
-  cloned_identity_unreadable: "The cloned identity tables could not be read.",
-  auth_handoff_not_configured: "The workspace was started without a login handoff key.",
-  seed_manifest_unreadable: "The seed manifest is unreadable, so the restore cannot be trusted.",
+  get database_unreachable() { return t("workspaceRemainingUi.text20"); },
+  get clone_data_missing() { return t("workspaceRemainingUi.text21"); },
+  get clone_data_unreadable() { return t("workspaceRemainingUi.text22"); },
+  get cloned_membership_missing() { return t("workspaceRemainingUi.text23"); },
+  get cloned_identity_unreadable() { return t("workspaceRemainingUi.text24"); },
+  get auth_handoff_not_configured() { return t("workspaceRemainingUi.text25"); },
+  get seed_manifest_unreadable() { return t("workspaceRemainingUi.text26"); },
 };
 
 /**
@@ -126,7 +125,7 @@ export function describeWorkspaceReadinessCause(
   if (!failure) return null;
   const phase = describeSeedPhase(failure.readiness);
   if (phase && READINESS_FAILURE_COPY[phase]) return READINESS_FAILURE_COPY[phase];
-  if (phase) return `Last recorded phase: ${phase}.`;
+  if (phase) return t("workspaceRemainingUi.lastPhase", { phase });
   if (failure.detail && READINESS_FAILURE_COPY[failure.detail]) return READINESS_FAILURE_COPY[failure.detail];
   return HANDOFF_REASON_COPY[failure.reason] ?? null;
 }
@@ -187,11 +186,11 @@ export function resolveWorkspaceAccessState(input: {
     const phase = typeof repair.metadata?.repairPhase === "string" ? repair.metadata.repairPhase : null;
     return {
       state: "repairing",
-      title: "Repairing workspace database",
+      title: t("workspaceRemainingUi.text27"),
       description: phase
-        ? `Only the isolated database is replaced; the git worktree and your files are preserved. Current phase: ${phase}.`
-        : "Only the isolated database is replaced; the git worktree and your files are preserved.",
-      action: { kind: "wait", label: "Repair in progress" },
+        ? t("workspaceRemainingUi.repairingPhase", { phase })
+        : t("workspaceRemainingUi.text28"),
+      action: { kind: "wait", label: t("workspaceRemainingUi.text29") },
       handoffAvailable,
     };
   }
@@ -207,9 +206,9 @@ export function resolveWorkspaceAccessState(input: {
   if (provision?.status === "running") {
     return {
       state: "provisioning",
-      title: "Provisioning database",
-      description: "Restoring the isolated database clone for this workspace. This runs once before the first start.",
-      action: { kind: "wait", label: "Provisioning" },
+      title: t("workspaceRemainingUi.text30"),
+      description: t("workspaceRemainingUi.text31"),
+      action: { kind: "wait", label: t("workspaceRemainingUi.text1") },
       handoffAvailable,
     };
   }
@@ -219,11 +218,11 @@ export function resolveWorkspaceAccessState(input: {
       : null;
     return {
       state: "failed",
-      title: "Database provisioning failed",
+      title: t("workspaceRemainingUi.text12"),
       description: seedPhase
-        ? `The clone failed during ${seedPhase}. Repairing replaces only the isolated database.`
-        : "The clone did not finish, so this workspace has no usable database yet.",
-      action: { kind: "repair", label: "Repair workspace" },
+        ? t("workspaceRemainingUi.clonePhase", { phase: seedPhase })
+        : t("workspaceRemainingUi.text32"),
+      action: { kind: "repair", label: t("workspaceRemainingUi.text33") },
       handoffAvailable,
     };
   }
@@ -235,9 +234,9 @@ export function resolveWorkspaceAccessState(input: {
     if (failure.reason === "runtime_not_running" && !servingService && !startingService) {
       return {
         state: "stopped",
-        title: "Workspace is not running",
-        description: "Start the workspace runtime to publish its board.",
-        action: { kind: "start", label: "Start workspace" },
+        title: t("workspaceRemainingUi.text34"),
+        description: t("workspaceRemainingUi.text35"),
+        action: { kind: "start", label: t("workspaceRemainingUi.text36") },
         handoffAvailable,
       };
     }
@@ -246,25 +245,25 @@ export function resolveWorkspaceAccessState(input: {
       const validating = readinessState === "validating" || readinessState === "provisioning";
       return {
         state: validating ? "validating" : "degraded",
-        title: validating ? "Validating clone" : "Workspace is degraded",
+        title: validating ? t("workspaceRemainingUi.text2") : t("workspaceRemainingUi.text37"),
         description: [
-          cause ?? "The workspace is serving, but its clone did not pass the readiness contract.",
-          validating ? "Paperclip is still confirming the clone." : "One bounded repair replaces the isolated database.",
+          cause ?? t("workspaceRemainingUi.text38"),
+          validating ? t("workspaceRemainingUi.text39") : t("workspaceRemainingUi.text40"),
         ].join(" "),
         action: validating
-          ? { kind: "wait", label: "Validating" }
-          : { kind: "repair", label: "Repair workspace" },
+          ? { kind: "wait", label: t("workspaceRemainingUi.text41") }
+          : { kind: "repair", label: t("workspaceRemainingUi.text33") },
         handoffAvailable,
       };
     }
     if (!handoffAvailable) {
       return {
         state: servingService ? "ready" : "degraded",
-        title: servingService ? "Ready — snapshot-local sign-in" : "Workspace is degraded",
-        description: cause ?? "Opening the board will ask for the credentials captured in this snapshot.",
+        title: servingService ? t("workspaceRemainingUi.text42") : t("workspaceRemainingUi.text37"),
+        description: cause ?? t("workspaceRemainingUi.text43"),
         action: servingService
-          ? { kind: "open", label: "Open workspace" }
-          : { kind: "start", label: "Start workspace" },
+          ? { kind: "open", label: t("workspaceRemainingUi.text44") }
+          : { kind: "start", label: t("workspaceRemainingUi.text36") },
         handoffAvailable: false,
         secondaryNotice,
       };
@@ -274,9 +273,9 @@ export function resolveWorkspaceAccessState(input: {
   if (startingService) {
     return {
       state: "provisioning",
-      title: "Workspace is starting",
-      description: "Paperclip is starting the workspace runtime and waiting for its board URL.",
-      action: { kind: "wait", label: "Starting workspace" },
+      title: t("workspaceRemainingUi.text45"),
+      description: t("workspaceRemainingUi.text46"),
+      action: { kind: "wait", label: t("workspaceRemainingUi.text47") },
       handoffAvailable,
     };
   }
@@ -284,9 +283,9 @@ export function resolveWorkspaceAccessState(input: {
   if (servingService) {
     return {
       state: "ready",
-      title: "Ready",
-      description: "Opening the workspace signs you in to the cloned board without a password.",
-      action: { kind: "open", label: "Open workspace" },
+      title: t("workspaceRemainingUi.text3"),
+      description: t("workspaceRemainingUi.text48"),
+      action: { kind: "open", label: t("workspaceRemainingUi.text44") },
       handoffAvailable,
       secondaryNotice,
     };
@@ -298,19 +297,19 @@ export function resolveWorkspaceAccessState(input: {
   if (unhealthyService) {
     return {
       state: "degraded",
-      title: "Workspace is degraded",
+      title: t("workspaceRemainingUi.text37"),
       description: cause
-        ?? "The runtime is up but did not report a usable database, so Paperclip will not publish it as ready.",
-      action: { kind: "repair", label: "Repair workspace" },
+        ?? t("workspaceRemainingUi.text49"),
+      action: { kind: "repair", label: t("workspaceRemainingUi.text33") },
       handoffAvailable,
     };
   }
 
   return {
     state: "stopped",
-    title: "Workspace is not running",
-    description: "Start the workspace runtime to publish its board.",
-    action: { kind: "start", label: "Start workspace" },
+    title: t("workspaceRemainingUi.text34"),
+    description: t("workspaceRemainingUi.text35"),
+    action: { kind: "start", label: t("workspaceRemainingUi.text36") },
     handoffAvailable,
   };
 }

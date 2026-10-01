@@ -1,3 +1,4 @@
+import { i18n, t } from "@/i18n";
 import type {
   AttentionDetailImage,
   AttentionFeed,
@@ -37,6 +38,48 @@ export function isInlineResolvable(item: AttentionItem): boolean {
   return item.inlineResolvable && INLINE_RESOLVABLE_SOURCE_KINDS.has(item.sourceKind);
 }
 
+/** Translate the fixed labels of the stable picker tuples at render time. */
+export function attentionOptionLabel(label: string): string {
+  switch (label) {
+    case "Approval": return t("attentionHelpers.approval");
+    case "Decision": return t("attentionHelpers.decision");
+    case "Decision requested": return t("attentionHelpers.decision_requested");
+    case "Join request": return t("attentionHelpers.join_request");
+    case "Recovery": return t("attentionHelpers.recovery");
+    case "Task": return t("attentionHelpers.task");
+    case "Blocked dependency": return t("attentionHelpers.blocked_dependency");
+    case "Review": return t("attentionHelpers.review");
+    case "Failed run": return t("attentionHelpers.failed_run");
+    case "Budget": return t("attentionHelpers.budget");
+    case "Agent error": return t("attentionHelpers.agent_error");
+    case "Critical": return t("attentionHelpers.critical");
+    case "High": return t("attentionHelpers.high");
+    case "Medium": return t("attentionHelpers.medium");
+    case "Low": return t("attentionHelpers.low");
+    case "Decide now": return t("attentionHelpers.decide_now");
+    case "New today": return t("attentionHelpers.new_today");
+    case "Earlier": return t("attentionHelpers.earlier");
+    case "Not set": return t("attentionHelpers.not_set");
+    case "Today": return t("attentionHelpers.today");
+    case "This week": return t("attentionHelpers.this_week");
+    case "Whenever": return t("attentionHelpers.whenever");
+    case "All": return t("attentionHelpers.all");
+    case "Yesterday": return t("attentionHelpers.yesterday");
+    case "Last 7 days": return t("attentionHelpers.last_7_days");
+    case "This month": return t("attentionHelpers.this_month");
+    case "None": return t("attentionHelpers.none");
+    case "Date": return t("attentionHelpers.date");
+    case "Type": return t("attentionHelpers.type");
+    case "Project": return t("attentionHelpers.project");
+    case "Severity": return t("attentionHelpers.severity");
+    case "Newest first": return t("attentionHelpers.newest_first");
+    case "Oldest first": return t("attentionHelpers.oldest_first");
+    case "No project": return t("attentionHelpers.no_project");
+    default: return label;
+  }
+}
+
+
 /**
  * Per-source wording only. The icon used to live here too — one glyph per
  * source kind — but rows now borrow the task-status glyph for their kind (see
@@ -48,18 +91,18 @@ interface SourceMeta {
 }
 
 const SOURCE_META: Record<AttentionSourceKind, SourceMeta> = {
-  approval: { label: "Approval" },
-  decision: { label: "Decision" },
-  issue_thread_interaction: { label: "Decision requested" },
-  join_request: { label: "Join request" },
-  recovery_action: { label: "Recovery" },
+  approval: { get label() { return t("attentionHelpers.approval"); } },
+  decision: { get label() { return t("attentionHelpers.decision"); } },
+  issue_thread_interaction: { get label() { return t("attentionHelpers.decision_requested"); } },
+  join_request: { get label() { return t("attentionHelpers.join_request"); } },
+  recovery_action: { get label() { return t("attentionHelpers.recovery"); } },
   // Read compatibility for persisted decisions from the retired feature.
-  productivity_review: { label: "Task" },
-  blocker_attention: { label: "Blocked dependency" },
-  review: { label: "Review" },
-  failed_run: { label: "Failed run" },
-  budget_alert: { label: "Budget" },
-  agent_error_alert: { label: "Agent error" },
+  productivity_review: { get label() { return t("attentionHelpers.task"); } },
+  blocker_attention: { get label() { return t("attentionHelpers.blocked_dependency"); } },
+  review: { get label() { return t("attentionHelpers.review"); } },
+  failed_run: { get label() { return t("attentionHelpers.failed_run"); } },
+  budget_alert: { get label() { return t("attentionHelpers.budget"); } },
+  agent_error_alert: { get label() { return t("attentionHelpers.agent_error"); } },
 };
 
 export function sourceMeta(kind: AttentionSourceKind): SourceMeta {
@@ -74,10 +117,10 @@ interface SeverityStyle {
 }
 
 const SEVERITY_STYLE: Record<AttentionSeverity, SeverityStyle> = {
-  critical: { accent: "bg-red-500", dot: "bg-red-500", label: "Critical" },
-  high: { accent: "bg-orange-500", dot: "bg-orange-500", label: "High" },
-  medium: { accent: "bg-yellow-500", dot: "bg-yellow-500", label: "Medium" },
-  low: { accent: "bg-blue-500", dot: "bg-blue-500", label: "Low" },
+  critical: { accent: "bg-red-500", dot: "bg-red-500", get label() { return t("attentionHelpers.critical"); } },
+  high: { accent: "bg-orange-500", dot: "bg-orange-500", get label() { return t("attentionHelpers.high"); } },
+  medium: { accent: "bg-yellow-500", dot: "bg-yellow-500", get label() { return t("attentionHelpers.medium"); } },
+  low: { accent: "bg-blue-500", dot: "bg-blue-500", get label() { return t("attentionHelpers.low"); } },
 };
 
 export function severityStyle(severity: AttentionSeverity): SeverityStyle {
@@ -188,7 +231,13 @@ function quote(text: string | null | undefined): string | null {
 }
 
 function countNoun(count: number, singular: string): string {
-  return `${count} ${count === 1 ? singular : `${singular}s`}`;
+  switch (singular) {
+    case "option": return t("attentionHelpers.option_count", { count });
+    case "question": return t("attentionHelpers.question_count", { count });
+    case "suggested task": return t("attentionHelpers.suggested_task_count", { count });
+    case "item": return t("attentionHelpers.verdict_item_count", { count });
+    default: return `${count} ${count === 1 ? singular : `${singular}s`}`;
+  }
 }
 
 /**
@@ -224,7 +273,7 @@ export function attentionDetailLine(item: AttentionItem): string | null {
     }
     case "item_verdicts": {
       const q = quote(detail.promptExcerpt);
-      const label = `${countNoun(detail.itemCount, "item")} to verdict`;
+      const label = countNoun(detail.itemCount, "item");
       return q ? `${label} — ${q}` : label;
     }
     case "failed_run":
@@ -237,10 +286,10 @@ export function attentionDetailLine(item: AttentionItem): string | null {
       const b = detail.blockingIssue;
       if (!b) return null;
       const id = b.identifier ? `${b.identifier} ` : "";
-      return b.title ? `Blocked by ${id}${b.title}` : b.identifier ? `Blocked by ${b.identifier}` : null;
+      return b.title ? t("attentionHelpers.blocked_by", { task: `${id}${b.title}` }) : b.identifier ? t("attentionHelpers.blocked_by", { task: b.identifier }) : null;
     }
     case "budget":
-      return `${Math.round(detail.observedPercent)}% of budget used ($${detail.amountObserved} / $${detail.amountLimit})`;
+      return t("attentionHelpers.budget_used", { percent: Math.round(detail.observedPercent), observed: detail.amountObserved, limit: detail.amountLimit });
     case "generic":
       return quote(detail.summaryExcerpt);
     default:
@@ -371,9 +420,9 @@ export function buildDeskShelves(items: AttentionItem[], now: number): DeskShelf
   const earlier = rest.filter((item) => !attentionIsNewToday(item, now));
 
   const shelves: DeskShelf[] = [];
-  if (decideNow.length > 0) shelves.push({ key: "desk:decide-now", label: "Decide now", items: decideNow });
-  if (newToday.length > 0) shelves.push({ key: "desk:new-today", label: "New today", items: newToday });
-  if (earlier.length > 0) shelves.push({ key: "desk:earlier", label: "Earlier", items: earlier });
+  if (decideNow.length > 0) shelves.push({ key: "desk:decide-now", label: t("attentionHelpers.decide_now"), items: decideNow });
+  if (newToday.length > 0) shelves.push({ key: "desk:new-today", label: t("attentionHelpers.new_today"), items: newToday });
+  if (earlier.length > 0) shelves.push({ key: "desk:earlier", label: t("attentionHelpers.earlier"), items: earlier });
   return shelves;
 }
 
@@ -420,14 +469,14 @@ export const DECIDE_BY_OPTIONS: ReadonlyArray<[DecideByPreset, string]> = [
 
 /** Human label for any stored `decideBy` value (preset or `YYYY-MM-DD`). */
 export function decideByLabel(decideBy: string | null): string {
-  if (!decideBy) return "Not set";
-  if (decideBy === "today") return "Today";
-  if (decideBy === "this_week") return "This week";
-  if (decideBy === "whenever") return "Whenever";
+  if (!decideBy) return t("attentionHelpers.not_set");
+  if (decideBy === "today") return t("attentionHelpers.today");
+  if (decideBy === "this_week") return t("attentionHelpers.this_week");
+  if (decideBy === "whenever") return t("attentionHelpers.whenever");
   if (/^\d{4}-\d{2}-\d{2}$/.test(decideBy)) {
     const parsed = new Date(`${decideBy}T00:00:00.000Z`);
     return Number.isFinite(parsed.getTime())
-      ? parsed.toLocaleDateString(undefined, { month: "short", day: "numeric", timeZone: "UTC" })
+      ? parsed.toLocaleDateString(i18n.language, { month: "short", day: "numeric", timeZone: "UTC" })
       : decideBy;
   }
   return decideBy;
@@ -811,10 +860,10 @@ const DATE_BUCKET_ORDER = ["today", "yesterday", "this_week", "earlier"] as cons
 type DateBucket = (typeof DATE_BUCKET_ORDER)[number];
 
 const DATE_BUCKET_LABELS: Record<DateBucket, string> = {
-  today: "Today",
-  yesterday: "Yesterday",
-  this_week: "This week",
-  earlier: "Earlier",
+  get today() { return t("attentionHelpers.today"); },
+  get yesterday() { return t("attentionHelpers.yesterday"); },
+  get this_week() { return t("attentionHelpers.this_week"); },
+  get earlier() { return t("attentionHelpers.earlier"); },
 };
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
@@ -834,10 +883,10 @@ export function attentionDateBucket(activityAt: string, now: number): DateBucket
 }
 
 const SEVERITY_LABEL: Record<AttentionSeverity, string> = {
-  critical: "Critical",
-  high: "High",
-  medium: "Medium",
-  low: "Low",
+  get critical() { return t("attentionHelpers.critical"); },
+  get high() { return t("attentionHelpers.high"); },
+  get medium() { return t("attentionHelpers.medium"); },
+  get low() { return t("attentionHelpers.low"); },
 };
 
 /**
@@ -896,7 +945,7 @@ export function groupAttentionItems(
         ? { key: `type:${item.sourceKind}`, label: sourceMeta(item.sourceKind).label }
         : item.project
           ? { key: `project:${item.project.id}`, label: item.project.name }
-          : { key: `project:${NO_GROUP_SENTINEL}`, label: "No project" };
+          : { key: `project:${NO_GROUP_SENTINEL}`, label: t("attentionHelpers.no_project") };
     const existing = groups.get(resolved.key);
     const ts = attentionActivityTimestamp(item);
     if (existing) {

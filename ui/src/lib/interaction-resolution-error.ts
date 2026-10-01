@@ -1,3 +1,4 @@
+import { t } from "@/i18n";
 /**
  * Plain-language copy for a *failed* issue-thread interaction resolution
  * (PAP-17287).
@@ -130,8 +131,8 @@ export function describeInteractionResolutionFailure(
       message: [
         reason
           ?? (coded
-            ? "You are not in this card's resolver audience."
-            : "You do not have permission to respond to this card."),
+            ? t("lastHelpersUi.notResolver")
+            : t("lastHelpersUi.noPermission")),
         responder,
       ]
         .filter(Boolean)
@@ -143,14 +144,14 @@ export function describeInteractionResolutionFailure(
     return {
       kind: "settled",
       code,
-      message: reason ?? "This request is no longer waiting for a decision.",
+      message: reason ?? t("lastHelpersUi.noLongerPending"),
     };
   }
 
   return {
     kind: "transient",
     code,
-    message: reason ? `${reason} Try again.` : "Couldn't submit. Try again.",
+    message: reason ? t("lastHelpersUi.reasonTryAgain", { reason }) : t("lastHelpersUi.submitFailed"),
   };
 }
 

@@ -1,4 +1,5 @@
 import type { Issue } from "@paperclipai/shared";
+import { t } from "@/i18n";
 
 type IssueDetailSource = "issues" | "inbox";
 
@@ -263,7 +264,16 @@ export function readIssueDetailBreadcrumb(
   state: unknown,
   search?: string,
 ): IssueDetailBreadcrumb | null {
-  return readIssueDetailLocationState(issuePathId, state, search)?.issueDetailBreadcrumb ?? null;
+  const breadcrumb = readIssueDetailLocationState(issuePathId, state, search)?.issueDetailBreadcrumb;
+  if (!breadcrumb) return null;
+  const pathname = breadcrumb.href.split(/[?#]/, 1)[0] ?? "";
+  if (/\/inbox(?:\/|$)/.test(pathname)) {
+    return { ...breadcrumb, label: t("inboxRest.inbox") };
+  }
+  if (/\/issues(?:\/|$)/.test(pathname)) {
+    return { ...breadcrumb, label: t("issues.breadcrumb") };
+  }
+  return breadcrumb;
 }
 
 export function shouldArmIssueDetailInboxQuickArchive(state: unknown): boolean {

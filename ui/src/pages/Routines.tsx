@@ -18,7 +18,7 @@ import { cn } from "../lib/utils";
 import { queryKeys } from "../lib/queryKeys";
 import { groupBy } from "../lib/groupBy";
 import { createIssueDetailLocationState } from "../lib/issueDetailBreadcrumb";
-import { useTranslation } from "@/i18n";
+import { t, useTranslation } from "@/i18n";
 import { collectLiveIssueIds } from "../lib/liveIssueIds";
 import { getRecentAssigneeIds, sortAgentsByRecency, trackRecentAssignee } from "../lib/recent-assignees";
 import { getRecentProjectIds, trackRecentProject } from "../lib/recent-projects";
@@ -72,13 +72,13 @@ import {
 const concurrencyPolicies = ["coalesce_if_active", "always_enqueue", "skip_if_active"];
 const catchUpPolicies = ["skip_missed", "enqueue_missed_with_cap"];
 const concurrencyPolicyDescriptions: Record<string, string> = {
-  coalesce_if_active: "If a run is already active, keep just one follow-up run queued.",
-  always_enqueue: "Queue every trigger occurrence, even if the routine is already running.",
-  skip_if_active: "Drop new trigger occurrences while a run is still active.",
+  get coalesce_if_active() { return t("routinesTail.if_a_run_is_already_active_keep_just_one_follow_up_run_queued"); },
+  get always_enqueue() { return t("routinesTail.queue_every_trigger_occurrence_even_if_the_routine_is_already_running"); },
+  get skip_if_active() { return t("routinesTail.drop_new_trigger_occurrences_while_a_run_is_still_active"); },
 };
 const catchUpPolicyDescriptions: Record<string, string> = {
-  skip_missed: "Ignore windows that were missed while the scheduler or routine was paused.",
-  enqueue_missed_with_cap: "Catch up missed schedule windows after recovery; sub-hourly schedules are combined into one catch-up run, slower schedules replay each missed window up to a cap.",
+  get skip_missed() { return t("routinesTail.ignore_windows_that_were_missed_while_the_scheduler_or_routine_was_paused"); },
+  get enqueue_missed_with_cap() { return t("routinesTail.catch_up_missed_schedule_windows_after_recovery_sub_hourly_schedules_are_combined_into_one_catch_up_run_slower_schedules_replay_each_missed_window_up_to_a_cap"); },
 };
 
 function autoResizeTextarea(element: HTMLTextAreaElement | null) {
@@ -187,8 +187,8 @@ export function buildRoutineGroups(
         const positionCompare = leftPosition - rightPosition;
         if (positionCompare !== 0) return positionCompare;
 
-        const labelCompare = (leftFolder?.name ?? "Unknown folder").localeCompare(
-          rightFolder?.name ?? "Unknown folder",
+        const labelCompare = (leftFolder?.name ?? t("routinesTail.unknown_folder")).localeCompare(
+          rightFolder?.name ?? t("routinesTail.unknown_folder"),
           undefined,
           { sensitivity: "base" },
         );
@@ -196,7 +196,7 @@ export function buildRoutineGroups(
       })
       .map((key) => ({
         key,
-        label: key === "__unfiled" ? "Unfiled" : (folderById.get(key)?.name ?? "Unknown folder"),
+        label: key === "__unfiled" ? t("routinesTail.unfiled") : (folderById.get(key)?.name ?? t("routinesTail.unknown_folder")),
         items: groups[key]!,
       }));
   }
@@ -205,13 +205,13 @@ export function buildRoutineGroups(
     const groups = groupBy(routines, (routine) => routine.projectId ?? "__no_project");
     return Object.keys(groups)
       .sort((left, right) => {
-        const leftLabel = left === "__no_project" ? "No project" : (projectById.get(left)?.name ?? "Unknown project");
-        const rightLabel = right === "__no_project" ? "No project" : (projectById.get(right)?.name ?? "Unknown project");
+        const leftLabel = left === "__no_project" ? t("routinesTail.no_project") : (projectById.get(left)?.name ?? t("routinesTail.unknown_project"));
+        const rightLabel = right === "__no_project" ? t("routinesTail.no_project") : (projectById.get(right)?.name ?? t("routinesTail.unknown_project"));
         return leftLabel.localeCompare(rightLabel);
       })
       .map((key) => ({
         key,
-        label: key === "__no_project" ? "No project" : (projectById.get(key)?.name ?? "Unknown project"),
+        label: key === "__no_project" ? t("routinesTail.no_project") : (projectById.get(key)?.name ?? t("routinesTail.unknown_project")),
         items: groups[key]!,
       }));
   }
@@ -219,13 +219,13 @@ export function buildRoutineGroups(
   const groups = groupBy(routines, (routine) => routine.assigneeAgentId ?? "__unassigned");
   return Object.keys(groups)
     .sort((left, right) => {
-      const leftLabel = left === "__unassigned" ? "Unassigned" : (agentById.get(left)?.name ?? "Unknown agent");
-      const rightLabel = right === "__unassigned" ? "Unassigned" : (agentById.get(right)?.name ?? "Unknown agent");
+      const leftLabel = left === "__unassigned" ? t("routinesTail.unassigned") : (agentById.get(left)?.name ?? t("routinesTail.unknown_agent"));
+      const rightLabel = right === "__unassigned" ? t("routinesTail.unassigned") : (agentById.get(right)?.name ?? t("routinesTail.unknown_agent"));
       return leftLabel.localeCompare(rightLabel);
     })
     .map((key) => ({
       key,
-      label: key === "__unassigned" ? "Unassigned" : (agentById.get(key)?.name ?? "Unknown agent"),
+      label: key === "__unassigned" ? t("routinesTail.unassigned") : (agentById.get(key)?.name ?? t("routinesTail.unknown_agent")),
       items: groups[key]!,
     }));
 }
@@ -247,7 +247,7 @@ export function buildRoutineSections(
     .filter((group) => group.items.length > 0)
     .map((group) => (
       builtInRoutines.length > 0 && groupByValue === "none" && group.key === "__all"
-        ? { ...group, label: "Custom routines" }
+        ? { ...group, label: t("routinesTail.custom_routines") }
         : group
     ));
 
@@ -257,7 +257,7 @@ export function buildRoutineSections(
     ...customGroups,
     {
       key: builtInRoutineGroupKey,
-      label: "Built-in routines",
+      label: t("routinesTail.built_in_routines"),
       items: builtInRoutines,
     },
   ];
@@ -367,8 +367,8 @@ export function Routines() {
   const folderSelection = normalizeFolderSelection(searchParams.get("folder"));
 
   useEffect(() => {
-    setBreadcrumbs([{ label: "Routines" }]);
-  }, [setBreadcrumbs]);
+    setBreadcrumbs([{ label: t("routinesTail.routines") }]);
+  }, [setBreadcrumbs, t]);
 
   useEffect(() => {
     setRoutineViewState(getRoutineViewState(routineViewStateKey));
@@ -430,7 +430,7 @@ export function Routines() {
       projects: (projects ?? []).filter((project) => !project.archivedAt),
       members: companyMembers?.users,
     });
-  }, [agents, companyMembers?.users, projects]);
+  }, [agents, companyMembers?.users, projects, t]);
 
   const createRoutine = useMutation({
     mutationFn: () =>
@@ -451,10 +451,10 @@ export function Routines() {
       setAdvancedOpen(false);
       await queryClient.invalidateQueries({ queryKey: queryKeys.routines.list(selectedCompanyId!) });
       pushToast({
-        title: "Routine created",
+        title: t("routinesTail.routine_created"),
         body: routine.assigneeAgentId
-          ? "Add the first trigger to turn it into a live workflow."
-          : "Draft saved. Add a default agent before enabling automation.",
+          ? t("routinesTail.add_the_first_trigger_to_turn_it_into_a_live_workflow")
+          : t("routinesTail.draft_saved_add_a_default_agent_before_enabling_automation"),
         tone: "success",
       });
       navigate(routineDetailHref(routine.id, "triggers"));
@@ -480,8 +480,8 @@ export function Routines() {
           ]);
         } catch (moveError) {
           pushToast({
-            title: "Folder created, move failed",
-            body: moveError instanceof Error ? moveError.message : "Paperclip could not move the selected routines.",
+            title: t("routinesTail.folder_created_move_failed"),
+            body: moveError instanceof Error ? moveError.message : t("routinesTail.paperclip_could_not_move_the_selected_routines"),
             tone: "error",
           });
           return;
@@ -489,12 +489,12 @@ export function Routines() {
       } else {
         setFolderSelection(folder.id);
       }
-      pushToast({ title: "Folder created", body: folder.name, tone: "success" });
+      pushToast({ title: t("routinesTail.folder_created"), body: folder.name, tone: "success" });
     },
     onError: (mutationError) => {
       pushToast({
-        title: "Failed to save folder",
-        body: mutationError instanceof Error ? mutationError.message : "Paperclip could not save the folder.",
+        title: t("routinesTail.failed_to_save_folder"),
+        body: mutationError instanceof Error ? mutationError.message : t("routinesTail.paperclip_could_not_save_the_folder"),
         tone: "error",
       });
     },
@@ -509,8 +509,8 @@ export function Routines() {
     },
     onError: (mutationError) => {
       pushToast({
-        title: "Folder save failed",
-        body: mutationError instanceof Error ? mutationError.message : "Paperclip could not update the folder.",
+        title: t("routinesTail.folder_save_failed"),
+        body: mutationError instanceof Error ? mutationError.message : t("routinesTail.paperclip_could_not_update_the_folder"),
         tone: "error",
       });
     },
@@ -524,12 +524,12 @@ export function Routines() {
         queryClient.invalidateQueries({ queryKey: queryKeys.routines.list(selectedCompanyId!) }),
         queryClient.invalidateQueries({ queryKey: queryKeys.folders.list(selectedCompanyId!, "routine") }),
       ]);
-      pushToast({ title: "Folder deleted", body: "Items moved to Unfiled.", tone: "success" });
+      pushToast({ title: t("routinesTail.folder_deleted"), body: t("routinesTail.items_moved_to_unfiled"), tone: "success" });
     },
     onError: (mutationError) => {
       pushToast({
-        title: "Folder delete failed",
-        body: mutationError instanceof Error ? mutationError.message : "Paperclip could not delete the folder.",
+        title: t("routinesTail.folder_delete_failed"),
+        body: mutationError instanceof Error ? mutationError.message : t("routinesTail.paperclip_could_not_delete_the_folder"),
         tone: "error",
       });
     },
@@ -545,8 +545,8 @@ export function Routines() {
     },
     onError: (mutationError) => {
       pushToast({
-        title: "Move failed",
-        body: mutationError instanceof Error ? mutationError.message : "Paperclip could not move the routine.",
+        title: t("routinesTail.move_failed"),
+        body: mutationError instanceof Error ? mutationError.message : t("routinesTail.paperclip_could_not_move_the_routine"),
         tone: "error",
       });
     },
@@ -567,8 +567,8 @@ export function Routines() {
     },
     onError: (mutationError) => {
       pushToast({
-        title: "Failed to update routine",
-        body: mutationError instanceof Error ? mutationError.message : "Paperclip could not update the routine.",
+        title: t("routinesTail.failed_to_update_routine"),
+        body: mutationError instanceof Error ? mutationError.message : t("routinesTail.paperclip_could_not_update_the_routine"),
         tone: "error",
       });
     },
@@ -602,8 +602,8 @@ export function Routines() {
     },
     onError: (mutationError) => {
       pushToast({
-        title: "Routine run failed",
-        body: mutationError instanceof Error ? mutationError.message : "Paperclip could not start the routine run.",
+        title: t("routinesTail.routine_run_failed"),
+        body: mutationError instanceof Error ? mutationError.message : t("routinesTail.paperclip_could_not_start_the_routine_run"),
         tone: "error",
       });
     },
@@ -653,8 +653,8 @@ export function Routines() {
     [liveRuns, routineExecutionIssues],
   );
   const recentRunsIssueLinkState = useMemo(
-    () => createIssueDetailLocationState("Recent Runs", "/routines?tab=runs", "issues"),
-    [],
+    () => createIssueDetailLocationState(t("routinesTail.recent_runs"), "/routines?tab=runs", "issues"),
+    [t],
   );
   const updateIssue = useMutation({
     mutationFn: ({ id, data }: { id: string; data: Record<string, unknown> }) => issuesApi.update(id, data),
@@ -703,7 +703,7 @@ export function Routines() {
   );
   const routineSections = useMemo(
     () => buildRoutineSections(sortedRoutines, routineViewState.groupBy, projectById, agentById, folderById),
-    [agentById, folderById, projectById, routineViewState.groupBy, sortedRoutines],
+    [agentById, folderById, projectById, routineViewState.groupBy, sortedRoutines, t],
   );
   const currentAssignee = draft.assigneeAgentId ? agentById.get(draft.assigneeAgentId) ?? null : null;
   const currentProject = draft.projectId ? projectById.get(draft.projectId) ?? null : null;
@@ -754,11 +754,11 @@ export function Routines() {
         queryClient.invalidateQueries({ queryKey: queryKeys.routines.list(selectedCompanyId!) }),
         queryClient.invalidateQueries({ queryKey: queryKeys.folders.list(selectedCompanyId!, "routine") }),
       ]);
-      pushToast({ title: "Routines moved", body: `${ids.length} routine${ids.length === 1 ? "" : "s"} filed.`, tone: "success" });
+      pushToast({ title: t("routinesTail.routines_moved"), body: t("routinesTail.filed", { count: ids.length }), tone: "success" });
     } catch (moveError) {
       pushToast({
-        title: "Failed to move routines",
-        body: moveError instanceof Error ? moveError.message : "Paperclip could not move the selected routines.",
+        title: t("routinesTail.failed_to_move_routines"),
+        body: moveError instanceof Error ? moveError.message : t("routinesTail.paperclip_could_not_move_the_selected_routines"),
         tone: "error",
       });
     }
@@ -771,8 +771,8 @@ export function Routines() {
   function handleToggleEnabled(routine: RoutineListItem, enabled: boolean) {
     if (!enabled && !routine.assigneeAgentId) {
       pushToast({
-        title: "Default agent required",
-        body: "Set a default agent before enabling routine automation.",
+        title: t("routinesTail.default_agent_required"),
+        body: t("routinesTail.set_a_default_agent_before_enabling_routine_automation"),
         tone: "warn",
       });
       return;
@@ -791,7 +791,7 @@ export function Routines() {
   }
 
   if (!selectedCompanyId) {
-    return <EmptyState icon={Repeat} message="Select an organization to view routines." />;
+    return <EmptyState icon={Repeat} message={t("routinesTail.select_an_organization_to_view_routines")} />;
   }
 
   if (streamlinedUiEnabled && legacyRunsRequested) {
@@ -808,14 +808,10 @@ export function Routines() {
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div className="space-y-1">
             <h1 className="text-2xl font-semibold tracking-tight">{t("routines.title")}</h1>
-            <p className="text-sm text-muted-foreground">
-              Recurring work definitions that materialize into auditable execution tasks.
-            </p>
+            <p className="text-sm text-muted-foreground">{t("routinesTail.recurring_work_definitions_that_materialize_into_auditable_execution_tasks")}</p>
           </div>
           <Button onClick={openCreateRoutine}>
-            <Plus className="mr-2 h-4 w-4" />
-            Create routine
-          </Button>
+            <Plus className="mr-2 h-4 w-4" />{t("routines.createRoutine")}</Button>
         </div>
         <Tabs value={activeTab} onValueChange={handleLegacyTabChange}>
           <PageTabBar
@@ -823,8 +819,8 @@ export function Routines() {
             value={activeTab}
             onValueChange={handleLegacyTabChange}
             items={[
-              { value: "routines", label: "Routines" },
-              { value: "runs", label: "Recent Runs" },
+              { value: "routines", label: t("routinesTail.routines") },
+              { value: "runs", label: t("routinesTail.recent_runs") },
             ]}
           />
         </Tabs>
@@ -848,20 +844,16 @@ export function Routines() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="space-y-1">
           <h1 className="text-xl font-bold">{t("routines.title")}</h1>
-          <p className="text-sm text-muted-foreground">
-            Recurring work definitions that materialize into auditable execution tasks.
-          </p>
+          <p className="text-sm text-muted-foreground">{t("routinesTail.recurring_work_definitions_that_materialize_into_auditable_execution_tasks")}</p>
         </div>
         <div className="flex items-center gap-2">
           {streamlinedUiEnabled ? (
             <Button variant="outline" asChild>
-              <Link to={auditSectionHref("runs", {})}>View all runs</Link>
+              <Link to={auditSectionHref("runs", {})}>{t("routinesTail.view_all_runs")}</Link>
             </Button>
           ) : null}
           <Button onClick={openCreateRoutine}>
-            <Plus className="mr-2 h-4 w-4" />
-            Create routine
-          </Button>
+            <Plus className="mr-2 h-4 w-4" />{t("routines.createRoutine")}</Button>
         </div>
       </div>
 
@@ -872,8 +864,8 @@ export function Routines() {
             value={activeTab}
             onValueChange={handleLegacyTabChange}
             items={[
-              { value: "routines", label: "Routines" },
-              { value: "runs", label: "Recent Runs" },
+              { value: "routines", label: t("routinesTail.routines") },
+              { value: "runs", label: t("routinesTail.recent_runs") },
             ]}
           />
         </Tabs>
@@ -882,7 +874,7 @@ export function Routines() {
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between gap-3">
           <p className="text-sm text-muted-foreground">
-            {visibleRoutines.length} routine{visibleRoutines.length === 1 ? "" : "s"}
+            {visibleRoutines.length}{" "}{t("teamCatalogUi.routine")}{visibleRoutines.length === 1 ? "" : "s"}
           </p>
           <div className="flex items-center gap-1">
               <Popover>
@@ -895,10 +887,10 @@ export function Routines() {
                 <PopoverContent align="end" className="w-44 p-0">
                   <div className="p-2 space-y-0.5">
                     {([
-                      ["updated", "Updated"],
-                      ["created", "Created"],
-                      ["lastRun", "Last run"],
-                      ["title", "Title"],
+                      ["updated", t("routinesTail.updated")],
+                      ["created", t("routinesTail.created")],
+                      ["lastRun", t("routinesTail.last_run")],
+                      ["title", t("routinesTail.title")],
                     ] as const).map(([field, label]) => (
                       <button
                         key={field}
@@ -918,7 +910,7 @@ export function Routines() {
                         <span>{label}</span>
                         {routineViewState.sortField === field ? (
                           <span className="text-xs text-muted-foreground">
-                            {routineViewState.sortDir === "asc" ? "Asc" : "Desc"}
+                            {routineViewState.sortDir === "asc" ? t("routinesTail.asc") : t("routinesTail.desc")}
                           </span>
                         ) : null}
                       </button>
@@ -936,10 +928,10 @@ export function Routines() {
                 <PopoverContent align="end" className="w-44 p-0">
                   <div className="p-2 space-y-0.5">
                     {([
-                      ["folder", "Folder"],
-                      ["project", "Project"],
-                      ["assignee", "Agent"],
-                      ["none", "None"],
+                      ["folder", t("routinesTail.folder")],
+                      ["project", t("routinesTail.project")],
+                      ["assignee", t("routinesTail.agent")],
+                      ["none", t("routinesTail.none")],
                     ] as const).map(([value, label]) => (
                       <button
                         key={value}
@@ -959,13 +951,11 @@ export function Routines() {
               </Popover>
               {routineViewState.groupBy === "folder" && !hasRoutineFolders ? (
                 <Button variant="outline" size="sm" onClick={() => openCreateFolder()}>
-                  <Plus className="mr-2 h-3.5 w-3.5" />
-                  New folder
-                </Button>
+                  <Plus className="mr-2 h-3.5 w-3.5" />{t("routines.newFolder")}</Button>
               ) : null}
               {showFolderRail ? (
                 <Button variant="ghost" size="sm" className="text-xs" onClick={() => setSelectMode((current) => !current)}>
-                  {selectMode ? "Done" : "Select"}
+                  {selectMode ? t("routinesTail.done") : t("routinesTail.select")}
                 </Button>
               ) : null}
           </div>
@@ -975,7 +965,7 @@ export function Routines() {
             <FolderChip
               result={railFolderResult}
               selection={folderSelection}
-              allLabel="All routines"
+              allLabel={t("routinesTail.all_routines")}
               onClick={() => setMobileFoldersOpen(true)}
             />
           </div>
@@ -996,10 +986,8 @@ export function Routines() {
         >
           <div className="shrink-0 flex flex-wrap items-center justify-between gap-3 border-b border-border/60 px-5 py-3">
             <div>
-              <p className="text-xs font-medium uppercase tracking-(--tracking-caps) text-muted-foreground">New routine</p>
-              <p className="text-sm text-muted-foreground">
-                Define the recurring work first. Default project and agent are optional for draft routines.
-              </p>
+              <p className="text-xs font-medium uppercase tracking-(--tracking-caps) text-muted-foreground">{t("routines.newRoutine")}</p>
+              <p className="text-sm text-muted-foreground">{t("routines.newRoutineDescription")}</p>
             </div>
             <Button
               variant="ghost"
@@ -1009,9 +997,7 @@ export function Routines() {
                 setAdvancedOpen(false);
               }}
               disabled={createRoutine.isPending}
-            >
-              Cancel
-            </Button>
+            >{t("common.cancel")}</Button>
           </div>
 
           <div className="min-h-0 flex-1 overflow-y-auto">
@@ -1019,7 +1005,7 @@ export function Routines() {
               <textarea
                 ref={titleInputRef}
                 className="w-full resize-none overflow-hidden bg-transparent text-xl font-semibold outline-none placeholder:text-muted-foreground/50"
-                placeholder="Routine title"
+                placeholder={t("routines.routineTitlePlaceholder")}
                 rows={1}
                 value={draft.title}
                 onChange={(event) => {
@@ -1058,10 +1044,10 @@ export function Routines() {
                     value={draft.assigneeAgentId}
                     options={assigneeOptions}
                     recentOptionIds={recentAssigneeIds}
-                    placeholder="Responsible"
-                    noneLabel="No responsible"
-                    searchPlaceholder="Search responsible..."
-                    emptyMessage="No responsible found."
+                    placeholder={t("routines.responsible")}
+                    noneLabel={t("routinesTail.no_responsible")}
+                    searchPlaceholder={t("routinesTail.search_responsible")}
+                    emptyMessage={t("routines.noResponsibleFound")}
                     onChange={(assigneeAgentId) => {
                       if (assigneeAgentId) trackRecentAssignee(assigneeAgentId);
                       setDraft((current) => ({ ...current, assigneeAgentId }));
@@ -1104,10 +1090,10 @@ export function Routines() {
                     value={draft.projectId}
                     options={projectOptions}
                     recentOptionIds={recentProjectIds}
-                    placeholder="Project"
-                    noneLabel="No project"
-                    searchPlaceholder="Search projects..."
-                    emptyMessage="No projects found."
+                    placeholder={t("routines.project")}
+                    noneLabel={t("routinesTail.no_project")}
+                    searchPlaceholder={t("routinesTail.search_projects")}
+                    emptyMessage={t("routines.noProjectsFound")}
                     onChange={(projectId) => {
                       if (projectId) trackRecentProject(projectId);
                       setDraft((current) => ({ ...current, projectId }));
@@ -1140,7 +1126,7 @@ export function Routines() {
                       );
                     }}
                   />
-                  <span>filed in</span>
+                  <span>{t("routines.filedIn")}</span>
                   <Select
                     value={draft.folderId ?? "__unfiled"}
                     onValueChange={(value) => setDraft((current) => ({
@@ -1169,7 +1155,7 @@ export function Routines() {
                 ref={descriptionEditorRef}
                 value={draft.description}
                 onChange={(description) => setDraft((current) => ({ ...current, description }))}
-                placeholder="Add instructions..."
+                placeholder={t("routines.addInstructions")}
                 bordered={false}
                 contentClassName="min-h-(--sz-160px) text-sm text-muted-foreground"
                 mentions={mentionOptions}
@@ -1185,8 +1171,8 @@ export function Routines() {
               <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
                 <CollapsibleTrigger className="flex w-full items-center justify-between text-left">
                   <div>
-                    <p className="text-sm font-medium">Advanced delivery settings</p>
-                    <p className="text-sm text-muted-foreground">Keep policy controls secondary to the work definition.</p>
+                    <p className="text-sm font-medium">{t("routines.advancedDeliverySettings")}</p>
+                    <p className="text-sm text-muted-foreground">{t("routines.advancedDeliveryDescription")}</p>
                   </div>
                   {advancedOpen ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
                 </CollapsibleTrigger>
@@ -1210,7 +1196,7 @@ export function Routines() {
                       <p className="text-xs text-muted-foreground">{concurrencyPolicyDescriptions[draft.concurrencyPolicy]}</p>
                     </div>
                     <div className="space-y-2">
-                      <p className="text-xs font-medium uppercase tracking-(--tracking-caps) text-muted-foreground">Catch-up</p>
+                      <p className="text-xs font-medium uppercase tracking-(--tracking-caps) text-muted-foreground">{t("routines.catchUp")}</p>
                       <Select
                         value={draft.catchUpPolicy}
                         onValueChange={(catchUpPolicy) => setDraft((current) => ({ ...current, catchUpPolicy }))}
@@ -1233,9 +1219,7 @@ export function Routines() {
           </div>
 
           <div className="shrink-0 flex flex-col gap-3 border-t border-border/60 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="text-sm text-muted-foreground">
-              After creation, Paperclip takes you straight to trigger setup. Draft routines stay paused until you add a default agent.
-            </div>
+            <div className="text-sm text-muted-foreground">{t("routinesTail.after_creation_paperclip_takes_you_straight_to_trigger_setup_draft_routines_stay_paused_until_you_add_a_default_agent")}</div>
             <div className="flex flex-col gap-2 sm:items-end">
               <Button
                 onClick={() => createRoutine.mutate()}
@@ -1245,11 +1229,11 @@ export function Routines() {
                 }
               >
                 <Plus className="mr-2 h-4 w-4" />
-                {createRoutine.isPending ? "Creating..." : "Create routine"}
+                {createRoutine.isPending ? t("routinesTail.creating") : t("routinesTail.create_routine")}
               </Button>
               {createRoutine.isError ? (
                 <p className="text-sm text-destructive">
-                  {createRoutine.error instanceof Error ? createRoutine.error.message : "Failed to create routine"}
+                  {createRoutine.error instanceof Error ? createRoutine.error.message : t("routinesTail.failed_to_create_routine")}
                 </p>
               ) : null}
             </div>
@@ -1260,7 +1244,7 @@ export function Routines() {
       {error ? (
         <Card>
           <CardContent className="pt-6 text-sm text-destructive">
-            {error instanceof Error ? error.message : "Failed to load routines"}
+            {error instanceof Error ? error.message : t("routinesTail.failed_to_load_routines")}
           </CardContent>
         </Card>
       ) : null}
@@ -1270,7 +1254,7 @@ export function Routines() {
             <FolderRail
               result={railFolderResult}
               selection={folderSelection}
-              allLabel="All routines"
+              allLabel={t("routinesTail.all_routines")}
               itemLabelPlural="routines"
               loading={foldersLoading}
               onSelect={setFolderSelection}
@@ -1286,11 +1270,11 @@ export function Routines() {
           <div className="min-w-0 flex-1">
           {routineViewState.groupBy === "folder" && hasRoutineFolders ? (
             <div className="mb-3 flex flex-wrap items-center gap-2">
-              {folderSelection === "all" ? <FolderIconHeader label="All routines" count={sortedRoutines.length} /> : (
+              {folderSelection === "all" ? <FolderIconHeader label={t("routines.allRoutines")} count={sortedRoutines.length} /> : (
                 <div className="flex min-w-0 items-center gap-2 text-sm">
                   <FolderSwatch color={activeFolder?.color} />
-                  <span className="truncate font-medium">{folderSelection === "unfiled" ? "Unfiled" : activeFolder?.name ?? "Folder"}</span>
-                  <span className="text-muted-foreground">{sortedRoutines.length} routine{sortedRoutines.length === 1 ? "" : "s"}</span>
+                  <span className="truncate font-medium">{folderSelection === "unfiled" ? t("routinesTail.unfiled") : activeFolder?.name ?? t("routinesTail.folder")}</span>
+                  <span className="text-muted-foreground">{sortedRoutines.length}{" "}{t("teamCatalogUi.routine")}{sortedRoutines.length === 1 ? "" : "s"}</span>
                 </div>
               )}
             </div>
@@ -1319,21 +1303,19 @@ export function Routines() {
             <div className="py-12">
               <EmptyState
                 icon={Repeat}
-                message="No active routines. Use Create routine to define the first recurring workflow."
+                message={t("routinesTail.no_active_routines_use_create_routine_to_define_the_first_recurring_workflow")}
               />
             </div>
           ) : sortedRoutines.length === 0 ? (
             <div className="py-12">
               <EmptyState
                 icon={Repeat}
-                message={folderSelection === "all" ? "No routines match this view." : "This folder is empty."}
+                message={folderSelection === "all" ? t("routinesTail.no_routines_match_this_view") : t("routinesTail.this_folder_is_empty")}
               />
               {folderSelection !== "all" ? (
                 <div className="mt-3 flex justify-center">
                   <Button size="sm" onClick={openCreateRoutine}>
-                    <Plus className="mr-2 h-3.5 w-3.5" />
-                    New routine in this folder
-                  </Button>
+                    <Plus className="mr-2 h-3.5 w-3.5" />{t("routines.newRoutineInFolder")}</Button>
                 </div>
               ) : null}
             </div>
@@ -1392,13 +1374,13 @@ export function Routines() {
                                 const previousFolderId = routine.folderId ?? null;
                                 moveRoutineToFolder.mutate({ itemId: routine.id, folderId });
                                 pushToast({
-                                  title: "Routine moved",
+                                  title: t("routinesTail.routine_moved"),
                                   body: folderId
-                                    ? `Moved "${routine.title}" to ${routineFolders?.folders.find((folder) => folder.id === folderId)?.name ?? "folder"}.`
-                                    : `Moved "${routine.title}" to Unfiled.`,
+                                    ? t("routinesTail.moved_to_folder", { title: routine.title, folder: routineFolders?.folders.find((folder) => folder.id === folderId)?.name ?? t("routinesTail.folder_fallback") })
+                                    : t("routinesTail.moved_unfiled", { title: routine.title }),
                                   tone: "success",
                                   action: {
-                                    label: "Undo",
+                                    label: t("routinesTail.undo"),
                                     onClick: () => moveRoutineToFolder.mutate({ itemId: routine.id, folderId: previousFolderId }),
                                   },
                                 });
@@ -1445,8 +1427,8 @@ export function Routines() {
         onOpenChange={setMobileFoldersOpen}
         result={railFolderResult}
         selection={folderSelection}
-        allLabel="All routines"
-        itemLabelPlural="Routines"
+        allLabel={t("routinesTail.all_routines")}
+        itemLabelPlural={t("routinesTail.routines")}
         onSelect={setFolderSelection}
         onCreate={() => openCreateFolder()}
       />
@@ -1474,11 +1456,12 @@ export function Routines() {
 }
 
 function FolderIconHeader({ label, count }: { label: string; count: number }) {
+  const { t } = useTranslation();
   return (
     <div className="flex min-w-0 items-center gap-2 text-sm">
       <Repeat className="h-3.5 w-3.5 text-muted-foreground" />
       <span className="truncate font-medium">{label}</span>
-      <span className="text-muted-foreground">{count} routine{count === 1 ? "" : "s"}</span>
+      <span className="text-muted-foreground">{t("routinesTail.routine_count", { count })}</span>
     </div>
   );
 }

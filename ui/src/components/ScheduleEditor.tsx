@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useTranslation } from "@/i18n";
+import { t, i18n, useTranslation } from "@/i18n";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
@@ -19,7 +19,7 @@ const PRESETS: { value: SchedulePreset; labelKey: string }[] = [
 
 const HOURS = Array.from({ length: 24 }, (_, i) => ({
   value: String(i),
-  label: i === 0 ? "12 AM" : i < 12 ? `${i} AM` : i === 12 ? "12 PM" : `${i - 12} PM`,
+  get label() { return new Intl.DateTimeFormat(i18n.language, { hour: "numeric", timeZone: "UTC" }).format(new Date(Date.UTC(2000, 0, 1, i))); },
 }));
 
 const MINUTES = Array.from({ length: 12 }, (_, i) => ({
@@ -28,13 +28,13 @@ const MINUTES = Array.from({ length: 12 }, (_, i) => ({
 }));
 
 const DAYS_OF_WEEK = [
-  { value: "1", label: "Mon" },
-  { value: "2", label: "Tue" },
-  { value: "3", label: "Wed" },
-  { value: "4", label: "Thu" },
-  { value: "5", label: "Fri" },
-  { value: "6", label: "Sat" },
-  { value: "0", label: "Sun" },
+  { value: "1", get label() { return t("agentRoutineTailUi.mon"); } },
+  { value: "2", get label() { return t("agentRoutineTailUi.tue"); } },
+  { value: "3", get label() { return t("agentRoutineTailUi.wed"); } },
+  { value: "4", get label() { return t("agentRoutineTailUi.thu"); } },
+  { value: "5", get label() { return t("agentRoutineTailUi.fri"); } },
+  { value: "6", get label() { return t("agentRoutineTailUi.sat"); } },
+  { value: "0", get label() { return t("agentRoutineTailUi.sun"); } },
 ];
 
 const DAYS_OF_MONTH = Array.from({ length: 31 }, (_, i) => ({
@@ -122,26 +122,25 @@ export function buildCron(preset: SchedulePreset, hour: string, minute: string, 
 
 function describeSchedule(cron: string): string {
   const { preset, hour, minute, dayOfWeek, dayOfMonth } = parseCronToPreset(cron);
-  const hourLabel = HOURS.find((h) => h.value === hour)?.label ?? `${hour}`;
-  const timeStr = `${hourLabel.replace(/ (AM|PM)$/, "")}:${minute.padStart(2, "0")} ${hourLabel.match(/(AM|PM)$/)?.[0] ?? ""}`;
+  const timeStr = new Intl.DateTimeFormat(i18n.language, { hour: "numeric", minute: "2-digit", timeZone: "UTC" }).format(new Date(Date.UTC(2000, 0, 1, Number(hour), Number(minute))));
 
   switch (preset) {
     case "every_minute":
-      return "Every minute";
+      return t("agentRoutineTailUi.everyMinute");
     case "every_hour":
-      return `Every hour at :${minute.padStart(2, "0")}`;
+      return t("agentRoutineTailUi.everyHour", { minute: minute.padStart(2, "0") });
     case "every_day":
-      return `Every day at ${timeStr}`;
+      return t("agentRoutineTailUi.everyDay", { time: timeStr });
     case "weekdays":
-      return `Weekdays at ${timeStr}`;
+      return t("agentRoutineTailUi.weekdays", { time: timeStr });
     case "weekly": {
       const day = DAYS_OF_WEEK.find((d) => d.value === dayOfWeek)?.label ?? dayOfWeek;
-      return `Every ${day} at ${timeStr}`;
+      return t("agentRoutineTailUi.weekly", { day, time: timeStr });
     }
     case "monthly":
-      return `Monthly on the ${dayOfMonth}${ordinalSuffix(Number(dayOfMonth))} at ${timeStr}`;
+      return t("agentRoutineTailUi.monthly", { day: `${dayOfMonth}${i18n.language.startsWith("zh") ? "" : ordinalSuffix(Number(dayOfMonth))}`, time: timeStr });
     case "custom":
-      return cron || "No schedule set";
+      return cron || t("agentRoutineTailUi.text12");
   }
 }
 
@@ -162,7 +161,7 @@ export function getScheduleCronValidation(cron: string): {
   if (!trimmed) {
     return {
       valid: false,
-      message: "Enter a 5-field cron expression.",
+      message: t("agentRoutineTailUi.text13"),
       nextFires: [],
     };
   }
@@ -171,7 +170,7 @@ export function getScheduleCronValidation(cron: string): {
   if (fields.length !== 5) {
     return {
       valid: false,
-      message: `Use exactly 5 fields; this has ${fields.length}.`,
+      message: t("agentRoutineTailUi.cronFields", { count: fields.length }),
       nextFires: [],
     };
   }
@@ -179,7 +178,7 @@ export function getScheduleCronValidation(cron: string): {
   if (!parseCronExpression(trimmed)) {
     return {
       valid: false,
-      message: "Cron fields must use valid numbers, ranges, lists, wildcards, or steps.",
+      message: t("agentRoutineTailUi.text14"),
       nextFires: [],
     };
   }
@@ -187,7 +186,7 @@ export function getScheduleCronValidation(cron: string): {
   const nextFires = nextCronFires(trimmed, 3, { timeZone: "UTC" });
   return {
     valid: true,
-    message: nextFires.length > 0 ? "Valid cron." : "Valid cron, but no upcoming fires were found.",
+    message: nextFires.length > 0 ? t("agentRoutineTailUi.text15") : t("agentRoutineTailUi.text16"),
     nextFires,
   };
 }
@@ -209,7 +208,7 @@ export function ScheduleEditor({
   const [dayOfWeek, setDayOfWeek] = useState(parsed.dayOfWeek);
   const [dayOfMonth, setDayOfMonth] = useState(parsed.dayOfMonth);
   const [customCron, setCustomCron] = useState(preset === "custom" ? value : "");
-  const customValidation = useMemo(() => getScheduleCronValidation(customCron), [customCron]);
+  const customValidation = useMemo(() => getScheduleCronValidation(customCron), [customCron, t]);
 
   useEffect(() => {
     onValidityChange?.(preset !== "custom" || customValidation.valid);
@@ -249,8 +248,8 @@ export function ScheduleEditor({
   return (
     <div className="space-y-3">
       <Select value={preset} onValueChange={(v) => handlePresetChange(v as SchedulePreset)}>
-        <SelectTrigger className="w-full" aria-label="Schedule frequency">
-          <SelectValue placeholder="Choose frequency..." />
+        <SelectTrigger className="w-full" aria-label={t("agentRoutineTailUi.text17")}>
+          <SelectValue placeholder={t("agentRoutineTailUi.text18")} />
         </SelectTrigger>
         <SelectContent>
           {PRESETS.map((p) => (
@@ -279,20 +278,18 @@ export function ScheduleEditor({
               }
             }}
             placeholder="0 10 * * *"
-            aria-label="Cron expression"
+            aria-label={t("agentRoutineTailUi.text19")}
             aria-invalid={!customValidation.valid}
             className="font-mono text-sm"
           />
-          <p className="text-xs text-muted-foreground">
-            Five fields: minute hour day-of-month month day-of-week
-          </p>
+          <p className="text-xs text-muted-foreground">{t("agentRoutineTailUi.text20")}</p>
           <p
             className={customValidation.valid ? "text-xs text-muted-foreground" : "text-xs text-destructive"}
             aria-live="polite"
           >
             {customValidation.message}
             {customValidation.valid && customValidation.nextFires.length > 0
-              ? ` Next: ${customValidation.nextFires.map((fire) => fire.toLocaleString()).join(", ")}.`
+              ? t("agentRoutineTailUi.nextFires", { times: customValidation.nextFires.map((fire) => fire.toLocaleString(i18n.language)).join(", ") })
               : null}
           </p>
         </div>
@@ -343,7 +340,7 @@ export function ScheduleEditor({
 
           {preset === "every_hour" && (
             <>
-              <span className="text-sm text-muted-foreground">at minute</span>
+              <span className="text-sm text-muted-foreground">{t("agentRoutineTailUi.text21")}</span>
               <Select
                 value={minute}
                 onValueChange={(m) => {
@@ -391,7 +388,7 @@ export function ScheduleEditor({
 
           {preset === "monthly" && (
             <>
-              <span className="text-sm text-muted-foreground">on day</span>
+              <span className="text-sm text-muted-foreground">{t("agentRoutineTailUi.text22")}</span>
               <Select
                 value={dayOfMonth}
                 onValueChange={(dom) => {

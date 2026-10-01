@@ -1,3 +1,4 @@
+import { useTranslation } from "@/i18n";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { copyTextToClipboard } from "@/lib/clipboard";
@@ -21,10 +22,11 @@ export function CopyText({
   className,
   ariaLabel,
   title,
-  copiedLabel = "Copied!",
+  copiedLabel,
 }: CopyTextProps) {
+  const { t } = useTranslation();
   const [visible, setVisible] = useState(false);
-  const [label, setLabel] = useState(copiedLabel);
+  const [copyFailed, setCopyFailed] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const triggerRef = useRef<HTMLButtonElement>(null);
 
@@ -33,14 +35,14 @@ export function CopyText({
   const handleClick = useCallback(async () => {
     try {
       await copyTextToClipboard(text);
-      setLabel(copiedLabel);
+      setCopyFailed(false);
     } catch {
-      setLabel("Copy failed");
+      setCopyFailed(true);
     }
     clearTimeout(timerRef.current);
     setVisible(true);
     timerRef.current = setTimeout(() => setVisible(false), 1500);
-  }, [copiedLabel, text]);
+  }, [text]);
 
   return (
     <span className={cn("relative inline-flex", containerClassName)}>
@@ -65,7 +67,7 @@ export function CopyText({
           visible ? "opacity-100" : "opacity-0",
         )}
       >
-        {label}
+        {copyFailed ? t("finalPropsUi.copyFailed") : copiedLabel ?? t("finalPropsUi.copied")}
       </span>
     </span>
   );

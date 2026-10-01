@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { i18n, t } from "@/i18n";
 
 const SECOND_MS = 1_000;
 const MINUTE_MS = 60 * SECOND_MS;
@@ -64,27 +65,27 @@ function toTimestamp(value: MonitorDate): number {
 
 function formatDuration(durationMs: number): string {
   if (durationMs < MINUTE_MS) {
-    return `${Math.max(1, Math.ceil(durationMs / SECOND_MS))}s`;
+    return t("issueShared.duration_seconds", { count: Math.max(1, Math.ceil(durationMs / SECOND_MS)) });
   }
   if (durationMs < HOUR_MS) {
-    return `${Math.floor(durationMs / MINUTE_MS)}m`;
+    return t("issueShared.duration_minutes", { count: Math.floor(durationMs / MINUTE_MS) });
   }
   if (durationMs < DAY_MS) {
     const hours = Math.floor(durationMs / HOUR_MS);
     const minutes = Math.floor((durationMs % HOUR_MS) / MINUTE_MS);
-    return minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`;
+    return minutes > 0 ? t("issueShared.duration_hours_minutes", { hours, minutes }) : t("issueShared.duration_hours", { count: hours });
   }
 
   const days = Math.floor(durationMs / DAY_MS);
   const hours = Math.floor((durationMs % DAY_MS) / HOUR_MS);
-  return hours > 0 ? `${days}d ${hours}h` : `${days}d`;
+  return hours > 0 ? t("issueShared.duration_days_hours", { days, hours }) : t("issueShared.duration_days", { count: days });
 }
 
 export function formatMonitorEta(nextCheckAt: MonitorDate, now: MonitorDate = new Date()): string {
   const deltaMs = toTimestamp(nextCheckAt) - toTimestamp(now);
-  if (deltaMs > 0) return `in ${formatDuration(deltaMs)}`;
-  if (deltaMs > -DUE_NOW_GRACE_MS) return "due now";
-  return `overdue by ${formatDuration(Math.abs(deltaMs))}`;
+  if (deltaMs > 0) return t("issueShared.monitor_in", { duration: formatDuration(deltaMs) });
+  if (deltaMs > -DUE_NOW_GRACE_MS) return t("issueShared.monitor_due_now");
+  return t("issueShared.monitor_overdue", { duration: formatDuration(Math.abs(deltaMs)) });
 }
 
 export function formatMonitorEtaLabel(nextCheckAt: MonitorDate, now: MonitorDate = new Date()): string {
@@ -122,10 +123,10 @@ export function formatMonitorAbsolute(
 ): string {
   const target = new Date(toTimestamp(nextCheckAt));
   const reference = new Date(toTimestamp(now));
-  const targetYmd = zonedYmd(target, options.locale, options.timeZone);
-  const referenceYmd = zonedYmd(reference, options.locale, options.timeZone);
+  const targetYmd = zonedYmd(target, options.locale ?? i18n.language, options.timeZone);
+  const referenceYmd = zonedYmd(reference, options.locale ?? i18n.language, options.timeZone);
 
-  const time = new Intl.DateTimeFormat(options.locale, {
+  const time = new Intl.DateTimeFormat(options.locale ?? i18n.language, {
     hour: "numeric",
     minute: "2-digit",
     timeZone: options.timeZone,
@@ -135,13 +136,13 @@ export function formatMonitorAbsolute(
     targetYmd.year === referenceYmd.year &&
     targetYmd.month === referenceYmd.month &&
     targetYmd.day === referenceYmd.day;
-  if (isToday) return `Today, ${time}`;
+  if (isToday) return t("issueShared.monitor_today", { time });
 
-  const weekday = new Intl.DateTimeFormat(options.locale, {
+  const weekday = new Intl.DateTimeFormat(options.locale ?? i18n.language, {
     weekday: "short",
     timeZone: options.timeZone,
   }).format(target);
-  const date = new Intl.DateTimeFormat(options.locale, {
+  const date = new Intl.DateTimeFormat(options.locale ?? i18n.language, {
     month: "short",
     day: "numeric",
     year: targetYmd.year === referenceYmd.year ? undefined : "numeric",
@@ -156,14 +157,14 @@ export function formatMonitorAbsoluteFull(
   options: MonitorDateTimeFormatOptions = {},
 ): string {
   const date = new Date(toTimestamp(nextCheckAt));
-  const datePart = new Intl.DateTimeFormat(options.locale, {
+  const datePart = new Intl.DateTimeFormat(options.locale ?? i18n.language, {
     weekday: "long",
     year: "numeric",
     month: "long",
     day: "numeric",
     timeZone: options.timeZone,
   }).format(date);
-  const timePart = new Intl.DateTimeFormat(options.locale, {
+  const timePart = new Intl.DateTimeFormat(options.locale ?? i18n.language, {
     hour: "numeric",
     minute: "2-digit",
     second: "2-digit",
@@ -262,9 +263,14 @@ export function useMonitorCountdown(nextCheckAt: MonitorDate | null | undefined)
 export function formatMonitorOffset(nextCheckAt: MonitorDate): string {
   const now = new Date(Date.now());
   const deltaMs = toTimestamp(nextCheckAt) - now.getTime();
-  if (Math.round(Math.abs(deltaMs) / MINUTE_MS) === 0) return "now";
-  const eta = formatMonitorEta(nextCheckAt, now);
-  if (eta === "due now") return "now";
-  if (eta.startsWith("overdue by ")) return `${eta.slice("overdue by ".length)} ago`;
-  return eta;
+  if (isMonitorOffsetNow(nextCheckAt, now)) return t("issueShared.monitor_now");
+  if (deltaMs < 0) return t("issueShared.monitor_ago", { duration: formatDuration(Math.abs(deltaMs)) });
+  return formatMonitorEta(nextCheckAt, now);
+}
+
+/** Mirrors the offset formatter's minute-rounding and due-now grace period. */
+export function isMonitorOffsetNow(nextCheckAt: MonitorDate, now: MonitorDate = new Date(Date.now())): boolean {
+  const deltaMs = toTimestamp(nextCheckAt) - toTimestamp(now);
+  return Math.round(Math.abs(deltaMs) / MINUTE_MS) === 0
+    || (deltaMs <= 0 && deltaMs > -DUE_NOW_GRACE_MS);
 }

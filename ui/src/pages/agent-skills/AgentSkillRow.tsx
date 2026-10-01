@@ -1,3 +1,4 @@
+import { t, useTranslation } from "@/i18n";
 import type { ReactNode } from "react";
 import { Lock, type LucideIcon } from "lucide-react";
 import { Link } from "@/lib/router";
@@ -65,6 +66,7 @@ export function AgentSkillRow({
   badge,
   accessory,
 }: AgentSkillRowProps) {
+  const { t } = useTranslation();
   const readOnly = variant === "readonly";
   const SourceIcon = data.sourceMeta?.icon;
 
@@ -92,7 +94,7 @@ export function AgentSkillRow({
         ) : null}
         {readOnly && data.originLabel ? (
           <p className="mt-0.5 truncate text-(length:--text-nano) text-muted-foreground/80">
-            {data.originLabel}
+            {data.originLabel === "Managed by Paperclip" ? t("profileOnboardingUi.managedOrigin") : data.originLabel === "External or unavailable" ? t("profileOnboardingUi.externalOrigin") : data.originLabel === "User-installed" ? t("profileOnboardingUi.userInstalledOrigin") : data.originLabel === "Hermes skill" ? t("profileOnboardingUi.hermesOrigin") : data.originLabel}
             {data.locationLabel ? ` · ${data.locationLabel}` : ""}
           </p>
         ) : null}
@@ -120,7 +122,7 @@ export function AgentSkillRow({
   );
 
   const trailing = readOnly ? (
-    <Lock className="h-4 w-4 shrink-0 text-muted-foreground/60" aria-label="Read-only" />
+    <Lock className="h-4 w-4 shrink-0 text-muted-foreground/60" aria-label={t("profileOnboardingUi.text107")} />
   ) : (
     (() => {
       const toggle = (
@@ -128,7 +130,7 @@ export function AgentSkillRow({
           checked={checked}
           disabled={disabled}
           onCheckedChange={(next) => onCheckedChange?.(next)}
-          aria-label={`${checked ? "Disable" : "Enable"} ${data.name}`}
+          aria-label={t(checked ? "profileOnboardingUi.disableSkill" : "profileOnboardingUi.enableSkill", { name: data.name })}
         />
       );
       if (disabled && disabledReason) {

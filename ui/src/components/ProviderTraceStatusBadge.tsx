@@ -1,3 +1,4 @@
+import { i18n, useTranslation } from "@/i18n";
 import type { ProviderTraceMetadata } from "@paperclipai/shared";
 import { Bug, CircleOff } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -26,6 +27,7 @@ export function ProviderTraceStatusBadge({
   showOff?: boolean;
   className?: string;
 }) {
+  const { t } = useTranslation();
   const status = trace?.status;
   const expired = trace
     ? new Date(trace.expiresAt).getTime() <= Date.now()
@@ -57,6 +59,16 @@ export function ProviderTraceStatusBadge({
     status === "deleted" ||
     expired;
   const Icon = label === "Trace off" ? CircleOff : Bug;
+  const labelKeys: Record<string, string> = {
+    "Trace expired": "finalControls.traceExpired",
+    "Raw tracing enabled": "finalControls.traceEnabled",
+    "Trace captured": "finalControls.traceCaptured",
+    "Trace incomplete": "finalControls.traceIncomplete",
+    "Trace truncated": "finalControls.traceTruncated",
+    "Trace deleted": "finalControls.traceDeleted",
+    "Trace requested": "finalControls.traceRequested",
+    "Trace off": "finalControls.traceOff",
+  };
   return (
     <span
       className={cn(
@@ -70,14 +82,14 @@ export function ProviderTraceStatusBadge({
       )}
       title={
         trace
-          ? `${trace.frameCount} frames · ${trace.byteCount} bytes · expires ${new Date(trace.expiresAt).toLocaleString()}`
+          ? t("finalControls.traceDetails", { frames: trace.frameCount, bytes: trace.byteCount, expires: new Date(trace.expiresAt).toLocaleString(i18n.language) })
           : requested
-            ? "This run requested sensitive provider-frame capture."
-            : "Raw provider-frame capture was disabled for this run."
+            ? t("finalControls.traceSensitive")
+            : t("finalControls.traceDisabled")
       }
     >
       <Icon className="h-3 w-3" />
-      {label}
+      {t(labelKeys[label])}
     </span>
   );
 }

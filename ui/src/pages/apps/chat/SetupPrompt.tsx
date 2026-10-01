@@ -1,3 +1,4 @@
+import { useTranslation } from "@/i18n";
 import { useState } from "react";
 import { Check, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,7 @@ export function buildSetupPrompt(instanceUrl: string, instructions: string) {
 }
 
 export function SetupPrompt({ prompt }: { prompt: string }) {
+  const { t } = useTranslation();
   const [status, setStatus] = useState<"idle" | "copied" | "failed">("idle");
   return (
     <div className="space-y-2">
@@ -39,14 +41,14 @@ export function SetupPrompt({ prompt }: { prompt: string }) {
           <img src="/brands/claude-color.svg" alt="" className="size-4 rounded-full bg-background ring-2 ring-background" />
           <img src="/brands/codex-color.svg" alt="" className="size-4 rounded-full bg-background ring-2 ring-background" />
         </span>
-        {status === "copied" ? "Copied setup prompt" : "Copy setup prompt"}
+        {status === "copied" ? t("appsChatBasic.copiedSetupPrompt") : t("appsChatBasic.copySetupPrompt")}
         {status === "copied" ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
       </Button>
-      <span className="sr-only" role="status">{status === "copied" ? "Setup prompt copied. Paste it into Codex or Claude with browser tools." : ""}</span>
+      <span className="sr-only" role="status">{status === "copied" ? t("appsChatBasic.setupPromptCopiedPasteItIntoCodexOrClaude") : ""}</span>
       {status === "failed" && (
         <div className="space-y-2">
-          <p role="alert" className="text-sm text-muted-foreground">Could not copy automatically. Select and copy the setup prompt below.</p>
-          <Textarea aria-label="Setup prompt" readOnly value={prompt} onFocus={(event) => event.currentTarget.select()} rows={8} />
+          <p role="alert" className="text-sm text-muted-foreground">{t("appsChatBasic.couldNotCopyAutomaticallySelectAndCopyTheSetup")}</p>
+          <Textarea aria-label={t("appsChatBasic.setupPrompt")} readOnly value={prompt} onFocus={(event) => event.currentTarget.select()} rows={8} />
         </div>
       )}
     </div>

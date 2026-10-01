@@ -1,3 +1,4 @@
+import { t, useTranslation } from "@/i18n";
 import { useMemo } from "react";
 import { Clock } from "lucide-react";
 import type { Issue } from "@paperclipai/shared";
@@ -70,10 +71,10 @@ export function buildMonitorSurfaceCopy(
 
   if (derived.source === "scheduled-retry" && scheduledRetryReason === "workspace_busy") {
     return {
-      bannerTitle: "Waiting for workspace",
-      stripTitle: "Waiting for workspace",
-      bannerMeta: ["Another task is using this workspace. Work starts automatically when it is available."],
-      stripMeta: ["Work starts automatically when the workspace is available."],
+      bannerTitle: t("issueMonitor.waiting_for_workspace"),
+      stripTitle: t("issueMonitor.waiting_for_workspace"),
+      bannerMeta: [t("issueMonitor.another_task_is_using_this_workspace_work_starts_automatically_when_it_is_available")],
+      stripMeta: [t("issueMonitor.work_starts_automatically_when_the_workspace_is_available")],
       tone: "info",
       workspaceWait: true,
     };
@@ -89,26 +90,26 @@ export function buildMonitorSurfaceCopy(
   switch (derived.state) {
     case "scheduled":
     case "retrying":
-      bannerTitle = isScheduledRetryOnly ? `Agent resumes ${eta}` : `Waiting on monitor — resumes ${eta}`;
-      stripTitle = `Resumes ${eta}`;
+      bannerTitle = t(isScheduledRetryOnly ? "issueMonitor.agent_resumes" : "issueMonitor.monitor_resumes", { eta });
+      stripTitle = t("issueMonitor.resumes", { eta });
       break;
     case "due-now":
-      bannerTitle = isScheduledRetryOnly ? "Agent retry due now" : "Waiting on monitor — due now";
-      stripTitle = "Due now";
-      statusHint = "Checking momentarily…";
+      bannerTitle = isScheduledRetryOnly ? t("issueMonitor.agent_retry_due_now") : t("issueMonitor.waiting_on_monitor_due_now");
+      stripTitle = t("issueMonitor.due_now");
+      statusHint = t("issueMonitor.checking_momentarily");
       break;
     case "overdue":
     default:
-      bannerTitle = isScheduledRetryOnly ? `Agent retry ${eta}` : `Waiting on monitor — ${eta}`;
+      bannerTitle = t(isScheduledRetryOnly ? "issueMonitor.agent_retry_eta" : "issueMonitor.waiting_monitor_eta", { eta });
       stripTitle = capitalize(eta);
-      statusHint = "Fires on next tick";
+      statusHint = t("issueMonitor.fires_on_next_tick");
       break;
   }
 
-  const attemptLabel = derived.attemptCount >= 1 ? `Attempt ${derived.attemptCount}` : null;
-  const serviceLabel = derived.serviceName ? `Watching: ${derived.serviceName}` : null;
+  const attemptLabel = derived.attemptCount >= 1 ? t("issueMonitor.attempt_count", { count: derived.attemptCount }) : null;
+  const serviceLabel = derived.serviceName ? t("issueMonitor.watching_service", { name: derived.serviceName }) : null;
 
-  const bannerMeta = [statusHint, `${absolute} (your time)`, attemptLabel, serviceLabel].filter(
+  const bannerMeta = [statusHint, t("issueMonitor.your_time", { time: absolute }), attemptLabel, serviceLabel].filter(
     (piece): piece is string => Boolean(piece),
   );
   const stripMeta = [statusHint, absolute, attemptLabel, serviceLabel].filter(
@@ -125,12 +126,13 @@ export function buildMonitorSurfaceCopy(
 }
 
 function useMonitorSurfaceCopy(issue: Issue): MonitorSurfaceCopy | null {
+  const { t } = useTranslation();
   // `nextCheckAt` is stable for a given issue; derive once to seed the ticking
   // countdown cadence, then re-derive against the live clock so the surfaces
   // roll scheduled → due → overdue on their own.
   const nextCheckAt = useMemo(() => deriveMonitorState(issue).nextCheckAt, [issue]);
   const now = useMonitorCountdown(nextCheckAt);
-  return useMemo(() => buildMonitorSurfaceCopy(deriveMonitorState(issue, now), now, issue.scheduledRetry?.scheduledRetryReason), [issue, now]);
+  return useMemo(() => buildMonitorSurfaceCopy(deriveMonitorState(issue, now), now, issue.scheduledRetry?.scheduledRetryReason), [issue, now, t]);
 }
 
 function CheckNowButton({
@@ -140,6 +142,7 @@ function CheckNowButton({
   onCheckNow: () => void;
   checkingNow: boolean;
 }) {
+  const { t } = useTranslation();
   return (
     <Button
       type="button"
@@ -149,7 +152,7 @@ function CheckNowButton({
       onClick={onCheckNow}
       disabled={checkingNow}
     >
-      {checkingNow ? "Checking…" : "Check now"}
+      {checkingNow ? t("issueMonitor.checking") : t("issueMonitor.check_now")}
     </Button>
   );
 }
@@ -218,8 +221,8 @@ export function IssueMonitorComposerStrip({
       </div>
       <p className="mt-1.5 text-xs text-muted-foreground">
         {copy.workspaceWait
-          ? "You can keep sending instructions while the agent waits."
-          : "Sending a reply wakes the agent now — before the scheduled check."}
+          ? t("issueMonitor.you_can_keep_sending_instructions_while_the_agent_waits")
+          : t("issueMonitor.sending_a_reply_wakes_the_agent_now_before_the_scheduled_check")}
       </p>
     </div>
   );

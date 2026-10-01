@@ -1,3 +1,4 @@
+import { t } from "@/i18n";
 import type {
   ConnectionGrantKind,
   ConnectionAudienceMember,
@@ -67,21 +68,21 @@ export function connectionNameForCredentialPolicy(
 
 /**
  * Status copy is label text, never colour alone, so it survives a monochrome or
- * high-contrast rendering. "Not connected" is the explicit missing state — a
+ * high-contrast rendering. t("appsIdentityLabels.missing") is the explicit missing state — a
  * `per_user` connection with no personal grant must never read as connected.
  */
 export function grantStatusLabel(status: ConnectionGrantStatus | null): string {
   switch (status) {
     case "active":
-      return "Connected";
+      return t("appsIdentityLabels.connected");
     case "needs_reauthorization":
-      return "Needs attention";
+      return t("appsIdentityLabels.attention");
     case "expired":
-      return "Expired";
+      return t("appsIdentityLabels.expired");
     case "revoked":
-      return "Revoked";
+      return t("appsIdentityLabels.revoked");
     default:
-      return "Not connected";
+      return t("appsIdentityLabels.missing");
   }
 }
 
@@ -112,9 +113,9 @@ export function grantAccountLabel(
 ): string {
   const tenantName = grant?.providerTenant?.name?.trim();
   if (tenantName) return tenantName;
-  if (grant?.kind === "user") return options.subjectLabel?.trim() || "Connected account";
-  if (grant?.kind === "agent") return options.subjectLabel?.trim() || "Dedicated account";
-  return "Shared credential";
+  if (grant?.kind === "user") return options.subjectLabel?.trim() || t("appsIdentityLabels.account");
+  if (grant?.kind === "agent") return options.subjectLabel?.trim() || t("appsIdentityLabels.dedicated");
+  return t("appsIdentityLabels.shared");
 }
 
 /**
@@ -124,8 +125,8 @@ export function grantAccountLabel(
  */
 export function audienceSummary(grant: Pick<ConnectionGrant, "members"> | null): string {
   const count = grant?.members?.length ?? 0;
-  if (count === 0) return "All organization members";
-  return `${count} selected ${count === 1 ? "member" : "members"}`;
+  if (count === 0) return t("appsIdentityLabels.allMembers");
+  return t("appsIdentityLabels.selectedMembers", { count });
 }
 
 export function audienceUserIds(grant: Pick<ConnectionGrant, "members"> | null): Set<string> {

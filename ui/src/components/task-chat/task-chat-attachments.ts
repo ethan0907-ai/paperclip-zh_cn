@@ -1,3 +1,4 @@
+import { t } from "@/i18n";
 /**
  * Attachment-chip helpers for the task-chat redesign (PAP-351): map a filename
  * to a kind icon + label for the shadcn base/attachment chips, and extract the
@@ -38,47 +39,47 @@ const IMAGE_EXTENSIONS = new Set([
 
 const KIND_BY_EXTENSION: Record<string, FileKind> = {
   pdf: { icon: FileText, label: "PDF" },
-  doc: { icon: FileText, label: "Doc" },
-  docx: { icon: FileText, label: "Doc" },
-  txt: { icon: FileText, label: "Text" },
+  doc: { icon: FileText, get label() { return t("taskAttachments.doc"); } },
+  docx: { icon: FileText, get label() { return t("taskAttachments.doc"); } },
+  txt: { icon: FileText, get label() { return t("taskAttachments.text"); } },
   md: { icon: FileText, label: "Markdown" },
-  rtf: { icon: FileText, label: "Text" },
+  rtf: { icon: FileText, get label() { return t("taskAttachments.text"); } },
   csv: { icon: FileSpreadsheet, label: "CSV" },
   tsv: { icon: FileSpreadsheet, label: "TSV" },
-  xls: { icon: FileSpreadsheet, label: "Sheet" },
-  xlsx: { icon: FileSpreadsheet, label: "Sheet" },
+  xls: { icon: FileSpreadsheet, get label() { return t("taskAttachments.sheet"); } },
+  xlsx: { icon: FileSpreadsheet, get label() { return t("taskAttachments.sheet"); } },
   zip: { icon: FileArchive, label: "ZIP" },
-  gz: { icon: FileArchive, label: "Archive" },
-  tar: { icon: FileArchive, label: "Archive" },
-  tgz: { icon: FileArchive, label: "Archive" },
-  rar: { icon: FileArchive, label: "Archive" },
-  "7z": { icon: FileArchive, label: "Archive" },
-  mp3: { icon: FileAudio, label: "Audio" },
-  wav: { icon: FileAudio, label: "Audio" },
-  m4a: { icon: FileAudio, label: "Audio" },
-  ogg: { icon: FileAudio, label: "Audio" },
-  mp4: { icon: FileVideo, label: "Video" },
-  mov: { icon: FileVideo, label: "Video" },
-  webm: { icon: FileVideo, label: "Video" },
+  gz: { icon: FileArchive, get label() { return t("taskAttachments.archive"); } },
+  tar: { icon: FileArchive, get label() { return t("taskAttachments.archive"); } },
+  tgz: { icon: FileArchive, get label() { return t("taskAttachments.archive"); } },
+  rar: { icon: FileArchive, get label() { return t("taskAttachments.archive"); } },
+  "7z": { icon: FileArchive, get label() { return t("taskAttachments.archive"); } },
+  mp3: { icon: FileAudio, get label() { return t("taskAttachments.audio"); } },
+  wav: { icon: FileAudio, get label() { return t("taskAttachments.audio"); } },
+  m4a: { icon: FileAudio, get label() { return t("taskAttachments.audio"); } },
+  ogg: { icon: FileAudio, get label() { return t("taskAttachments.audio"); } },
+  mp4: { icon: FileVideo, get label() { return t("taskAttachments.video"); } },
+  mov: { icon: FileVideo, get label() { return t("taskAttachments.video"); } },
+  webm: { icon: FileVideo, get label() { return t("taskAttachments.video"); } },
   json: { icon: FileCode, label: "JSON" },
   yaml: { icon: FileCode, label: "YAML" },
   yml: { icon: FileCode, label: "YAML" },
   xml: { icon: FileCode, label: "XML" },
   html: { icon: FileCode, label: "HTML" },
   css: { icon: FileCode, label: "CSS" },
-  js: { icon: FileCode, label: "Code" },
-  jsx: { icon: FileCode, label: "Code" },
-  ts: { icon: FileCode, label: "Code" },
-  tsx: { icon: FileCode, label: "Code" },
-  py: { icon: FileCode, label: "Code" },
-  rb: { icon: FileCode, label: "Code" },
-  go: { icon: FileCode, label: "Code" },
-  rs: { icon: FileCode, label: "Code" },
-  sh: { icon: FileCode, label: "Code" },
+  js: { icon: FileCode, get label() { return t("taskAttachments.code"); } },
+  jsx: { icon: FileCode, get label() { return t("taskAttachments.code"); } },
+  ts: { icon: FileCode, get label() { return t("taskAttachments.code"); } },
+  tsx: { icon: FileCode, get label() { return t("taskAttachments.code"); } },
+  py: { icon: FileCode, get label() { return t("taskAttachments.code"); } },
+  rb: { icon: FileCode, get label() { return t("taskAttachments.code"); } },
+  go: { icon: FileCode, get label() { return t("taskAttachments.code"); } },
+  rs: { icon: FileCode, get label() { return t("taskAttachments.code"); } },
+  sh: { icon: FileCode, get label() { return t("taskAttachments.code"); } },
   sql: { icon: FileCode, label: "SQL" },
-  log: { icon: FileText, label: "Log" },
-  patch: { icon: FileCode, label: "Patch" },
-  diff: { icon: FileCode, label: "Patch" },
+  log: { icon: FileText, get label() { return t("taskAttachments.log"); } },
+  patch: { icon: FileCode, get label() { return t("taskAttachments.patch"); } },
+  diff: { icon: FileCode, get label() { return t("taskAttachments.patch"); } },
 };
 
 function extensionOf(name: string): string {
@@ -115,12 +116,12 @@ export function isImageAttachment(ref: AttachmentRef): boolean {
 
 /** Kind icon + short label for a filename; unknown extensions get File/"File". */
 export function fileKindForName(name: string): FileKind {
-  return KIND_BY_EXTENSION[extensionOf(name)] ?? { icon: FileIcon, label: "File" };
+  return KIND_BY_EXTENSION[extensionOf(name)] ?? { icon: FileIcon, label: t("taskAttachments.file") };
 }
 
 export function fileKindForAttachment(ref: AttachmentRef): FileKind {
   const byName = fileKindForName(ref.name);
-  if (byName.label !== "File") return byName;
+  if (KIND_BY_EXTENSION[extensionOf(ref.name)]) return byName;
 
   const contentType = normalizedContentType(ref.contentType);
   if (contentType === "application/pdf") return { icon: FileText, label: "PDF" };
@@ -130,11 +131,11 @@ export function fileKindForAttachment(ref: AttachmentRef): FileKind {
   if (contentType === "text/csv" || contentType === "application/csv") {
     return { icon: FileSpreadsheet, label: "CSV" };
   }
-  if (contentType.startsWith("text/")) return { icon: FileText, label: "Text" };
-  if (contentType.startsWith("audio/")) return { icon: FileAudio, label: "Audio" };
-  if (contentType.startsWith("video/")) return { icon: FileVideo, label: "Video" };
+  if (contentType.startsWith("text/")) return { icon: FileText, label: t("taskAttachments.text") };
+  if (contentType.startsWith("audio/")) return { icon: FileAudio, label: t("taskAttachments.audio") };
+  if (contentType.startsWith("video/")) return { icon: FileVideo, label: t("taskAttachments.video") };
   if (contentType.includes("zip") || contentType.includes("archive")) {
-    return { icon: FileArchive, label: "Archive" };
+    return { icon: FileArchive, label: t("taskAttachments.archive") };
   }
   return byName;
 }

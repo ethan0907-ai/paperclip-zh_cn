@@ -66,13 +66,12 @@ export function AgentChat() {
   }, [agent, selectedCompanyId, chat.data, client, userId]);
   if (!loaded || agents.isPending || session.isPending)
     return (
-      <p className="text-sm text-muted-foreground">t("agentChat.loadingConversation")</p>
+      <p className="text-sm text-muted-foreground">{t("agentChat.loadingConversation")}</p>
     );
   if (!enabled && !chat.data)
     return (
       <p className="text-sm text-muted-foreground">
-        Agent Chat is disabled. Enable it in Experimental settings. Existing
-        history remains available through task links.
+        {t("shellTail.disabled")}
       </p>
     );
   if (agents.error || chat.error)
@@ -82,10 +81,10 @@ export function AgentChat() {
       </p>
     );
   if (!agent)
-    return <p className="text-sm text-destructive">t("agentChat.notFound")</p>;
+    return <p className="text-sm text-destructive">{t("agentChat.notFound")}</p>;
   if (chat.isPending)
     return (
-      <p className="text-sm text-muted-foreground">t("agentChat.loadingConversation")</p>
+      <p className="text-sm text-muted-foreground">{t("agentChat.loadingConversation")}</p>
     );
   return (
     <TaskDetailSurface

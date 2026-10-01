@@ -31,7 +31,7 @@ def snapshot(root):
 
 
 def is_test(name):
-    return any(x in name for x in (".test.", ".spec.", "__tests__/", "__snapshots__/", "fixture"))
+    return any(x in name for x in (".test.", ".spec.", ".stories.", "__tests__/", "__snapshots__/", "fixture"))
 
 
 def result_status(path):
@@ -148,10 +148,19 @@ def verify_batch(root, output):
     zh = json.loads((locales / "zh-CN.json").read_text(), object_pairs_hook=unique_object)
     if keys(en) != keys(zh):
         raise RuntimeError("English/Chinese locale keys differ; inspect the saved edits.")
-    code = run_child(["pnpm", "check:token-gates"], root, output, 120)
-    if code:
-        raise RuntimeError(f"Token gates failed (exit {code}); inspect {output}")
-    print("Scheduler verification: locale keys match; token gates passed.", flush=True)
+    checks = [
+        ("keys", ["node", "scripts/i18n/scan-ui-copy.mjs", "--check-keys"], 120),
+        ("locales", ["pnpm", "-C", "ui", "exec", "vitest", "run", "src/i18n/locale-validation.test.ts"], 120),
+        ("formatters", ["node", "scripts/i18n/check-ui-formatters.mjs"], 120),
+        ("tokens", ["pnpm", "check:token-gates"], 120),
+        ("typecheck", ["pnpm", "-C", "ui", "typecheck"], 180),
+    ]
+    for label, command, timeout in checks:
+        log = output.with_suffix(f".{label}.log")
+        code = run_child(command, root, log, timeout)
+        if code:
+            raise RuntimeError(f"{label} check failed (exit {code}); inspect {log}")
+    print("Scheduler verification: locale parity/validation, literal keys, token gates and UI typecheck passed.", flush=True)
 
 
 def self_test():

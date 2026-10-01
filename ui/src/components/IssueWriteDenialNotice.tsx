@@ -1,3 +1,4 @@
+import { useTranslation } from "@/i18n";
 import { Clock, EyeOff, ShieldX, UserCog } from "lucide-react";
 import {
   describeIssueWriteDenial,
@@ -73,7 +74,30 @@ export function IssueWriteDenialNotice({
   context?: IssueWriteDenialContext;
   className?: string;
 }) {
-  const copy = describeIssueWriteDenial(code, context ?? {});
+  const { t } = useTranslation();
+  const rawCopy = describeIssueWriteDenial(code, context ?? {});
+  const params = {
+    issue: context?.issueIdentifier?.trim() || t("taskUiFinalTail.thisTask"),
+    actor: context?.actorLabel?.trim() || t("taskUiFinalTail.thisAgent"),
+    assignee: context?.assigneeLabel?.trim() || t("taskUiFinalTail.currentAssignee"),
+    responsible: context?.responsibleUserName?.trim() || t("taskUiFinalTail.responsibleUser"),
+    cap: context?.cap ?? 20,
+    count: context?.count ?? null,
+  };
+  const translate = (field: "title" | "boundary" | "description" | "whoCanAct" | "sanctionedPath") => {
+    const keyCode = code === "cross_issue_influence_cap_exceeded" && context?.count != null && field === "description"
+      ? "capWithAttempt"
+      : code;
+    return t("taskUiFinalTail.denial_" + keyCode + "_" + field, { ...params, defaultValue: rawCopy[field] });
+  };
+  const copy = {
+    ...rawCopy,
+    title: translate("title"),
+    boundary: translate("boundary"),
+    description: translate("description"),
+    whoCanAct: translate("whoCanAct"),
+    sanctionedPath: translate("sanctionedPath"),
+  };
   const tone = TONE_CLASSES[copy.tone];
   const Icon = VISIBILITY_CODES.has(code) ? EyeOff : TONE_ICONS[copy.tone];
 
@@ -99,11 +123,11 @@ export function IssueWriteDenialNotice({
               label and the first words of the value together at every width. */}
           <dl className={cn("space-y-0.5 text-xs leading-5", tone.action)}>
             <div className="min-w-0">
-              <dt className="inline font-medium">Who can act:</dt>{" "}
+              <dt className="inline font-medium">{t("taskUiFinalTail.whoCanAct")}</dt>{" "}
               <dd className="inline">{copy.whoCanAct}</dd>
             </div>
             <div className="min-w-0">
-              <dt className="inline font-medium">Try this:</dt>{" "}
+              <dt className="inline font-medium">{t("taskUiFinalTail.tryThis")}</dt>{" "}
               <dd className="inline">{copy.sanctionedPath}</dd>
             </div>
           </dl>

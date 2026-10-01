@@ -1,10 +1,12 @@
+import { useTranslation } from "@/i18n";
 import { useRef, useState } from "react";
 
 /** Keeps stop requests independent of draft submission and prevents double clicks. */
 export function useComposerStop(onStop?: () => Promise<void>, pending = false) {
+  const { t } = useTranslation();
   const inFlight = useRef(false);
   const [stopping, setStopping] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<{ message: string } | { fallback: true } | null>(null);
 
   async function stop() {
     if (!onStop || inFlight.current || pending) return;
@@ -15,7 +17,7 @@ export function useComposerStop(onStop?: () => Promise<void>, pending = false) {
       await onStop();
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Unable to stop. Try again.",
+        err instanceof Error ? { message: err.message } : { fallback: true },
       );
     } finally {
       inFlight.current = false;
@@ -23,5 +25,5 @@ export function useComposerStop(onStop?: () => Promise<void>, pending = false) {
     }
   }
 
-  return { stop, stopping: stopping || pending, error };
+  return { stop, stopping: stopping || pending, error: error ? ("message" in error ? error.message : t("lastHelpersUi.stopFailed")) : null };
 }

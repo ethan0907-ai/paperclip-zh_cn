@@ -1,3 +1,4 @@
+import { t, useTranslation } from "@/i18n";
 import { Check, ChevronsUpDown, X } from "lucide-react";
 import { useMemo, useRef, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
@@ -94,9 +95,9 @@ export function SearchableSelect<
   groups,
   onValueChange,
   placeholder,
-  searchPlaceholder = "Search...",
-  emptyMessage = "No options found.",
-  loadingMessage = "Loading...",
+  searchPlaceholder = t("finalControls.search"),
+  emptyMessage = t("finalControls.noOptions"),
+  loadingMessage = t("finalControls.loading"),
   loading = false,
   disabled = false,
   className,
@@ -113,6 +114,7 @@ export function SearchableSelect<
   mobileTitle,
   createItem,
 }: SearchableSelectProps<TValue, TOption>) {
+  useTranslation();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const mobileViewportStyle = useMobileEntityPickerViewportStyle();
@@ -256,7 +258,7 @@ export function SearchableSelect<
           <button
             type="button"
             className="inline-flex size-9 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
-            aria-label="Close selector"
+            aria-label={t("finalControls.closeSelector")}
             onClick={() => closePopover({ suppressTriggerFocus: true })}
           >
             <X className="size-5" />

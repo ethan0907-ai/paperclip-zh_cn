@@ -1,3 +1,4 @@
+import { t } from "@/i18n";
 import type {
   Issue,
   IssueBlockedInboxAttention,
@@ -38,27 +39,27 @@ export const BLOCKED_REASON_VARIANT_ORDER: BlockedReasonVariant[] = [
 ];
 
 export const BLOCKED_VARIANT_LABELS: Record<BlockedReasonVariant, string> = {
-  needs_decision: "Needs decision",
-  stalled: "Blocked chain stalled",
-  needs_attention: "Needs attention",
-  recovery_required: "Recovery required",
-  external_wait: "External wait",
-  owner_paused: "Owner paused",
+  get needs_decision() { return t("inboxRest.needsDecision"); },
+  get stalled() { return t("inboxRest.blockedChainStalled"); },
+  get needs_attention() { return t("inboxRest.needsAttention"); },
+  get recovery_required() { return t("inboxRest.recoveryRequired"); },
+  get external_wait() { return t("inboxRest.externalWait"); },
+  get owner_paused() { return t("inboxRest.ownerPaused"); },
 };
 
 const REASON_LABELS: Record<IssueBlockedInboxReason, string> = {
-  pending_board_decision: "Pending board decision",
-  pending_user_decision: "Pending user decision",
-  missing_successful_run_disposition: "Pick disposition",
-  blocked_chain_stalled: "Blocked chain stalled",
-  blocked_by_unassigned_issue: "Unassigned blocker",
-  blocked_by_assigned_backlog_issue: "Parked blocker",
-  blocked_by_cancelled_issue: "Cancelled blocker",
-  in_review_without_action_path: "Review without action path",
-  invalid_review_participant: "Invalid review participant",
-  open_recovery_issue: "Recovery in progress",
-  external_owner_action: "External owner action",
-  blocked_by_uninvokable_assignee: "Owner paused",
+  get pending_board_decision() { return t("inboxRest.pendingBoardDecision"); },
+  get pending_user_decision() { return t("inboxRest.pendingUserDecision"); },
+  get missing_successful_run_disposition() { return t("inboxRest.pickDisposition"); },
+  get blocked_chain_stalled() { return t("inboxRest.blockedChainStalled"); },
+  get blocked_by_unassigned_issue() { return t("inboxRest.unassignedBlocker"); },
+  get blocked_by_assigned_backlog_issue() { return t("inboxRest.parkedBlocker"); },
+  get blocked_by_cancelled_issue() { return t("inboxRest.cancelledBlocker"); },
+  get in_review_without_action_path() { return t("inboxRest.reviewWithoutActionPath"); },
+  get invalid_review_participant() { return t("inboxRest.invalidReviewParticipant"); },
+  get open_recovery_issue() { return t("inboxRest.recoveryInProgress"); },
+  get external_owner_action() { return t("inboxRest.externalOwnerAction"); },
+  get blocked_by_uninvokable_assignee() { return t("inboxRest.ownerPaused"); },
 };
 
 const SEVERITY_RANK: Record<IssueBlockedInboxSeverity, number> = {
@@ -75,7 +76,7 @@ export function blockedReasonVariant(reason: IssueBlockedInboxReason): BlockedRe
 }
 
 export function blockedReasonLabel(reason: IssueBlockedInboxReason): string {
-  return REASON_LABELS[reason] ?? "Stopped";
+  return REASON_LABELS[reason] ?? t("inboxRest.stopped");
 }
 
 export function blockedVariantLabel(variant: BlockedReasonVariant): string {
@@ -110,14 +111,14 @@ export type BlockedInboxGroupBy = "blocker_type" | "none";
 export type BlockedInboxSort = "urgency" | "most_recent" | "longest_stopped";
 
 export const BLOCKED_GROUP_OPTIONS: readonly [BlockedInboxGroupBy, string][] = [
-  ["blocker_type", "Blocker type"],
-  ["none", "None"],
+  ["blocker_type", "inboxRest.blockerType"],
+  ["none", "inboxRest.none"],
 ];
 
 export const BLOCKED_SORT_OPTIONS: readonly [BlockedInboxSort, string][] = [
-  ["urgency", "Most urgent"],
-  ["most_recent", "Most recent"],
-  ["longest_stopped", "Longest stopped"],
+  ["urgency", "inboxRest.mostUrgent"],
+  ["most_recent", "inboxRest.mostRecent"],
+  ["longest_stopped", "inboxRest.longestStopped"],
 ];
 
 export interface BlockedInboxGroup {
@@ -249,27 +250,27 @@ export function blockedBadgeTone(rows: readonly BlockedInboxIssueRow[]): Blocked
 }
 
 export function formatStoppedAge(stoppedSinceAt: string | null, now: number = Date.now()): string {
-  if (!stoppedSinceAt) return "stopped";
+  if (!stoppedSinceAt) return t("inboxRest.stopped2");
   const then = new Date(stoppedSinceAt).getTime();
-  if (!Number.isFinite(then)) return "stopped";
+  if (!Number.isFinite(then)) return t("inboxRest.stopped2");
   const seconds = Math.max(0, Math.round((now - then) / 1000));
-  if (seconds < 60) return "stopped just now";
+  if (seconds < 60) return t("inboxRest.stoppedJustNow");
   if (seconds < 3600) {
     const m = Math.floor(seconds / 60);
-    return `stopped ${m}m`;
+    return t("inboxRest.stoppedMinutes", { count: m });
   }
   if (seconds < 86_400) {
     const h = Math.floor(seconds / 3600);
-    return `stopped ${h}h`;
+    return t("inboxRest.stoppedHours", { count: h });
   }
   if (seconds < 86_400 * 7) {
     const d = Math.floor(seconds / 86_400);
-    return `stopped ${d}d`;
+    return t("inboxRest.stoppedDays", { count: d });
   }
   if (seconds < 86_400 * 30) {
     const w = Math.floor(seconds / (86_400 * 7));
-    return `stopped ${w}w`;
+    return t("inboxRest.stoppedWeeks", { count: w });
   }
   const mo = Math.floor(seconds / (86_400 * 30));
-  return `stopped ${mo}mo`;
+  return t("inboxRest.stoppedMonths", { count: mo });
 }

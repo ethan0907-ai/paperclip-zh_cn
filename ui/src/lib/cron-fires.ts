@@ -9,6 +9,8 @@
  * This is preview-only — the authoritative `nextRunAt` is still computed server-side.
  */
 
+import { t } from "@/i18n";
+
 const WEEKDAY_INDEX: Record<string, number> = {
   Sun: 0,
   Mon: 1,
@@ -224,9 +226,9 @@ export interface FirePreviewEntry {
 }
 
 const DISPOSITION_LABEL: Record<FireDisposition, string> = {
-  queued: "queued",
-  coalesced: "would be coalesced",
-  skipped: "would be skipped",
+  get queued() { return t("routineSections.fire_queued"); },
+  get coalesced() { return t("routineSections.fire_coalesced"); },
+  get skipped() { return t("routineSections.fire_skipped"); },
 };
 
 /**
@@ -246,7 +248,7 @@ export function previewFirePolicies(
         at,
         disposition: "queued",
         label: DISPOSITION_LABEL.queued,
-        note: "runs immediately",
+        note: t("routineSections.fire_immediate"),
       };
     }
     let disposition: FireDisposition;
@@ -266,7 +268,7 @@ export function previewFirePolicies(
       at,
       disposition,
       label: DISPOSITION_LABEL[disposition],
-      note: disposition === "queued" ? null : "if the previous run is still active",
+      note: disposition === "queued" ? null : t("routineSections.fire_previous_active"),
     };
   });
 }

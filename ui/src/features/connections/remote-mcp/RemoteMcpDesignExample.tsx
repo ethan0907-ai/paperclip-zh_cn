@@ -13,7 +13,7 @@ function ConnectExample({ providerId }: { providerId: RemoteMcpProviderId }) {
     tools: [], notice: null, refreshing: false,
   });
   const edit: RemoteMcpSetupActions["edit"] = (patch) => setState((value) => ({ ...value, ...patch }));
-  const explain = () => edit({ notice: "Design example only. Review the interactive states in Storybook → Apps / Connections. No credentials are saved or sent." });
+  const explain = () => edit({ notice: "connectionRemote.designExampleNotice" });
   const actions: RemoteMcpSetupActions = { edit, navigate: (step) => edit({ step }), connect: explain, cancelConnect: explain,
     openProvider: explain, saveExit: explain, resumeDraft: explain, finish: explain, refresh: explain, reconnect: explain, disconnect: explain,
   };

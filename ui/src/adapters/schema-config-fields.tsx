@@ -1,3 +1,4 @@
+import { t, useTranslation } from "@/i18n";
 import { schemaFieldSection } from "./config-sections";
 import { useState, useEffect, useRef, useCallback } from "react";
 
@@ -31,7 +32,7 @@ function SelectField({
       <PopoverTrigger asChild>
         <button className="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-sm hover:bg-accent/50 transition-colors w-full justify-between">
           <span className={!value ? "text-muted-foreground" : ""}>
-            {selectedOpt?.label ?? value ?? "Select..."}
+            {selectedOpt?.label ?? value ?? t("adapterConfigRest.select")}
           </span>
           <ChevronDown className="h-3 w-3 text-muted-foreground" />
         </button>
@@ -139,7 +140,7 @@ function ComboboxField({
           type="text"
           className="flex-1 rounded-l-md border border-r-0 border-border px-2.5 py-1.5 bg-transparent outline-none text-sm font-mono placeholder:text-muted-foreground/40 focus:z-10"
           value={displayValue}
-          placeholder={placeholder ?? "Type or select..."}
+          placeholder={placeholder ?? t("adapterConfigRest.typeOrSelect")}
           onChange={(e) => {
             setFilter(e.target.value);
             if (!open) setOpen(true);
@@ -190,7 +191,7 @@ function ComboboxField({
             ))}
             {filter && filtered.length === 0 && (
               <div className="px-2 py-1.5 text-sm text-muted-foreground">
-                Use &quot;{filter}&quot; as custom value (press Enter)
+                {t("adapterConfigRest.customValue", { value: filter })}
               </div>
             )}
           </PopoverContent>
@@ -331,6 +332,7 @@ export function SchemaConfigFields({
   eff,
   mark,
 }: AdapterConfigFieldsProps) {
+  useTranslation();
   const schema = useConfigSchema(adapterType);
 
   const defaultsApplied = useRef({ adapterType, applied: false });
@@ -415,14 +417,21 @@ export function SchemaConfigFields({
         .filter((field) => !(field.type === "select" && /permissionMode/i.test(field.key) && (field.options?.length ?? 0) <= 1))
         .filter((field) => fieldMatchesVisibleWhen(field, readValue, schema))
         .map((field) => {
+          const translationKey = `adapterConfigSchema.${adapterType}.${field.key}`;
+          const label = t(`${translationKey}.label`, { defaultValue: field.label });
+          const hint = field.hint ? t(`${translationKey}.hint`, { defaultValue: field.hint }) : undefined;
+          const options = field.options?.map((option) => ({
+            ...option,
+            label: t(`${translationKey}.options.${option.value}`, { defaultValue: option.label }),
+          }));
           switch (field.type) {
             case "select": {
               const currentVal = String(readValue(field) ?? "");
               return (
-                <Field key={field.key} label={field.label} hint={field.hint}>
+                <Field key={field.key} label={label} hint={hint}>
                   <SelectField
                     value={currentVal}
-                    options={field.options ?? []}
+                    options={options ?? []}
                     onChange={(v) => writeValue(field, v)}
                   />
                 </Field>
@@ -433,8 +442,8 @@ export function SchemaConfigFields({
               return (
                 <ToggleField
                   key={field.key}
-                  label={field.label}
-                  hint={field.hint}
+                  label={label}
+                  hint={hint}
                   checked={readValue(field) === true}
                   onChange={(v) => writeValue(field, v)}
                 />
@@ -442,7 +451,7 @@ export function SchemaConfigFields({
 
             case "number":
               return (
-                <Field key={field.key} label={field.label} hint={field.hint}>
+                <Field key={field.key} label={label} hint={hint}>
                   <DraftNumberInput
                     value={Number(readValue(field) ?? 0)}
                     onCommit={(v) => writeValue(field, v)}
@@ -454,7 +463,7 @@ export function SchemaConfigFields({
 
             case "textarea":
               return (
-                <Field key={field.key} label={field.label} hint={field.hint}>
+                <Field key={field.key} label={label} hint={hint}>
                   <DraftTextarea
                     value={String(readValue(field) ?? "")}
                     onCommit={(v) => writeValue(field, v || undefined)}
@@ -467,7 +476,7 @@ export function SchemaConfigFields({
               const currentVal = String(readValue(field) ?? "");
               // Dynamic options: if meta.providerModels exists, compute options
               // based on the current provider value
-              let comboboxOptions = field.options ?? [];
+              let comboboxOptions = options ?? [];
               if (field.meta?.providerModels) {
                 const providerVal = String(readValue(schema.fields.find((f) => f.key === "provider")!) ?? "auto");
                 const modelsByProvider = field.meta.providerModels as Record<string, string[]>;
@@ -494,12 +503,12 @@ export function SchemaConfigFields({
                 }
               }
               return (
-                <Field key={field.key} label={field.label} hint={field.hint}>
+                <Field key={field.key} label={label} hint={hint}>
                   <ComboboxField
                     value={currentVal}
                     options={comboboxOptions}
                     onChange={(v) => writeValue(field, v || undefined)}
-                    placeholder={field.hint}
+                    placeholder={hint}
                   />
                 </Field>
               );
@@ -508,7 +517,7 @@ export function SchemaConfigFields({
             case "text":
             default:
               return (
-                <Field key={field.key} label={field.label} hint={field.hint}>
+                <Field key={field.key} label={label} hint={hint}>
                   <DraftInput
                     value={String(readValue(field) ?? "")}
                     onCommit={(v) => writeValue(field, v || undefined)}

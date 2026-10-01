@@ -1,3 +1,4 @@
+import { useTranslation } from "@/i18n";
 import { cn } from "../../lib/utils";
 
 /**
@@ -107,6 +108,14 @@ export function Stepper({
   canJumpToStep?: (target: number) => boolean;
   onJumpToStep?: (target: number) => void;
 }) {
+  const { t } = useTranslation();
+  const defaultLabels = labels === AGENT_ARC_STEP_LABELS || labels === ONBOARDING_STEP_LABELS;
+  const labelKeys: Record<string, string> = {
+    "Create your first agent": "taskUiFinalTail.createFirstAgent",
+    "Connect a model": "taskUiFinalTail.connectModel",
+    Review: "taskUiFinalTail.review",
+    "Name your organization": "taskUiFinalTail.nameOrganization",
+  };
   return (
     <div className="mb-11 flex items-center justify-center gap-2">
       {Array.from({ length: total }, (_, index) => index + 1).map((segment) => {
@@ -115,7 +124,9 @@ export function Stepper({
           <button
             key={segment}
             type="button"
-            aria-label={labels[segment - 1] ?? `Step ${segment}`}
+            aria-label={defaultLabels && labels[segment - 1]
+              ? t(labelKeys[labels[segment - 1]])
+              : labels[segment - 1] ?? t("taskUiFinalTail.step", { step: segment })}
             aria-current={segment === step ? "step" : undefined}
             disabled={!jumpable}
             onClick={() => jumpable && onJumpToStep?.(segment)}
@@ -134,7 +145,7 @@ export function Stepper({
       })}
       {/* Out of flow, so it neither takes a row nor picks up the gap. */}
       <span className="sr-only">
-        Step {step} of {total}
+        {t("taskUiFinalTail.stepProgress", { step, total })}
       </span>
     </div>
   );

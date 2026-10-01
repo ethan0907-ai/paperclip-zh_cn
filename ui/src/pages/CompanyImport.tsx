@@ -1,3 +1,4 @@
+import { t, useTranslation } from "@/i18n";
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type {
@@ -71,6 +72,18 @@ import { Badge } from "@/components/ui/badge";
 // ── Import-specific helpers ───────────────────────────────────────────
 
 /** Build a map from file path → planned action (create/update/skip) using the manifest + plan */
+function importActionLabel(action: string) {
+  return ["create", "update", "skip", "replace", "reuse", "rename"].includes(action)
+    ? t(`companyImport.action_${action}`)
+    : action;
+}
+
+function importKindLabel(kind: string) {
+  return ["agent", "routine", "project", "issue"].includes(kind)
+    ? t(`companyImport.kind_${kind}`)
+    : kind;
+}
+
 function buildActionMap(preview: CompanyPortabilityPreviewResult): Map<string, string> {
   const map = new Map<string, string>();
   const manifest = preview.manifest;
@@ -133,13 +146,14 @@ const ACTION_COLORS: Record<string, string> = {
 };
 
 function FrontmatterCard({ data }: { data: FrontmatterData }) {
+  const { t } = useTranslation();
   return (
     <div className="rounded-md border border-border bg-accent/20 px-4 py-3 mb-4">
       <dl className="grid grid-cols-(--gtc-5) gap-x-4 gap-y-1.5 text-sm">
         {Object.entries(data).map(([key, value]) => (
           <div key={key} className="contents">
             <dt className="text-muted-foreground whitespace-nowrap py-0.5">
-              {FRONTMATTER_FIELD_LABELS[key] ?? key}
+              {t(`companyImport.field_${key}`, { defaultValue: FRONTMATTER_FIELD_LABELS[key] ?? key })}
             </dt>
             <dd className="py-0.5">
               {Array.isArray(value) ? (
@@ -174,7 +188,7 @@ function renderImportFileExtra(node: FileTreeNode, checked: boolean, renameMap: 
       "text-(length:--text-nano) uppercase tracking-wide",
       ACTION_COLORS[node.action] ?? ACTION_COLORS.skip,
     )}>
-      {checked ? node.action : "skip"}
+      {importActionLabel(checked ? node.action : "skip")}
     </Badge>
   ) : null;
 
@@ -211,9 +225,10 @@ function ImportPreviewPane({
   action: string | null;
   renamedTo: string | null;
 }) {
+  const { t } = useTranslation();
   if (!selectedFile || content === null) {
     return (
-      <EmptyState icon={Package} message="Select a file to preview its contents." />
+      <EmptyState icon={Package} message={t("companyImport.select_a_file_to_preview_its_contents")} />
     );
   }
 
@@ -252,7 +267,7 @@ function ImportPreviewPane({
               "uppercase tracking-wide",
               actionColor,
             )}>
-              {action}
+              {importActionLabel(action)}
             </Badge>
           )}
         </div>
@@ -274,9 +289,7 @@ function ImportPreviewPane({
             <code>{textContent}</code>
           </pre>
         ) : (
-          <div className="rounded-lg border border-border bg-accent/10 px-4 py-3 text-sm text-muted-foreground">
-            Binary asset preview is not available for this file type.
-          </div>
+          <div className="rounded-lg border border-border bg-accent/10 px-4 py-3 text-sm text-muted-foreground">{t("companyImport.binary_asset_preview_is_not_available_for_this_file_type")}</div>
         )}
       </div>
     </div>
@@ -447,17 +460,16 @@ function ConflictResolutionList({
   onToggleSkip: (slug: string, filePath: string | null) => void;
   onToggleConfirm: (slug: string) => void;
 }) {
+  const { t } = useTranslation();
   if (conflicts.length === 0) return null;
 
   return (
     <div className="mx-5 mt-3">
       <div className="rounded-md border border-border">
         <div className="flex items-center gap-2 border-b border-border px-4 py-2.5">
-          <h3 className="text-sm font-medium">
-            Renames
-          </h3>
+          <h3 className="text-sm font-medium">{t("companyImport.renames")}</h3>
           <span className="text-xs text-muted-foreground">
-            {conflicts.length} item{conflicts.length === 1 ? "" : "s"}
+            {t("companyImport.item_count", { count: conflicts.length })}
           </span>
         </div>
         <div className="divide-y divide-border">
@@ -496,7 +508,7 @@ function ConflictResolutionList({
                       ? "text-emerald-500 border-emerald-500/30"
                       : "text-amber-500 border-amber-500/30",
                 )}>
-                  {item.kind}
+                  {importKindLabel(item.kind)}
                 </Badge>
 
                 <span className={cn(
@@ -537,9 +549,7 @@ function ConflictResolutionList({
                   >
                     {isConfirmed ? (
                       <>
-                        <Check className="h-3 w-3" />
-                        confirmed
-                      </>
+                        <Check className="h-3 w-3" />{t("companyImport.confirmed")}</>
                     ) : (
                       "confirm rename"
                     )}
@@ -557,7 +567,7 @@ function ConflictResolutionList({
 // ── Adapter type options for import ───────────────────────────────────
 
 const FALLBACK_IMPORT_ADAPTER_TYPE = "claude_local";
-const IMPORT_ADAPTER_OPTIONS: { value: string; label: string }[] = listUIAdapters().map((adapter) => ({
+const IMPORT_ADAPTER_OPTIONS = (): { value: string; label: string }[] => listUIAdapters().map((adapter) => ({
   value: adapter.type,
   label: adapterLabels[adapter.type] ?? getAdapterLabel(adapter.type),
 }));
@@ -597,15 +607,16 @@ function AdapterPickerList({
   onToggleExpand: (slug: string) => void;
   onChangeConfig: (slug: string, patch: Partial<CreateConfigValues>) => void;
 }) {
+  const { t } = useTranslation();
   if (agents.length === 0) return null;
 
   return (
     <div className="mx-5 mt-3">
       <div className="rounded-md border border-border">
         <div className="flex items-center gap-2 border-b border-border px-4 py-2.5">
-          <h3 className="text-sm font-medium">Adapters</h3>
+          <h3 className="text-sm font-medium">{t("companyImport.adapters")}</h3>
           <span className="text-xs text-muted-foreground">
-            {agents.length} agent{agents.length === 1 ? "" : "s"}
+            {t("companyImport.agent_count", { count: agents.length })}
           </span>
         </div>
         <div className="divide-y divide-border">
@@ -622,7 +633,7 @@ function AdapterPickerList({
                     "text-(length:--text-nano) uppercase tracking-wide",
                     "text-blue-500 border-blue-500/30",
                   )}>
-                    agent
+                    {t("companyImport.kind_agent")}
                   </Badge>
                   <span className="shrink-0 font-mono text-xs text-muted-foreground">
                     {agent.name}
@@ -649,15 +660,11 @@ function AdapterPickerList({
                     )}
                     onClick={() => onToggleExpand(agent.slug)}
                   >
-                    <ChevronRight className={cn("h-3 w-3 transition-transform", isExpanded && "rotate-90")} />
-                    configure adapter
-                  </button>
+                    <ChevronRight className={cn("h-3 w-3 transition-transform", isExpanded && "rotate-90")} />{t("companyImport.configure_adapter")}</button>
                 </div>
                 {agent.fallbackAdapterType && (
                   <div className="mx-4 mb-2.5 rounded-md border border-amber-500/30 bg-amber-500/5 px-3 py-2">
-                    <p className="text-xs text-amber-500">
-                      source adapter {agent.adapterType} is not installed here — this agent
-                      will use {adapterLabels[selectedType] ?? getAdapterLabel(selectedType)}
+                    <p className="text-xs text-amber-500">{t("companyImport.source_adapter")}{" "}{agent.adapterType}{" "}{t("companyImport.is_not_installed_here_this_agent_will_use")}{" "}{adapterLabels[selectedType] ?? getAdapterLabel(selectedType)}
                     </p>
                   </div>
                 )}
@@ -700,11 +707,11 @@ async function readLocalPackageZip(file: File): Promise<{
   files: Record<string, CompanyPortabilityFileEntry>;
 }> {
   if (!/\.zip$/i.test(file.name)) {
-    throw new Error("Select a .zip organization package.");
+    throw new Error(t("companyImport.select_a_zip_organization_package"));
   }
   const archive = await readZipArchive(await file.arrayBuffer());
   if (Object.keys(archive.files).length === 0) {
-    throw new Error("No package files were found in the selected zip archive.");
+    throw new Error(t("companyImport.no_package_files_were_found_in_the_selected_zip_archive"));
   }
   return {
     name: file.name,
@@ -739,7 +746,7 @@ interface ImportTransferProgress {
 
 function formatTransferProgress(progress: ImportTransferProgress): string {
   const currentPart = Math.min(progress.uploadedParts + 1, progress.totalParts);
-  return `Uploading part ${currentPart} of ${progress.totalParts} — ${formatMegabytes(progress.uploadedBytes)} of ${formatMegabytes(progress.totalBytes)} uploaded.`;
+  return t("companyImport.transfer_progress", { part: currentPart, total: progress.totalParts, uploaded: formatMegabytes(progress.uploadedBytes), bytes: formatMegabytes(progress.totalBytes) });
 }
 
 // ── Async import job flow ─────────────────────────────────────────────
@@ -798,7 +805,7 @@ async function watchImportJob(
         // refreshed company list lets the user confirm what actually landed.
         clearStoredImportJob(storageKey);
         throw new Error(
-          "The server no longer reports this import job — it may have restarted while the import ran.",
+          t("companyImport.the_server_no_longer_reports_this_import_job_it_may_have_restarted_while_the_import_ran"),
         );
       }
       if (
@@ -813,7 +820,7 @@ async function watchImportJob(
         // 429 (rate limited) and 5xx stay transient and fall through below.
         clearStoredImportJob(storageKey);
         throw new Error(
-          "The import status can no longer be read — your session may have expired. Reload and sign in to check on it.",
+          t("companyImport.the_import_status_can_no_longer_be_read_your_session_may_have_expired_reload_and_sign_in_to_check_on_it"),
         );
       }
       // Any other poll failure is treated as transient (network blip,
@@ -836,7 +843,7 @@ async function watchImportJob(
     }
     if (job?.status === "failed") {
       clearStoredImportJob(storageKey);
-      throw new Error(job.error?.message ?? "Import failed on the server.");
+      throw new Error(job.error?.message ?? t("companyImport.import_failed_on_the_server"));
     }
     await waitForNextImportJobPoll();
   }
@@ -845,6 +852,7 @@ async function watchImportJob(
 // ── Main page ─────────────────────────────────────────────────────────
 
 export function CompanyImport() {
+  const { t } = useTranslation();
   const {
     selectedCompanyId,
     selectedCompany,
@@ -984,7 +992,7 @@ export function CompanyImport() {
           // preview/import resumes from them instead of starting over.
           throw lastError instanceof Error
             ? lastError
-            : new Error(`Part ${part.index + 1} of ${manifest.parts.length} failed to upload.`);
+            : new Error(t("companyImport.part_failed", { part: part.index + 1, total: manifest.parts.length }));
         }
         uploadedParts += 1;
         uploadedBytes += part.byteSize;
@@ -1035,22 +1043,22 @@ export function CompanyImport() {
   const nativeRunnerAvailable =
     availableAdapterTypes?.has("paperclip_runner") === true;
   const importAdapterOptions = useMemo(
-    () => IMPORT_ADAPTER_OPTIONS.filter(
+    () => IMPORT_ADAPTER_OPTIONS().filter(
       (option) => option.value !== "paperclip_runner" || nativeRunnerAvailable,
     ),
-    [nativeRunnerAvailable],
+    [nativeRunnerAvailable, t],
   );
 
   const localZipHelpText =
-    "Upload a .zip exported directly from Paperclip. Re-zipped archives created by Finder, Explorer, or other zip tools may not import correctly.";
+    t("companyImport.upload_a_zip_exported_directly_from_paperclip_re_zipped_archives_created_by_finder_explorer_or_other_zip_tools_may_not_import_correctly");
 
   useEffect(() => {
     setBreadcrumbs([
-      { label: selectedCompany?.name ?? "Company", href: "/dashboard" },
-      { label: "Settings", href: "/company/settings" },
-      { label: "Import" },
+      { label: selectedCompany?.name ?? t("companyImport.company"), href: "/dashboard" },
+      { label: t("companyImport.settings"), href: "/company/settings" },
+      { label: t("companyImport.import") },
     ]);
-  }, [selectedCompany?.name, setBreadcrumbs]);
+  }, [selectedCompany?.name, setBreadcrumbs, t]);
 
   // The GitHub/URL source still travels inline (it is just a URL, so it never
   // hits the inline-size ceiling). The local .zip source uploads its raw
@@ -1087,7 +1095,7 @@ export function CompanyImport() {
     mutationFn: async (_generation: number) => {
       const meta = buildImportMetaCommon();
       if (sourceMode === "local") {
-        if (!localPackage) throw new Error("No source configured.");
+        if (!localPackage) throw new Error(t("companyImport.no_source_configured"));
         if (usesChunkedTransfer(localPackage.file)) {
           // Too large for one request: upload (or resume) the chunked
           // transfer, then preview against the server-side assembled spool.
@@ -1099,7 +1107,7 @@ export function CompanyImport() {
         return companiesApi.importPreviewPackage(localPackage.file, meta);
       }
       const source = buildGithubSource();
-      if (!source) throw new Error("No source configured.");
+      if (!source) throw new Error(t("companyImport.no_source_configured"));
       return companiesApi.importPreview({ source, ...meta });
     },
     onSuccess: (result, generation) => {
@@ -1168,8 +1176,8 @@ export function CompanyImport() {
       if (generation !== previewGenerationRef.current) return;
       pushToast({
         tone: "error",
-        title: "Preview failed",
-        body: err instanceof Error ? err.message : "Failed to preview import.",
+        title: t("companyImport.preview_failed"),
+        body: err instanceof Error ? err.message : t("companyImport.failed_to_preview_import"),
       });
     },
   });
@@ -1226,7 +1234,7 @@ export function CompanyImport() {
       const localFile = sourceMode === "local" ? localPackage?.file : null;
       const githubSource = sourceMode === "local" ? null : buildGithubSource();
       if (sourceMode === "local" ? !localFile : !githubSource) {
-        throw new Error("No source configured.");
+        throw new Error(t("companyImport.no_source_configured"));
       }
       const storageKey = currentImportJobStorageKey();
       let accepted: CompanyImportJobAccepted;
@@ -1287,8 +1295,8 @@ export function CompanyImport() {
         });
         pushToast({
           tone: "success",
-          title: "Import completed",
-          body: "Open the organization to view it.",
+          title: t("companyImport.import_completed"),
+          body: t("companyImport.open_the_organization_to_view_it"),
         });
         return;
       }
@@ -1322,8 +1330,8 @@ export function CompanyImport() {
       setResumedWatchJobId(null);
       pushToast({
         tone: "error",
-        title: "Import failed",
-        body: err instanceof Error ? err.message : "Failed to apply import.",
+        title: t("companyImport.import_failed"),
+        body: err instanceof Error ? err.message : t("companyImport.failed_to_apply_import"),
       });
     },
   });
@@ -1376,8 +1384,8 @@ export function CompanyImport() {
     } catch (err) {
       pushToast({
         tone: "error",
-        title: "Package read failed",
-        body: err instanceof Error ? err.message : "Failed to read folder.",
+        title: t("companyImport.package_read_failed"),
+        body: err instanceof Error ? err.message : t("companyImport.failed_to_read_folder"),
       });
     }
   }
@@ -1567,7 +1575,7 @@ export function CompanyImport() {
         }
         nextActivated.add(item.key);
       } catch (err) {
-        nextFailures[item.key] = err instanceof Error ? err.message : "Activation failed.";
+        nextFailures[item.key] = err instanceof Error ? err.message : t("companyImport.activation_failed");
       }
     }
     setActivatedKeys(nextActivated);
@@ -1577,8 +1585,8 @@ export function CompanyImport() {
     if (failureCount > 0) {
       pushToast({
         tone: "error",
-        title: "Some items were not activated",
-        body: `${failureCount} item${failureCount === 1 ? "" : "s"} failed to activate; the rest were activated.`,
+        title: t("companyImport.some_items_were_not_activated"),
+        body: t("companyImport.activation_failed_count", { count: failureCount }),
       });
     }
   }
@@ -1667,16 +1675,14 @@ export function CompanyImport() {
     return (
       <div className="max-w-6xl space-y-4 px-5 py-5">
         <div>
-          <h2 className="text-base font-semibold">Import completed</h2>
+          <h2 className="text-base font-semibold">{t("companyImport.import_completed")}</h2>
           <p className="text-xs text-muted-foreground mt-1">
             {importOutcome.companyName
-              ? <>The import finished and <span className="font-medium text-foreground">{importOutcome.companyName}</span> is ready. Its detailed summary is no longer available.</>
-              : "The import finished and your organization is ready. Its detailed summary is no longer available, but the organization has been added — select it from the organization switcher to view it."}
+              ? <>{t("companyImport.the_import_finished_and")}{" "}<span className="font-medium text-foreground">{importOutcome.companyName}</span>{" "}{t("companyImport.is_ready_its_detailed_summary_is_no_longer_available")}</>
+              : t("companyImport.the_import_finished_and_your_organization_is_ready_its_detailed_summary_is_no_longer_available_but_the_organization_has_been_added_select_it_from_the_organization_switcher_to_view_it")}
           </p>
           {importOutcome.pausedAutomations ? (
-            <p className="text-xs text-muted-foreground mt-1">
-              Imported agents arrived paused — resume them from the company's Agents page so assigned tasks can start.
-            </p>
+            <p className="text-xs text-muted-foreground mt-1">{t("companyImport.imported_agents_arrived_paused_resume_them_from_the_company_s_agents_page_so_assigned_tasks_can_start")}</p>
           ) : null}
         </div>
         {importOutcome.dashboardPath ? (
@@ -1688,9 +1694,7 @@ export function CompanyImport() {
               // Force a fresh dashboard load so newly imported agents are
               // immediately visible (same reason as the full-outcome CTA).
               onClick={() => window.location.assign(importOutcome.dashboardPath!)}
-            >
-              Open organization dashboard
-            </Button>
+            >{t("companyImport.open_organization_dashboard")}</Button>
           </div>
         ) : null}
       </div>
@@ -1707,27 +1711,23 @@ export function CompanyImport() {
     return (
       <div className="max-w-6xl space-y-4 px-5 py-5">
         <div>
-          <h2 className="text-base font-semibold">Import complete</h2>
+          <h2 className="text-base font-semibold">{t("companyImport.import_complete")}</h2>
           <p className="text-xs text-muted-foreground mt-1">
-            {result.company.name}: {result.agents.length} agent{result.agents.length === 1 ? "" : "s"},{" "}
-            {skillResults.length} skill{skillResults.length === 1 ? "" : "s"},{" "}
-            {result.projects.length} project{result.projects.length === 1 ? "" : "s"}, and{" "}
-            {result.routines.length} routine{result.routines.length === 1 ? "" : "s"} processed.
-          </p>
+            {t("companyImport.processed_summary", { name: result.company.name, agents: result.agents.length, skills: skillResults.length, projects: result.projects.length, routines: result.routines.length })}</p>
         </div>
 
         {skillResults.length > 0 && (
           <div className="rounded-md border border-border">
             <div className="border-b border-border px-4 py-2.5">
-              <h3 className="text-sm font-medium">Skill import results</h3>
+              <h3 className="text-sm font-medium">{t("companyImport.skill_import_results")}</h3>
             </div>
             <div className="divide-y divide-border">
               {skillResults.map((skill) => (
                 <div key={`${skill.originalKey}:${skill.id}`} className="flex items-center gap-3 px-4 py-2.5 text-sm">
                   <span className="min-w-0 flex-1 truncate">{skill.originalSlug}</span>
-                  <span className="shrink-0 text-xs text-muted-foreground">{skill.action}</span>
+                  <span className="shrink-0 text-xs text-muted-foreground">{importActionLabel(skill.action)}</span>
                   {skill.slug !== skill.originalSlug && (
-                    <span className="shrink-0 text-xs text-muted-foreground">as {skill.slug}</span>
+                    <span className="shrink-0 text-xs text-muted-foreground">{t("companyImport.as")}{" "}{skill.slug}</span>
                   )}
                 </div>
               ))}
@@ -1746,8 +1746,8 @@ export function CompanyImport() {
         {activationItems.length > 0 && (
           <div className="rounded-md border border-border">
             <div className="flex items-center gap-2 border-b border-border px-4 py-2.5">
-              <h3 className="text-sm font-medium">Activate imported agents and routines</h3>
-              <span className="text-xs text-muted-foreground">imported paused</span>
+              <h3 className="text-sm font-medium">{t("companyImport.activate_imported_agents_and_routines")}</h3>
+              <span className="text-xs text-muted-foreground">{t("companyImport.imported_paused")}</span>
             </div>
             <div className="divide-y divide-border">
               {activationItems.map((item) => {
@@ -1768,15 +1768,15 @@ export function CompanyImport() {
                         ? "text-blue-500 border-blue-500/30"
                         : "text-purple-500 border-purple-500/30",
                     )}>
-                      {item.kind}
+                      {importKindLabel(item.kind)}
                     </Badge>
                     <span className="min-w-0 flex-1 truncate">{item.name}</span>
                     {isActivated ? (
-                      <span className="shrink-0 text-xs text-emerald-500">activated</span>
+                      <span className="shrink-0 text-xs text-emerald-500">{t("companyImport.activated")}</span>
                     ) : failure ? (
-                      <span className="shrink-0 text-xs text-destructive">failed: {failure}</span>
+                      <span className="shrink-0 text-xs text-destructive">{t("companyImport.failed")}{" "}{failure}</span>
                     ) : (
-                      <span className="shrink-0 text-xs text-muted-foreground">paused</span>
+                      <span className="shrink-0 text-xs text-muted-foreground">{t("companyImport.paused")}</span>
                     )}
                   </label>
                 );
@@ -1788,16 +1788,14 @@ export function CompanyImport() {
                 onClick={() => void handleActivateSelected()}
                 disabled={isActivating || pendingCount === 0}
               >
-                {isActivating ? "Activating..." : `Activate selected (${pendingCount})`}
+                {isActivating ? t("companyImport.activating") : t("companyImport.activate_selected", { count: pendingCount })}
               </Button>
             </div>
           </div>
         )}
 
         {importOutcome.pausedAutomations ? (
-          <p className="text-xs text-muted-foreground">
-            Anything left paused here stays visible on the company's Agents and Routines pages, which offer the same resume actions — nothing is lost if you leave this page.
-          </p>
+          <p className="text-xs text-muted-foreground">{t("companyImport.anything_left_paused_here_stays_visible_on_the_company_s_agents_and_routines_pages_which_offer_the_same_resume_actions_nothing_is_lost_if_you_leave_this_page")}</p>
         ) : null}
 
         {/* Force a fresh dashboard load so newly imported agents are immediately visible. */}
@@ -1806,9 +1804,7 @@ export function CompanyImport() {
             size="sm"
             variant="outline"
             onClick={() => window.location.assign(dashboardPath)}
-          >
-            Go to dashboard
-          </Button>
+          >{t("companyImport.go_to_dashboard")}</Button>
         </div>
       </div>
     );
@@ -1821,23 +1817,19 @@ export function CompanyImport() {
     return (
       <div className="max-w-6xl space-y-4 px-5 py-5">
         <div>
-          <h2 className="text-base font-semibold">Resume watching import</h2>
-          <p className="text-xs text-muted-foreground mt-1">
-            An import you started earlier is still running on the server.
-          </p>
+          <h2 className="text-base font-semibold">{t("companyImport.resume_watching_import")}</h2>
+          <p className="text-xs text-muted-foreground mt-1">{t("companyImport.an_import_you_started_earlier_is_still_running_on_the_server")}</p>
         </div>
         <div className="flex items-start gap-2 rounded-md border border-border bg-muted/30 px-3 py-2.5">
           <Loader2 className="mt-0.5 h-3.5 w-3.5 shrink-0 animate-spin text-muted-foreground" />
-          <p className="text-xs text-muted-foreground">
-            Import running on the server — safe to keep waiting; reconnecting won&apos;t lose it.
-          </p>
+          <p className="text-xs text-muted-foreground">{t("companyImport.import_running_on_the_server_safe_to_keep_waiting_reconnecting_won_t_lose_it")}</p>
         </div>
       </div>
     );
   }
 
   if (!selectedCompanyId) {
-    return <EmptyState icon={Download} message="Select an organization to import into." />;
+    return <EmptyState icon={Download} message={t("companyImport.select_an_organization_to_import_into")} />;
   }
 
   return (
@@ -1845,17 +1837,15 @@ export function CompanyImport() {
       {/* Source form section */}
       <div className="border-b border-border px-5 py-5 space-y-4">
         <div>
-          <h2 className="text-base font-semibold">Import source</h2>
-          <p className="text-xs text-muted-foreground mt-1">
-            Choose a GitHub repo or upload a local Paperclip zip package.
-          </p>
+          <h2 className="text-base font-semibold">{t("companyImport.import_source")}</h2>
+          <p className="text-xs text-muted-foreground mt-1">{t("companyImport.choose_a_github_repo_or_upload_a_local_paperclip_zip_package")}</p>
         </div>
 
         <div className="grid gap-2 md:grid-cols-2">
           {(
             [
-              { key: "github", icon: GithubIcon, label: "GitHub repo" },
-              { key: "local", icon: Upload, label: "Local zip" },
+              { key: "github", icon: GithubIcon, label: t("companyImport.github_repo") },
+              { key: "local", icon: Upload, label: t("companyImport.local_zip") },
             ] as const
           ).map(({ key, icon: Icon, label }) => (
             <button
@@ -1897,14 +1887,11 @@ export function CompanyImport() {
                 variant="outline"
                 onClick={() => packageInputRef.current?.click()}
                 disabled={importMutation.isPending}
-              >
-                Choose zip
-              </Button>
+              >{t("companyImport.choose_zip")}</Button>
               {localPackage && (
                 <span className="text-xs text-muted-foreground">
-                  {localPackage.name} with{" "}
-                  {Object.keys(localPackage.files).length} file
-                  {Object.keys(localPackage.files).length === 1 ? "" : "s"}
+                  {localPackage.name}{" "}{t("companyImport.with")}{" "}
+                  {t("companyImport.file_count", { count: Object.keys(localPackage.files).length })}
                   {localCompressedBytes !== null ? ` (${formatMegabytes(localCompressedBytes)} zip)` : ""}
                 </span>
               )}
@@ -1917,8 +1904,8 @@ export function CompanyImport() {
           </div>
         ) : (
           <Field
-            label="GitHub URL"
-            hint="Repo tree path or blob URL to COMPANY.md (e.g. github.com/owner/repo/tree/main/company)."
+            label={t("companyImport.github_url")}
+            hint={t("companyImport.repo_tree_path_or_blob_url_to_company_md_e_g_github_com_owner_repo_tree_main_company")}
           >
             <input
               className="w-full rounded-md border border-border bg-transparent px-2.5 py-1.5 text-sm outline-none"
@@ -1934,7 +1921,7 @@ export function CompanyImport() {
           </Field>
         )}
 
-        <Field label="Target" hint="Import into this organization or create a new one.">
+        <Field label={t("companyImport.target")} hint={t("companyImport.import_into_this_organization_or_create_a_new_one")}>
           <select
             className="w-full rounded-md border border-border bg-transparent px-2.5 py-1.5 text-sm outline-none"
             value={targetMode}
@@ -1944,17 +1931,16 @@ export function CompanyImport() {
               resetImportFlowState();
             }}
           >
-            <option value="new">Create new organization</option>
-            <option value="existing">
-              Existing company: {selectedCompany?.name}
+            <option value="new">{t("companyImport.create_new_organization")}</option>
+            <option value="existing">{t("companyImport.existing_company")}{" "}{selectedCompany?.name}
             </option>
           </select>
         </Field>
 
         {targetMode === "new" && (
           <Field
-            label="New organization name"
-            hint="Optional override. Leave blank to use the package name."
+            label={t("companyImport.new_organization_name")}
+            hint={t("companyImport.optional_override_leave_blank_to_use_the_package_name")}
           >
             <input
               className="w-full rounded-md border border-border bg-transparent px-2.5 py-1.5 text-sm outline-none"
@@ -1964,14 +1950,14 @@ export function CompanyImport() {
                 setNewCompanyName(e.target.value);
                 resetMutationState();
               }}
-              placeholder="Imported Organization"
+              placeholder={t("finalPropsUi.importedOrg")}
             />
           </Field>
         )}
 
         <Field
-          label="Collision strategy"
-          hint="Board imports can rename, skip, or replace matching organization content."
+          label={t("companyImport.collision_strategy")}
+          hint={t("companyImport.board_imports_can_rename_skip_or_replace_matching_organization_content")}
         >
           <select
             className="w-full rounded-md border border-border bg-transparent px-2.5 py-1.5 text-sm outline-none"
@@ -1982,9 +1968,9 @@ export function CompanyImport() {
               resetImportFlowState();
             }}
           >
-            <option value="rename">Rename on conflict</option>
-            <option value="skip">Skip on conflict</option>
-            <option value="replace">Replace existing</option>
+            <option value="rename">{t("companyImport.rename_on_conflict")}</option>
+            <option value="skip">{t("companyImport.skip_on_conflict")}</option>
+            <option value="replace">{t("companyImport.replace_existing")}</option>
           </select>
         </Field>
 
@@ -1997,17 +1983,13 @@ export function CompanyImport() {
               previewMutation.isPending || importMutation.isPending || !hasSource
             }
           >
-            {previewMutation.isPending ? "Previewing..." : "Preview import"}
+            {previewMutation.isPending ? t("companyImport.previewing") : t("companyImport.preview_import")}
           </Button>
           {!hasSource && !previewMutation.isPending && (
-            <span className="text-xs text-muted-foreground">
-              Choose a package above to enable the preview.
-            </span>
+            <span className="text-xs text-muted-foreground">{t("companyImport.choose_a_package_above_to_enable_the_preview")}</span>
           )}
           {importMutation.isPending && (
-            <span className="text-xs text-muted-foreground">
-              Import in progress — the package and settings unlock when it finishes.
-            </span>
+            <span className="text-xs text-muted-foreground">{t("companyImport.import_in_progress_the_package_and_settings_unlock_when_it_finishes")}</span>
           )}
         </div>
         {previewMutation.isPending && (
@@ -2015,10 +1997,8 @@ export function CompanyImport() {
             <Loader2 className="mt-0.5 h-3.5 w-3.5 shrink-0 animate-spin text-muted-foreground" />
             <p className="text-xs text-muted-foreground">
               {transferProgress
-                ? `${formatTransferProgress(transferProgress)} An interrupted upload resumes from the finished parts.`
-                : `Uploading and analyzing your package${
-                    localCompressedBytes !== null ? ` (${formatMegabytes(localCompressedBytes)} zip)` : ""
-                  } — large packages can take a few minutes. Keep this page open.`}
+                ? t("companyImport.upload_resumes", { progress: formatTransferProgress(transferProgress) })
+                : t("companyImport.analyzing_package", { size: localCompressedBytes !== null ? ` (${formatMegabytes(localCompressedBytes)} zip)` : "" })}
             </p>
           </div>
         )}
@@ -2026,13 +2006,10 @@ export function CompanyImport() {
           !previewMutation.isPending &&
           previewMutation.variables === previewGenerationRef.current && (
           <div className="mt-3 rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2.5">
-            <p className="text-xs text-destructive">
-              Preview failed:{" "}
+            <p className="text-xs text-destructive">{t("companyImport.preview_failed_6c65643a")}{" "}
               {previewMutation.error instanceof Error
                 ? previewMutation.error.message
-                : "the request did not complete."}{" "}
-              Retry, or re-export the package without large attachments to shrink it.
-            </p>
+                : "the request did not complete."}{" "}{t("companyImport.retry_or_re_export_the_package_without_large_attachments_to_shrink_it")}</p>
           </div>
         )}
       </div>
@@ -2043,20 +2020,17 @@ export function CompanyImport() {
           {/* Sticky import action bar */}
           <div className="sticky top-0 z-10 border-b border-border bg-background px-5 py-3">
             <div className="flex flex-wrap items-center gap-4 text-sm">
-              <span className="font-medium">
-                Import preview
-              </span>
+              <span className="font-medium">{t("companyImport.import_preview")}</span>
               <span className="text-muted-foreground">
-                {selectedCount} / {totalFiles} file{totalFiles === 1 ? "" : "s"} selected
-              </span>
+                {selectedCount} / {t("companyImport.file_count", { count: totalFiles })}{" "}{t("companyImport.selected")}</span>
               {conflicts.length > 0 && (
                 <span className="text-amber-500">
-                  {conflicts.length} conflict{conflicts.length === 1 ? "" : "s"}
+                  {t("companyImport.conflict_count", { count: conflicts.length })}
                 </span>
               )}
               {importPreview.errors.length > 0 && (
                 <span className="text-destructive">
-                  {importPreview.errors.length} error{importPreview.errors.length === 1 ? "" : "s"}
+                  {t("companyImport.error_count", { count: importPreview.errors.length })}
                 </span>
               )}
             </div>
@@ -2096,9 +2070,7 @@ export function CompanyImport() {
                   resetMutationState();
                 }}
                 className="accent-foreground"
-              />
-              Start imported agents and routines paused
-            </label>
+              />{t("companyImport.start_imported_agents_and_routines_paused")}</label>
             <Button
               size="sm"
               onClick={() => importMutation.mutate({ previewForImport: importPreview, pauseAutomations })}
@@ -2106,8 +2078,8 @@ export function CompanyImport() {
             >
               <Download className="mr-1.5 h-3.5 w-3.5" />
               {importMutation.isPending
-                ? "Importing..."
-                : `Import ${selectedCount} file${selectedCount === 1 ? "" : "s"}`}
+                ? t("companyImport.importing")
+                : t("companyImport.import_files", { count: selectedCount })}
             </Button>
           </div>
           {importMutation.isPending && (
@@ -2115,21 +2087,17 @@ export function CompanyImport() {
               <Loader2 className="mt-0.5 h-3.5 w-3.5 shrink-0 animate-spin text-muted-foreground" />
               <p className="text-xs text-muted-foreground">
                 {transferProgress
-                  ? `${formatTransferProgress(transferProgress)} An interrupted upload resumes from the finished parts.`
-                  : "Import running on the server — safe to keep waiting; reconnecting won't lose it. Large packages can take several minutes."}
+                  ? t("companyImport.upload_resumes", { progress: formatTransferProgress(transferProgress) })
+                  : t("companyImport.import_running_on_the_server_safe_to_keep_waiting_reconnecting_won_t_lose_it_large_packages_can_take_several_minutes")}
               </p>
             </div>
           )}
           {importMutation.isError && !importMutation.isPending && (
             <div className="mx-5 mt-3 rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2.5">
-              <p className="text-xs text-destructive">
-                Import failed:{" "}
+              <p className="text-xs text-destructive">{t("companyImport.import_failed_6c65643a")}{" "}
                 {importMutation.error instanceof Error
                   ? importMutation.error.message
-                  : "the request did not complete."}{" "}
-                Nothing may have been created, or the import stopped partway — check the target company
-                before retrying.
-              </p>
+                  : "the request did not complete."}{" "}{t("companyImport.nothing_may_have_been_created_or_the_import_stopped_partway_check_the_target_company_before_retrying")}</p>
             </div>
           )}
 
@@ -2155,7 +2123,7 @@ export function CompanyImport() {
           <div className="grid gap-4 xl:h-(--sz-calc-31) xl:grid-cols-(--gtc-25) xl:gap-0">
             <aside className="flex max-h-(--sz-24rem) flex-col overflow-hidden border-b border-border xl:max-h-none xl:border-b-0 xl:border-r">
               <div className="border-b border-border px-4 py-3 shrink-0">
-                <h2 className="text-base font-semibold">Package files</h2>
+                <h2 className="text-base font-semibold">{t("companyImport.package_files")}</h2>
               </div>
               <div className="flex-1 overflow-y-auto">
                 <FileTree

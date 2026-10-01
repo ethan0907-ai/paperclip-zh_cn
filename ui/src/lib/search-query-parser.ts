@@ -1,3 +1,4 @@
+import { t } from "@/i18n";
 import {
   COMPANY_SEARCH_UPDATED_WITHIN_OPTIONS,
   ISSUE_PRIORITIES,
@@ -132,7 +133,10 @@ export function searchOperatorSuggestions(input: string, limit = 5): SearchOpera
   const candidates = normalized.length > 0
     ? SEARCH_OPERATOR_SUGGESTIONS.filter((suggestion) => suggestion.token.toLowerCase().startsWith(normalized))
     : SEARCH_OPERATOR_SUGGESTIONS;
-  return candidates.slice(0, limit);
+  return candidates.slice(0, limit).map((suggestion) => {
+    const index = SEARCH_OPERATOR_SUGGESTIONS.indexOf(suggestion);
+    return { ...suggestion, label: t("searchUi.operator" + index + "Label"), description: t("searchUi.operator" + index + "Description") };
+  });
 }
 
 export function applySearchOperatorSuggestion(input: string, token: string): string {

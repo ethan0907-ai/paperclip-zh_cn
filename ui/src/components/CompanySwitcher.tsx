@@ -52,7 +52,7 @@ export function CompanySwitcher({ open: controlledOpen, onOpenChange }: CompanyS
               <span className={`h-2 w-2 rounded-full shrink-0 ${statusDotColor(selectedCompany.status)}`} />
             )}
             <span className="text-sm font-medium truncate">
-              {selectedCompany?.name ?? "Select organization"}
+              {selectedCompany?.name ?? t("companySwitcher.selectOrganization")}
             </span>
           </div>
           <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
@@ -77,7 +77,7 @@ export function CompanySwitcher({ open: controlledOpen, onOpenChange }: CompanyS
           // give the customer the way out, since nothing else in the app does.
           companyListUnavailable ? (
             <>
-              <DropdownMenuItem disabled>Couldn't load organizations</DropdownMenuItem>
+              <DropdownMenuItem disabled>{t("companySwitcher.loadFailed")}</DropdownMenuItem>
               <DropdownMenuItem
                 onSelect={(event) => {
                   // Keep the menu open so the result of the retry is visible.
@@ -85,25 +85,21 @@ export function CompanySwitcher({ open: controlledOpen, onOpenChange }: CompanyS
                   void retryCompanies?.();
                 }}
               >
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Try again
-              </DropdownMenuItem>
+                <RefreshCw className="h-4 w-4 mr-2" />{t("secretsUi.tryAgain")}</DropdownMenuItem>
             </>
           ) : (
-            <DropdownMenuItem disabled>No organizations</DropdownMenuItem>
+            <DropdownMenuItem disabled>{t("companySwitcher.empty")}</DropdownMenuItem>
           )
         )}
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
           <Link to="/company/settings" className="no-underline text-inherit">
-            <Settings className="h-4 w-4 mr-2" />
-            Settings
-          </Link>
+            <Settings className="h-4 w-4 mr-2" />{t("common.settings")}</Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link to="/companies" className="no-underline text-inherit">
             <Plus className="h-4 w-4 mr-2" />
-            Manage Organizations
+            {t("companySwitcher.manage")}
           </Link>
         </DropdownMenuItem>
       </DropdownMenuContent>

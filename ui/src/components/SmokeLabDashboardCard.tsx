@@ -1,3 +1,4 @@
+import { useTranslation, i18n } from "@/i18n";
 import { useQuery } from "@tanstack/react-query";
 import { FlaskConical, ChevronRight } from "lucide-react";
 import { Link } from "@/lib/router";
@@ -26,17 +27,18 @@ function formatTime(value: string | Date | null | undefined): string {
   if (!value) return "—";
   const date = new Date(value as string | Date);
   if (Number.isNaN(date.getTime())) return "—";
-  return new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(date);
+  return new Intl.DateTimeFormat(i18n.language, { dateStyle: "medium", timeStyle: "short" }).format(date);
 }
 
 /**
- * Compact "Integration smoke" dashboard card (PAP-13347 / S2, plan §D3).
+ * Compact t("smallControls.smoke") dashboard card (PAP-13347 / S2, plan §D3).
  * Renders only when `experimental.enableSmokeLab` is on (board-readable flag),
  * so the dashboard stays clean for everyone who isn't running the Smoke Lab.
  * Operator-facing copy stays plain; protocol depth lives behind the link into
  * the Developer › Smoke Lab tab.
  */
 export function SmokeLabDashboardCard({ companyId }: { companyId: string }) {
+  const { t } = useTranslation();
   const { enabled, loaded } = useSmokeLabEnabled();
 
   const runsQuery = useQuery({
@@ -72,14 +74,14 @@ export function SmokeLabDashboardCard({ companyId }: { companyId: string }) {
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <span className={cn("h-2.5 w-2.5 shrink-0 rounded-full", HEALTH_DOT[health])} />
-            <p className="truncate text-sm font-semibold text-foreground">Integration smoke</p>
+            <p className="truncate text-sm font-semibold text-foreground">{t("smallControls.smoke")}</p>
           </div>
           <p className="mt-0.5 truncate text-xs text-muted-foreground">
-            {HEALTH_LABEL[health]}
+            {t("smallControls." + health, { defaultValue: HEALTH_LABEL[health] })}
             {failing.length > 0 && `: ${failing.join(", ")}`}
           </p>
           <p className="mt-0.5 truncate text-(length:--text-micro) text-muted-foreground/80">
-            {latestRun ? `Last run ${formatTime(latestRun.startedAt)}` : "Run one from the Smoke Lab tab"}
+            {latestRun ? t("smallControls.last", { time: formatTime(latestRun.startedAt) }) : t("smallControls.runSmoke")}
           </p>
         </div>
       </div>

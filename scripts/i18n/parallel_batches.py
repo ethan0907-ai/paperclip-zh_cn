@@ -9,6 +9,9 @@ import uuid
 
 LOCALES = {"ui/src/i18n/locales/en.json", "ui/src/i18n/locales/zh-CN.json"}
 HANDOFF = "doc/plans/2026-09-30-ui-translation-handoff.md"
+PRODUCT_PATHS = ("ui/src/pages/", "ui/src/components/", "ui/src/adapters/", "ui/src/features/",
+                 "ui/src/lib/", "ui/src/hooks/", "ui/src/context/", "ui/src/plugins/", "ui/src/api/")
+PRODUCT_ENTRIES = {"ui/src/App.tsx", "ui/src/main.tsx", "ui/src/connect-flow-preview-main.tsx"}
 MISSING = object()
 
 
@@ -88,8 +91,8 @@ def validate_scopes(scopes, baseline, workers):
             raise RuntimeError("Each scope needs a task")
         for name in scope["files"]:
             if (not isinstance(name, str) or name not in baseline or
-                    any(x in name for x in (".test.", ".spec.", "__tests__/", "__snapshots__/", "fixture")) or
-                    not name.startswith(("ui/src/pages/", "ui/src/components/")) or
+                    any(x in name for x in (".test.", ".spec.", ".stories.", "__tests__/", "__snapshots__/", "fixture")) or
+                    not (name.startswith(PRODUCT_PATHS) or name in PRODUCT_ENTRIES) or
                     not name.endswith((".tsx", ".ts")) or name in seen):
                 raise RuntimeError(f"Invalid or overlapping scope: {name}")
             seen.add(name)
@@ -118,8 +121,13 @@ def stage_merge(baseline, results):
                 if staged[name] != baseline[name]:
                     raise RuntimeError(f"File merge conflict: {name}")
                 staged[name] = after[name]
-        notes.append("## " + ", ".join(scope["files"]) + "\n" + after[HANDOFF].decode())
-    staged[HANDOFF] = ("# Parallel translation handoff\n\n" + "\n\n".join(notes)).encode()
+        note = after[HANDOFF].decode()
+        # Workers may append their report or replace their private copy with a short report.
+        # Keep the main document's agreed scope, inventory and previous evidence in either case.
+        if note.startswith(baseline[HANDOFF].decode()):
+            note = note[len(baseline[HANDOFF].decode()):].strip()
+        notes.append("### " + ", ".join(scope["files"]) + "\n" + note)
+    staged[HANDOFF] = (baseline[HANDOFF].decode().rstrip() + "\n\n## 合并批次记录\n\n" + "\n\n".join(notes) + "\n").encode()
     return staged
 
 
@@ -136,6 +144,9 @@ def parallel_self_test():
                      "server/src/types/express.d.ts": b"tracked but ignored type"})
     baseline.update({name: b'{"shared":"old"}' for name in LOCALES})
     validate_scopes(scopes, baseline, 2)
+    for folder in ("adapters", "features", "lib", "hooks", "context", "plugins"):
+        name = f"ui/src/{folder}/Example.tsx"
+        validate_scopes([{"files": [name], "task": "translate copy"}], {name: b""}, 1)
     for invalid in ([scopes[0], scopes[0]], [{"files": ["../A"], "task": "a"}],
                     [{"files": [a], "task": ""}]):
         try:
@@ -154,6 +165,11 @@ def parallel_self_test():
         results.append((scope, after))
     merged = stage_merge(baseline, results)
     assert merged[a] == merged[b] == b"translated"
+    assert merged[HANDOFF].startswith(baseline[HANDOFF])
+    appended = dict(results[0][1])
+    appended[HANDOFF] = baseline[HANDOFF] + b"\nnew report"
+    report = stage_merge(baseline, [(scopes[0], appended)])[HANDOFF]
+    assert report.count(b"old handoff") == 1 and b"new report" in report
     for locale in LOCALES:
         assert load_json(merged[locale])["new"] == {"a": "a", "b": "b"}
     bad = dict(results[0][1])
@@ -193,27 +209,47 @@ def parallel_self_test():
         runs.mkdir()
         args = SimpleNamespace(workers=2, model=None, timeout=5, max_repairs=0)
         barrier = threading.Barrier(2)
+        calls = [0, 0]
         def fake_child(command, cwd, output, timeout, **kwargs):
             if command[0] != "pi":
                 return 0
             if "dispatcher" in command:
                 (cwd / ".pi-translation-plan.json").write_text(json.dumps({"scopes": scopes}))
             else:
-                barrier.wait(timeout=5)  # Both worker calls must actually overlap.
                 i = int(cwd.name.split("-")[-1]) - 1
+                calls[i] += 1
+                if calls[i] == 1:
+                    barrier.wait(timeout=5)  # Both initial worker calls must overlap.
+                else:
+                    assert "Duplicate JSON key: worker0" in command[-1]
                 name = scopes[i]["files"][0]
                 (cwd / name).write_bytes(b"translated")
                 (cwd / HANDOFF).write_text(f"worker {i} complete")
                 for locale in LOCALES:
-                    value = load_json((cwd / locale).read_bytes())
+                    value = {"shared": "old"}
                     value[f"worker{i}"] = "translated"
-                    (cwd / locale).write_text(json.dumps(value))
+                    content = json.dumps(value)
+                    if i == 0 and calls[i] == 1:
+                        content = content[:-1] + ', "worker0": "duplicate"}'
+                    (cwd / locale).write_text(content)
             return 0
         with patch.object(scheduler, "run_child", side_effect=fake_child), \
                 patch.object(scheduler, "result_status", side_effect=lambda log:
                              "PLAN_READY" if log.name == "dispatcher.log" else "BATCH_COMPLETE"), \
                 patch.object(scheduler, "verify_batch") as verify:
+            try:
+                parallel_round(root, runs, args, "test prompt", 1)
+            except RuntimeError as error:
+                assert "Duplicate JSON key: worker0" in str(error)
+            else:
+                raise AssertionError("Duplicate locale key accepted without repair")
+            assert (root / a).read_bytes() == baseline[a]
+            assert (root / b).read_bytes() == baseline[b]
+            verify.assert_not_called()
+            calls[:] = [0, 0]
+            args.max_repairs = 1
             assert parallel_round(root, runs, args, "test prompt", 1)
+            assert calls == [2, 1]
             verify.assert_called_once()
         assert (root / a).read_bytes() == (root / b).read_bytes() == b"translated"
         for locale in LOCALES:
@@ -244,11 +280,13 @@ def parallel_round(root, runs, args, prompt, batch):
             raise RuntimeError(f"Worker failed; inspect {log}")
         return scheduler.result_status(log)
     plan_prompt = (
-        f"你是只读翻译调度器。遵守 AGENTS.md，先读 {HANDOFF}。用 rg 和局部代码片段确认尚未翻译的"
-        f"产品 UI，选择最多 {args.workers} 个互不重叠的文件范围，每个约20–30条文案。优先交接范围。"
+        f"你是只读翻译调度器。遵守 AGENTS.md，先读 {HANDOFF} 的固定规则和末尾最新进度。"
+        "优先用 node scripts/i18n/scan-ui-copy.mjs 的候选文件索引及局部代码确认尚未翻译的"
+        f"产品 UI，选择最多 {args.workers} 个互不重叠的文件范围，每个完整组件或功能块约50–100条文案。"
+        "优先公共组件，其次业务页面及 adapters/features 的产品表单；演示/预览后置但不默认排除。"
         "不翻译、不运行测试、不修改产品文件、不读取整个大文件或语言包，不查记忆，不压缩。"
         '只写 .pi-translation-plan.json，格式 {"scopes":[{"files":["ui/src/pages/X.tsx"],'
-        '"task":"具体范围和待译文案说明"}]}。文件只能来自 pages/components，禁止测试。'
+        '"task":"具体范围和待译文案说明"}]}。文件来自 pages/components/adapters/features/lib/hooks/context/plugins/api 或 App/main UI 入口；禁止测试、stories、fixture。'
         "确无产品候选则 scopes 为 []，不能把无法判断视为完成。最后一行输出 PLAN_READY。"
     )
     if invoke(planner, plan_prompt, "dispatcher") != "PLAN_READY":
@@ -273,22 +311,35 @@ def parallel_round(root, runs, args, prompt, batch):
             "\n本批为并行隔离工作，唯一允许修改的产品文件：" + ", ".join(scope["files"]) +
             "。具体任务：" + scope["task"] +
             "。只允许上述文件、en.json、zh-CN.json及交接文件，不修改其他文件；"
+            "隔离副本没有提交，所有基线文件显示 staged 新增是正常状态，不是待修复问题。"
+            "本批覆盖通用提示里的全仓 git status 要求：仅对分配文件、语言包和交接执行"
+            " git status --short -- <路径> 与 git diff -- <路径>；不要读取 cached diff 或全仓状态。"
+            "产品范围以本次分配为准，旧交接中的其他范围只作背景。只翻译分配文件直接渲染的文案；"
+            "子组件文案在许可范围外就留待后续，不因此阻塞。条数不足也完成已有文案，不扩大搜索。"
             "只检查分配范围，不判断全项目完成。完成输出 BATCH_COMPLETE；阻塞输出 BATCH_BLOCKED。"
-            "交接只记录本范围，给出下一范围建议。外部调度器统一验证，不运行 token gates 或全仓库检查。"
+            "交接副本只写本范围的简短完成记录、保留英文的理由及剩余项，主进程会追加到原文档，禁止重复复制历史全文。"
+            "外部调度器统一验证，不运行测试、token gates 或全仓库检查。"
             "node_modules 链接到主目录，只读；禁止安装依赖、构建或执行会修改依赖的命令。"
         )
         tasks.append((scope, workspace, task, f"worker-{i}"))
     results = []
-    def translate(workspace, task, label):
+    def translate(scope, workspace, task, label):
         for attempt in range(args.max_repairs + 1):
             status = invoke(workspace, task, f"{label}-attempt-{attempt}", cancelled)
             if status == "BATCH_COMPLETE":
+                try:
+                    stage_merge(baseline, [(scope, files(workspace))])
+                except (RuntimeError, ValueError) as error:
+                    if attempt == args.max_repairs:
+                        raise RuntimeError(f"{error}; preserved workspace: {workspace}") from error
+                    task += f"\n外部检查失败：{error}。修复实际文件后再报告完成；复用已有语言键，禁止重复添加。"
+                    continue
                 return status
             if status != "BATCH_BLOCKED" or attempt == args.max_repairs:
                 raise RuntimeError(f"Parallel worker blocked; preserved workspace: {workspace}")
             task += "\n本次仅修复此隔离副本交接中的阻塞，不扩展分配范围。修复后更新交接并 BATCH_COMPLETE。"
     with ThreadPoolExecutor(max_workers=args.workers) as pool:
-        futures = {pool.submit(translate, workspace, task, label): (scope, workspace)
+        futures = {pool.submit(translate, scope, workspace, task, label): (scope, workspace)
                    for scope, workspace, task, label in tasks}
         try:
             for future in as_completed(futures):
@@ -305,12 +356,9 @@ def parallel_round(root, runs, args, prompt, batch):
     merged_root = wave / "merged"
     copy_workspace(root, merged_root, staged)
     scheduler.verify_batch(merged_root, wave / "checks.log")
-    if scheduler.run_child(["pnpm", "-C", "ui", "typecheck"], merged_root,
-                           wave / "typecheck.log", 180):
-        raise RuntimeError(f"Merged UI typecheck failed; inspect {wave}")
     if files(root) != baseline:
         raise RuntimeError(f"Main workspace changed during validation; inspect {wave}")
-    staged[HANDOFF] += b"\nMerged verification: locale parity, token gates and UI typecheck passed.\n"
+    staged[HANDOFF] += b"\nMerged verification: locale parity/validation, literal keys, token gates and UI typecheck passed.\n"
     for name, content in staged.items():
         if content != baseline[name]:
             (root / name).write_bytes(content)

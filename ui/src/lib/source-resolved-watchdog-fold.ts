@@ -1,3 +1,4 @@
+import { t } from "@/i18n";
 import type { HeartbeatRun } from "@paperclipai/shared";
 
 export type SourceResolvedFoldCleanupOutcome =
@@ -114,18 +115,18 @@ const CLEANUP_OUTCOME_LABELS: Record<string, string> = {
 };
 
 export function formatCleanupOutcome(outcome: string): string {
-  return CLEANUP_OUTCOME_LABELS[outcome] ?? outcome.replace(/_/g, " ");
+  return CLEANUP_OUTCOME_LABELS[outcome] ? t("recoveryNoticesUi.cleanupOutcomes." + outcome) : outcome.replace(/_/g, " ");
 }
 
 export function formatSilenceAgeMs(ms: number | null | undefined): string | null {
   if (!ms || ms <= 0) return null;
   const totalMinutes = Math.floor(ms / 60_000);
-  if (totalMinutes < 1) return "under 1 minute";
-  if (totalMinutes < 60) return `${totalMinutes} minute${totalMinutes === 1 ? "" : "s"}`;
+  if (totalMinutes < 1) return t("recoveryNoticesUi.underMinute");
+  if (totalMinutes < 60) return t("recoveryNoticesUi.minutes", { count: totalMinutes });
   const hours = Math.floor(totalMinutes / 60);
   const minutes = totalMinutes % 60;
-  if (minutes === 0) return `${hours} hour${hours === 1 ? "" : "s"}`;
-  return `${hours}h ${minutes}m`;
+  if (minutes === 0) return t("recoveryNoticesUi.hours", { count: hours });
+  return t("recoveryNoticesUi.hoursMinutes", { hours, minutes });
 }
 
 export function shortenEvidenceId(id: string): string {

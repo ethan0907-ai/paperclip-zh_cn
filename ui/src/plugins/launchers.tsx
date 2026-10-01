@@ -1,3 +1,5 @@
+import { Translation, useTranslation } from "react-i18next";
+import { t } from "@/i18n";
 import {
   Component,
   createContext,
@@ -129,7 +131,7 @@ const PluginLauncherRuntimeContext = createContext<PluginLauncherRuntimeContextV
 
 function getErrorMessage(error: unknown): string {
   if (error instanceof Error && error.message) return error.message;
-  return "Unknown error";
+  return t("pluginContinuation.unknown");
 }
 
 function buildLauncherHostContext(
@@ -416,9 +418,9 @@ class LauncherErrorBoundary extends Component<LauncherErrorBoundaryProps, Launch
   override render() {
     if (this.state.hasError) {
       return (
-        <div className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
-          {this.props.launcher.pluginDisplayName}: failed to render
-        </div>
+        <Translation>{(t) => (<div className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
+          {t("pluginContinuation.renderFailed", { name: this.props.launcher.pluginDisplayName })}
+        </div>)}</Translation>
       );
     }
     return this.props.children;
@@ -432,6 +434,7 @@ function LauncherRenderContent({
   instance: LauncherInstance;
   renderEnvironment: PluginRenderEnvironmentContext;
 }) {
+  const { t } = useTranslation();
   const component = instance.component;
   const { data: session } = useQuery({
     queryKey: queryKeys.auth.session,
@@ -456,7 +459,7 @@ function LauncherRenderContent({
 
     return (
       <div className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
-        {instance.launcher.pluginDisplayName}: could not resolve launcher target "{instance.launcher.action.target}".
+        {t("pluginContinuation.targetFailed", { name: instance.launcher.pluginDisplayName, target: instance.launcher.action.target })}
       </div>
     );
   }
@@ -496,6 +499,7 @@ function LauncherModalShell({
   requestBounds: (key: string, request: PluginModalBoundsRequest) => Promise<void>;
   closeLauncher: (key: string, event: PluginRenderCloseEvent) => Promise<void>;
 }) {
+  const { t } = useTranslation();
   const contentRef = useRef<HTMLDivElement | null>(null);
   const titleId = useId();
 
@@ -596,7 +600,7 @@ function LauncherModalShell({
             className="ml-auto"
             onClick={() => void closeLauncher(instance.key, { reason: "programmatic" })}
           >
-            Close
+            {t("pluginContinuation.close")}
           </Button>
         </div>
         <div
@@ -791,6 +795,7 @@ export function PluginLauncherOutlet({
   itemClassName,
   errorClassName,
 }: PluginLauncherOutletProps) {
+  const { t } = useTranslation();
   const { activateLauncher } = usePluginLauncherRuntime();
   const { launchers, contributionsByPluginId, errorMessage } = usePluginLaunchers({
     placementZones,
@@ -802,7 +807,7 @@ export function PluginLauncherOutlet({
   if (errorMessage) {
     return (
       <div className={cn("rounded-md border border-destructive/30 bg-destructive/5 px-2 py-1 text-xs text-destructive", errorClassName)}>
-        Plugin launchers unavailable: {errorMessage}
+        {t("pluginContinuation.launchers", { error: errorMessage })}
       </div>
     );
   }

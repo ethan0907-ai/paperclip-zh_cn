@@ -245,6 +245,8 @@ export interface TaskChatMarkerItem {
   kind: "marker";
   variant: "session_start" | "interrupted" | "turn_boundary";
   label: string;
+  /** Stable source label for compatibility predicates; label is display-only. */
+  rawLabel?: string;
   detail?: string;
   /** False when the recorded run cannot be retried, even after the chat continues. */
   retryable?: boolean;

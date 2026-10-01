@@ -10,6 +10,24 @@ python3 scripts/i18n/batch-scheduler.py --dry-run
 python3 scripts/i18n/batch-scheduler.py --max-batches 8 --timeout 1200
 ```
 
+Build the read-only candidate inventory first:
+
+```sh
+node scripts/i18n/scan-ui-copy.mjs
+node scripts/i18n/scan-ui-copy.mjs --json
+node scripts/i18n/scan-ui-copy.mjs --markdown
+```
+
+The inventory uses the Babel parser already installed by Vite's React plugin.
+It covers JSX text, display attributes, conditional text, copy fields and local
+feedback. It excludes tests, snapshots, fixtures and stories; product files such
+as `TestPanel.tsx` remain in scope. Candidates include proper names and code
+examples, so the count is not the number of strings that must be translated.
+Dynamic mappings, upstream errors and language switching still need review.
+Keep the inventory, agreed rules and batch evidence in
+`doc/plans/2026-09-30-ui-translation-handoff.md`; append batch notes instead of
+replacing the document. The file table is a dated snapshot; rescan for live counts.
+
 To continue without a batch limit until completion:
 
 ```sh
@@ -28,14 +46,24 @@ containing the current saved changes; each worker may edit only its assigned
 files, the two locale files, and its own handoff. Copies have independent Git
 indexes without commits. Installed `node_modules` are linked read-only by
 instruction; installing dependencies/building in workers is prohibited.
+All baseline files appear as staged additions in these copies. Workers inspect
+only assigned paths and unstaged diffs, and translate the directly rendered copy
+within their assignment even when related child components are outside it.
 The scheduler merges locale changes by key, rejects differing edits to the same
-key, and combines worker handoffs. It checks locale parity, token gates and UI
-typecheck in a merged copy before writing results to the main workspace.
-Related tests remain the worker's responsibility. No project commits or pushes
+key, and appends worker reports to the existing handoff without discarding history.
+Allowed product paths include pages, components, adapters, features, lib, hooks,
+context, plugins, api and the App/main UI entry points. It checks locale parity, static translation references,
+the existing locale-validation suite, shared Chinese/English formatters, token gates and UI typecheck in a merged
+copy before writing results to the main workspace. Tests, snapshots, fixtures
+and stories are never translated. No project commits or pushes
 are made. The scheduler also stops if the main workspace changes during a round.
 
 Each worker can use `--max-repairs` fresh repair sessions within its assigned
-scope. On failure/conflict/Ctrl+C, isolated edits and logs remain under the printed
+scope. A `BATCH_COMPLETE` response is checked for scope, product progress,
+handoff updates and valid locale JSON before acceptance. Failed checks, including
+duplicate keys, use the same repair limit and send the actual error to the worker.
+Conflicts between workers still stop the merge. On failure/conflict/Ctrl+C,
+isolated edits and logs remain under the printed
 `parallel-<UUID>` directory in Git metadata; inspect those copies before retrying.
 Unmerged worker edits are not automatically recovered on restart. Successful
 rounds delete the temporary source copies while retaining logs. An empty
@@ -89,17 +117,24 @@ repository context files still load. Memory tools are not activated for batch
 workers; local handoff is the recovery source.
 
 After each successful batch response the scheduler independently checks duplicate
-locale keys, English/Chinese key parity, and runs token gates outside the model
-context. Validation failure stops the loop. Related UI tests still depend on the
-worker; skipped tests must remain clearly recorded in the handoff.
+locale keys, English/Chinese key parity, static literal key references, the locale
+validation suite (including interpolation/content limits), token gates and UI
+typecheck outside the model context. Validation failure stops the loop. Other UI
+tests are deferred and must remain clearly recorded in the handoff; old English
+assertion failures are not evidence that all tests pass. Final build and manual
+Chinese/English verification are separate completion checks.
 
 Tool text over 4000
 characters is saved under the system temporary directory, and only an excerpt
-reaches the model. With a reported model context window of at least 131072,
+reaches the model. Output clipping does not require stopping a batch; only a
+live guard wrap-up message does. Quoted guard text in an old handoff is not a
+new trigger, and repair sessions recheck the recorded blocker.
+With a reported model context window of at least 131072,
 it queues wrap-up at 80000 context tokens or 40 turns and aborts at 100000 tokens
 or 55 turns. Smaller or unknown windows retain wrap-up at 38000 tokens/20 turns
-and abort at 48000 tokens/35 turns. The prompt targets 20–30 strings in one related
-area for larger windows (8–12 for smaller windows). To select Luna explicitly:
+and abort at 48000 tokens/35 turns. The prompt targets a complete component or
+feature block of roughly 50–100 strings; workers may shrink a batch for smaller
+contexts. To select Luna explicitly:
 
 ```sh
 python3 scripts/i18n/batch-scheduler.py --until-done --timeout 1200 --model openai-codex/gpt-6-luna
@@ -121,5 +156,8 @@ The shell entry point remains available:
 Run the local checks without calling a model:
 
 ```sh
-python3 scripts/i18n/batch-scheduler.py --self-test
+PYTHONDONTWRITEBYTECODE=1 python3 scripts/i18n/batch-scheduler.py --self-test
+node scripts/i18n/scan-ui-copy.mjs --self-test
+node scripts/i18n/scan-ui-copy.mjs --check-keys
+node scripts/i18n/check-ui-formatters.mjs
 ```

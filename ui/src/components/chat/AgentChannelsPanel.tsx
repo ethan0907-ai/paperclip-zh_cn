@@ -1,3 +1,4 @@
+import { t, useTranslation } from "@/i18n";
 import { useQuery } from "@tanstack/react-query";
 import { ExternalLink, MessageSquarePlus } from "lucide-react";
 import { chatEndpointsApi, type ChatProvider } from "@/api/chatEndpoints";
@@ -24,6 +25,7 @@ export function AgentChannelsPanel({
   companyId: string;
   agentId: string;
 }) {
+  const { t } = useTranslation();
   const { enabled } = useChatConnectorsEnabled();
   const query = useQuery({
     queryKey: queryKeys.chatEndpoints.list(companyId),
@@ -39,29 +41,22 @@ export function AgentChannelsPanel({
     <section className="max-w-3xl space-y-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="text-lg font-semibold">Channels</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Chat and email identities connected to this agent.
-          </p>
+          <h2 className="text-lg font-semibold">{t("chatSidePanels.channels")}</h2>
+          <p className="mt-1 text-sm text-muted-foreground">{t("chatSidePanels.chat_and_email_identities_connected_to_this_agent")}</p>
         </div>
         <Button asChild size="sm">
           <Link to={`/apps?chatAgentId=${encodeURIComponent(agentId)}`}>
-            <MessageSquarePlus />
-            Connect a channel
-          </Link>
+            <MessageSquarePlus />{t("chatSidePanels.connect_a_channel")}</Link>
         </Button>
       </div>
       {query.isLoading ? (
-        <p className="text-sm text-muted-foreground">Loading channels…</p>
+        <p className="text-sm text-muted-foreground">{t("chatSidePanels.loading_channels")}</p>
       ) : endpoints.length === 0 ? (
         <div className="rounded-lg border border-dashed border-border p-5">
-          <p className="text-sm font-medium">No channels connected</p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Connect AgentMail, Slack, GitHub, Discord, Microsoft Teams, or Telegram from
-            Connectors.
-          </p>
+          <p className="text-sm font-medium">{t("chatSidePanels.no_channels_connected")}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{t("chatSidePanels.connect_agentmail_slack_github_discord_microsoft_teams_or_telegram_from_connectors")}</p>
           <Button asChild className="mt-3" variant="outline" size="sm">
-            <Link to="/apps">Open Connectors</Link>
+            <Link to="/apps">{t("chatSidePanels.open_connectors")}</Link>
           </Button>
         </div>
       ) : (
@@ -78,13 +73,12 @@ export function AgentChannelsPanel({
                 <p className="truncate text-xs text-muted-foreground">
                   {endpoint.botLabel ??
                     endpoint.providerAccountLabel ??
-                    "Provider identity"}
+                    t("chatSidePanels.provider_identity")}
                 </p>
               </div>
               <StatusBadge status={endpoint.status} />
               <Button asChild size="sm" variant="outline">
-                <Link to={`/apps/chat/${endpoint.id}/settings`}>
-                  Open connection <ExternalLink />
+                <Link to={`/apps/chat/${endpoint.id}/settings`}>{t("chatSidePanels.open_connection")}{" "}<ExternalLink />
                 </Link>
               </Button>
             </div>

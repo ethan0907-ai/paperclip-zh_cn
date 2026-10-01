@@ -1,3 +1,4 @@
+import { t } from "@/i18n";
 import type { Agent } from "@paperclipai/shared";
 import type { CompanyUserProfile } from "./company-members";
 import { formatReviewPolicyValue } from "./review-policy";
@@ -23,166 +24,166 @@ interface ActivityFormatOptions {
 }
 
 const ACTIVITY_ROW_VERBS: Record<string, string> = {
-  "issue.created": "created",
-  "issue.updated": "updated",
-  "issue.read_marked": "read",
-  "issue.read_unmarked": "marked unread",
-  "issue.checked_out": "checked out",
-  "issue.released": "released",
-  "issue.comment_added": "commented on",
-  "issue.comment_cancelled": "cancelled a queued comment on",
-  "issue.queued_comment_edited": "edited a queued comment on",
-  "issue.queued_comments_reordered": "reordered queued comments on",
-  "issue.queued_comment_discarded": "discarded a queued comment on",
-  "issue.comment_deleted": "deleted a comment on",
-  "issue.attachment_added": "attached file to",
-  "issue.attachment_removed": "removed attachment from",
-  "issue.document_created": "created document for",
-  "issue.document_updated": "updated document on",
-  "issue.document_locked": "locked document on",
-  "issue.document_unlocked": "unlocked document on",
-  "issue.document_deleted": "deleted document from",
-  "issue.monitor_scheduled": "scheduled monitor on",
-  "issue.monitor_triggered": "triggered monitor for",
-  "issue.monitor_cleared": "cleared monitor on",
-  "issue.monitor_skipped": "skipped monitor for",
-  "issue.monitor_exhausted": "exhausted monitor on",
-  "issue.monitor_recovery_wake_queued": "queued monitor recovery for",
-  "issue.monitor_recovery_issue_created": "created monitor recovery for",
-  "issue.monitor_escalated_to_board": "escalated monitor for",
-  "issue.commented": "commented on",
-  "issue.deleted": "deleted",
-  "issue.successful_run_handoff_required": "flagged missing next step on",
-  "issue.successful_run_handoff_resolved": "recorded next step chosen on",
-  "issue.successful_run_handoff_escalated": "escalated missing next step on",
-  "issue.accepted_plan_decomposition_updated": "updated accepted-plan decomposition on",
-  "issue.recovery_action_opened": "opened a recovery action on",
-  "issue.recovery_action_resolved": "resolved the recovery action on",
-  "issue.recovery_action_escalated": "escalated the recovery action on",
-  "agent.created": "created",
-  "agent.updated": "updated",
-  "agent.paused": "paused",
-  "agent.resumed": "resumed",
-  "agent.error_cleared": "cleared error on",
-  "agent.terminated": "terminated",
-  "agent.key_created": "created API key for",
-  "agent.budget_updated": "updated budget for",
-  "agent.runtime_session_reset": "reset session for",
-  "heartbeat.invoked": "invoked heartbeat for",
-  "heartbeat.cancelled": "cancelled heartbeat for",
-  "heartbeat.output_stale_source_resolved": "system-folded stale run on",
-  "heartbeat.output_stale_recovery_recursion_refused": "refused recovery-on-recovery for",
-  "approval.created": "requested approval",
-  "approval.approved": "approved",
-  "approval.rejected": "rejected",
+  get "issue.created"() { return t("activityFormat.created"); },
+  get "issue.updated"() { return t("activityFormat.updated"); },
+  get "issue.read_marked"() { return t("activityFormat.read"); },
+  get "issue.read_unmarked"() { return t("activityFormat.markedUnread"); },
+  get "issue.checked_out"() { return t("activityFormat.checkedOut"); },
+  get "issue.released"() { return t("activityFormat.released"); },
+  get "issue.comment_added"() { return t("activityFormat.commentedOn"); },
+  get "issue.comment_cancelled"() { return t("activityFormat.cancelledAQueuedCommentOn"); },
+  get "issue.queued_comment_edited"() { return t("activityFormat.editedAQueuedCommentOn"); },
+  get "issue.queued_comments_reordered"() { return t("activityFormat.reorderedQueuedCommentsOn"); },
+  get "issue.queued_comment_discarded"() { return t("activityFormat.discardedAQueuedCommentOn"); },
+  get "issue.comment_deleted"() { return t("activityFormat.deletedACommentOn"); },
+  get "issue.attachment_added"() { return t("activityFormat.attachedFileTo"); },
+  get "issue.attachment_removed"() { return t("activityFormat.removedAttachmentFrom"); },
+  get "issue.document_created"() { return t("activityFormat.createdDocumentFor"); },
+  get "issue.document_updated"() { return t("activityFormat.updatedDocumentOn"); },
+  get "issue.document_locked"() { return t("activityFormat.lockedDocumentOn"); },
+  get "issue.document_unlocked"() { return t("activityFormat.unlockedDocumentOn"); },
+  get "issue.document_deleted"() { return t("activityFormat.deletedDocumentFrom"); },
+  get "issue.monitor_scheduled"() { return t("activityFormat.scheduledMonitorOn"); },
+  get "issue.monitor_triggered"() { return t("activityFormat.triggeredMonitorFor"); },
+  get "issue.monitor_cleared"() { return t("activityFormat.clearedMonitorOn"); },
+  get "issue.monitor_skipped"() { return t("activityFormat.skippedMonitorFor"); },
+  get "issue.monitor_exhausted"() { return t("activityFormat.exhaustedMonitorOn"); },
+  get "issue.monitor_recovery_wake_queued"() { return t("activityFormat.queuedMonitorRecoveryFor"); },
+  get "issue.monitor_recovery_issue_created"() { return t("activityFormat.createdMonitorRecoveryFor"); },
+  get "issue.monitor_escalated_to_board"() { return t("activityFormat.escalatedMonitorFor"); },
+  get "issue.commented"() { return t("activityFormat.commentedOn"); },
+  get "issue.deleted"() { return t("activityFormat.deleted"); },
+  get "issue.successful_run_handoff_required"() { return t("activityFormat.flaggedMissingNextStepOn"); },
+  get "issue.successful_run_handoff_resolved"() { return t("activityFormat.recordedNextStepChosenOn"); },
+  get "issue.successful_run_handoff_escalated"() { return t("activityFormat.escalatedMissingNextStepOn"); },
+  get "issue.accepted_plan_decomposition_updated"() { return t("activityFormat.updatedAcceptedplanDecompositionOn"); },
+  get "issue.recovery_action_opened"() { return t("activityFormat.openedARecoveryActionOn"); },
+  get "issue.recovery_action_resolved"() { return t("activityFormat.resolvedTheRecoveryActionOn"); },
+  get "issue.recovery_action_escalated"() { return t("activityFormat.escalatedTheRecoveryActionOn"); },
+  get "agent.created"() { return t("activityFormat.created"); },
+  get "agent.updated"() { return t("activityFormat.updated"); },
+  get "agent.paused"() { return t("activityFormat.paused"); },
+  get "agent.resumed"() { return t("activityFormat.resumed"); },
+  get "agent.error_cleared"() { return t("activityFormat.clearedErrorOn"); },
+  get "agent.terminated"() { return t("activityFormat.terminated"); },
+  get "agent.key_created"() { return t("activityFormat.createdApiKeyFor"); },
+  get "agent.budget_updated"() { return t("activityFormat.updatedBudgetFor"); },
+  get "agent.runtime_session_reset"() { return t("activityFormat.resetSessionFor"); },
+  get "heartbeat.invoked"() { return t("activityFormat.invokedHeartbeatFor"); },
+  get "heartbeat.cancelled"() { return t("activityFormat.cancelledHeartbeatFor"); },
+  get "heartbeat.output_stale_source_resolved"() { return t("activityFormat.systemfoldedStaleRunOn"); },
+  get "heartbeat.output_stale_recovery_recursion_refused"() { return t("activityFormat.refusedRecoveryonrecoveryFor"); },
+  get "approval.created"() { return t("activityFormat.requestedApproval"); },
+  get "approval.approved"() { return t("activityFormat.approved"); },
+  get "approval.rejected"() { return t("activityFormat.rejected"); },
   // Interaction outcomes (PAP-16506). An agent may now resolve one — including a
   // review of its own work — so these must read as outcomes in the feed instead
   // of falling through to the raw "issue thread interaction accepted" action id.
   // `details.interactionKind` sharpens the wording; see INTERACTION_OUTCOME_LABELS.
-  "issue.thread_interaction_created": "asked for a decision on",
-  "issue.thread_interaction_accepted": "accepted the request on",
-  "issue.thread_interaction_rejected": "rejected the request on",
-  "issue.thread_interaction_answered": "answered the request on",
-  "issue.thread_interaction_withdrawn": "withdrew the request on",
-  "issue.thread_interaction_cancelled": "cancelled the request on",
-  "issue.thread_interaction_skipped": "skipped the request on",
-  "issue.thread_interaction_expired": "expired the request on",
-  "issue.thread_interaction_item_verdicts_submitted": "submitted verdicts on",
-  "issue.stalled_review_decided": "recorded a review verdict on",
-  "project.created": "created",
-  "project.updated": "updated",
-  "project.deleted": "deleted",
-  "goal.created": "created",
-  "goal.updated": "updated",
-  "goal.deleted": "deleted",
-  "cost.reported": "reported cost for",
-  "cost.recorded": "recorded cost for",
-  "company.created": "created organization",
-  "company.updated": "updated organization",
-  "company.archived": "archived",
-  "company.reactivated": "reactivated",
-  "company.budget_updated": "updated budget for",
-  "audit.exported": "exported the agent audit log for",
-  "tool_app.connected": "connected",
-  "tool_app.oauth_connected": "connected credentials for",
-  "tool_app.oauth_failed": "failed to connect credentials for",
-  "tool_app.oauth_access_finalized": "finished credential access for",
-  "tool_app.finished": "finished setup for",
-  "tool_app.reconnected": "reconnected",
-  "tool_connection.created": "created",
-  "tool_connection.updated": "updated",
-  "tool_connection.archived": "removed",
-  "tool_connection.catalog_refresh": "refreshed actions for",
-  "tool_connection.installs_synced": "changed agent installs for",
-  "tool_connection.install_access_extended": "extended agent access for",
-  "tool_connection.grant_audience_replaced": "changed human access for",
-  "tool_connection.grant_added": "added credentials to",
-  "tool_connection.grant_revoked": "revoked credentials from",
-  "tool_connection.grant_delegated": "delegated credentials for",
-  "tool_connection.grant_delegation_revoked": "revoked credential delegation for",
+  get "issue.thread_interaction_created"() { return t("activityFormat.askedForADecisionOn"); },
+  get "issue.thread_interaction_accepted"() { return t("activityFormat.acceptedTheRequestOn"); },
+  get "issue.thread_interaction_rejected"() { return t("activityFormat.rejectedTheRequestOn"); },
+  get "issue.thread_interaction_answered"() { return t("activityFormat.answeredTheRequestOn"); },
+  get "issue.thread_interaction_withdrawn"() { return t("activityFormat.withdrewTheRequestOn"); },
+  get "issue.thread_interaction_cancelled"() { return t("activityFormat.cancelledTheRequestOn"); },
+  get "issue.thread_interaction_skipped"() { return t("activityFormat.skippedTheRequestOn"); },
+  get "issue.thread_interaction_expired"() { return t("activityFormat.expiredTheRequestOn"); },
+  get "issue.thread_interaction_item_verdicts_submitted"() { return t("activityFormat.submittedVerdictsOn"); },
+  get "issue.stalled_review_decided"() { return t("activityFormat.recordedAReviewVerdictOn"); },
+  get "project.created"() { return t("activityFormat.created"); },
+  get "project.updated"() { return t("activityFormat.updated"); },
+  get "project.deleted"() { return t("activityFormat.deleted"); },
+  get "goal.created"() { return t("activityFormat.created"); },
+  get "goal.updated"() { return t("activityFormat.updated"); },
+  get "goal.deleted"() { return t("activityFormat.deleted"); },
+  get "cost.reported"() { return t("activityFormat.reportedCostFor"); },
+  get "cost.recorded"() { return t("activityFormat.recordedCostFor"); },
+  get "company.created"() { return t("activityFormat.createdOrganization"); },
+  get "company.updated"() { return t("activityFormat.updatedOrganization"); },
+  get "company.archived"() { return t("activityFormat.archived"); },
+  get "company.reactivated"() { return t("activityFormat.reactivated"); },
+  get "company.budget_updated"() { return t("activityFormat.updatedBudgetFor"); },
+  get "audit.exported"() { return t("activityFormat.exportedTheAgentAuditLogFor"); },
+  get "tool_app.connected"() { return t("activityFormat.connected"); },
+  get "tool_app.oauth_connected"() { return t("activityFormat.connectedCredentialsFor"); },
+  get "tool_app.oauth_failed"() { return t("activityFormat.failedToConnectCredentialsFor"); },
+  get "tool_app.oauth_access_finalized"() { return t("activityFormat.finishedCredentialAccessFor"); },
+  get "tool_app.finished"() { return t("activityFormat.finishedSetupFor"); },
+  get "tool_app.reconnected"() { return t("activityFormat.reconnected"); },
+  get "tool_connection.created"() { return t("activityFormat.created"); },
+  get "tool_connection.updated"() { return t("activityFormat.updated"); },
+  get "tool_connection.archived"() { return t("activityFormat.removed"); },
+  get "tool_connection.catalog_refresh"() { return t("activityFormat.refreshedActionsFor"); },
+  get "tool_connection.installs_synced"() { return t("activityFormat.changedAgentInstallsFor"); },
+  get "tool_connection.install_access_extended"() { return t("activityFormat.extendedAgentAccessFor"); },
+  get "tool_connection.grant_audience_replaced"() { return t("activityFormat.changedHumanAccessFor"); },
+  get "tool_connection.grant_added"() { return t("activityFormat.addedCredentialsTo"); },
+  get "tool_connection.grant_revoked"() { return t("activityFormat.revokedCredentialsFrom"); },
+  get "tool_connection.grant_delegated"() { return t("activityFormat.delegatedCredentialsFor"); },
+  get "tool_connection.grant_delegation_revoked"() { return t("activityFormat.revokedCredentialDelegationFor"); },
 };
 
 const ISSUE_ACTIVITY_LABELS: Record<string, string> = {
-  "issue.created": "created the issue",
-  "issue.updated": "updated the issue",
-  "issue.checked_out": "checked out the issue",
-  "issue.released": "released the issue",
-  "issue.comment_added": "added a comment",
-  "issue.comment_cancelled": "cancelled a queued comment",
-  "issue.queued_comment_edited": "edited a queued comment",
-  "issue.queued_comments_reordered": "reordered queued comments",
-  "issue.queued_comment_discarded": "discarded a queued comment",
-  "issue.comment_deleted": "deleted a comment",
-  "issue.feedback_vote_saved": "saved feedback on an AI output",
-  "issue.attachment_added": "added an attachment",
-  "issue.attachment_removed": "removed an attachment",
-  "issue.document_created": "created a document",
-  "issue.document_updated": "updated a document",
-  "issue.document_locked": "locked a document",
-  "issue.document_unlocked": "unlocked a document",
-  "issue.document_deleted": "deleted a document",
-  "issue.monitor_scheduled": "scheduled a monitor",
-  "issue.monitor_triggered": "triggered a monitor",
-  "issue.monitor_cleared": "cleared a monitor",
-  "issue.monitor_skipped": "skipped a monitor",
-  "issue.monitor_exhausted": "exhausted a monitor",
-  "issue.monitor_recovery_wake_queued": "queued a monitor recovery wake",
-  "issue.monitor_recovery_issue_created": "created a monitor recovery issue",
-  "issue.monitor_escalated_to_board": "escalated a monitor to the board",
-  "issue.deleted": "deleted the issue",
-  "issue.successful_run_handoff_required": "Run finished without a clear next step",
-  "issue.successful_run_handoff_resolved": "Next step chosen",
-  "issue.successful_run_handoff_escalated": "Run finished without a next step - recovery escalated",
-  "issue.cross_issue_influence_cap_rejected": "hit the per-run cross-task write cap",
-  "issue.cross_issue_influence_observed": "made a cross-task write",
-  "issue.attribution_spoof_rejected": "tried to choose its own responsible user",
-  "issue.recovery_action_opened": "Opened a source-scoped recovery action",
-  "issue.recovery_action_resolved": "Resolved the recovery action",
-  "issue.recovery_action_escalated": "Escalated the recovery action",
-  "issue.accepted_plan_decomposition_updated": "updated the accepted-plan decomposition",
-  "agent.created": "created an agent",
-  "agent.updated": "updated the agent",
-  "agent.paused": "paused the agent",
-  "agent.resumed": "resumed the agent",
-  "agent.error_cleared": "cleared the agent error",
-  "agent.terminated": "terminated the agent",
-  "heartbeat.invoked": "invoked a heartbeat",
-  "heartbeat.cancelled": "cancelled a heartbeat",
-  "heartbeat.output_stale_source_resolved": "System folded a stale run",
-  "heartbeat.output_stale_recovery_recursion_refused": "Refused recovery-on-recovery escalation",
-  "approval.created": "requested approval",
-  "approval.approved": "approved",
-  "approval.rejected": "rejected",
-  "issue.thread_interaction_created": "asked for a decision",
-  "issue.thread_interaction_accepted": "accepted the request",
-  "issue.thread_interaction_rejected": "rejected the request",
-  "issue.thread_interaction_answered": "answered the request",
-  "issue.thread_interaction_withdrawn": "withdrew the request",
-  "issue.thread_interaction_cancelled": "cancelled the request",
-  "issue.thread_interaction_skipped": "skipped the request",
-  "issue.thread_interaction_expired": "expired the request",
-  "issue.thread_interaction_item_verdicts_submitted": "submitted verdicts on the request",
-  "issue.stalled_review_decided": "recorded a review verdict",
+  get "issue.created"() { return t("activityFormat.createdTheIssue"); },
+  get "issue.updated"() { return t("activityFormat.updatedTheIssue"); },
+  get "issue.checked_out"() { return t("activityFormat.checkedOutTheIssue"); },
+  get "issue.released"() { return t("activityFormat.releasedTheIssue"); },
+  get "issue.comment_added"() { return t("activityFormat.addedAComment"); },
+  get "issue.comment_cancelled"() { return t("activityFormat.cancelledAQueuedComment"); },
+  get "issue.queued_comment_edited"() { return t("activityFormat.editedAQueuedComment"); },
+  get "issue.queued_comments_reordered"() { return t("activityFormat.reorderedQueuedComments"); },
+  get "issue.queued_comment_discarded"() { return t("activityFormat.discardedAQueuedComment"); },
+  get "issue.comment_deleted"() { return t("activityFormat.deletedAComment"); },
+  get "issue.feedback_vote_saved"() { return t("activityFormat.savedFeedbackOnAnAiOutput"); },
+  get "issue.attachment_added"() { return t("activityFormat.addedAnAttachment"); },
+  get "issue.attachment_removed"() { return t("activityFormat.removedAnAttachment"); },
+  get "issue.document_created"() { return t("activityFormat.createdADocument"); },
+  get "issue.document_updated"() { return t("activityFormat.updatedADocument"); },
+  get "issue.document_locked"() { return t("activityFormat.lockedADocument"); },
+  get "issue.document_unlocked"() { return t("activityFormat.unlockedADocument"); },
+  get "issue.document_deleted"() { return t("activityFormat.deletedADocument"); },
+  get "issue.monitor_scheduled"() { return t("activityFormat.scheduledAMonitor"); },
+  get "issue.monitor_triggered"() { return t("activityFormat.triggeredAMonitor"); },
+  get "issue.monitor_cleared"() { return t("activityFormat.clearedAMonitor"); },
+  get "issue.monitor_skipped"() { return t("activityFormat.skippedAMonitor"); },
+  get "issue.monitor_exhausted"() { return t("activityFormat.exhaustedAMonitor"); },
+  get "issue.monitor_recovery_wake_queued"() { return t("activityFormat.queuedAMonitorRecoveryWake"); },
+  get "issue.monitor_recovery_issue_created"() { return t("activityFormat.createdAMonitorRecoveryIssue"); },
+  get "issue.monitor_escalated_to_board"() { return t("activityFormat.escalatedAMonitorToTheBoard"); },
+  get "issue.deleted"() { return t("activityFormat.deletedTheIssue"); },
+  get "issue.successful_run_handoff_required"() { return t("activityFormat.runFinishedWithoutAClearNextStep"); },
+  get "issue.successful_run_handoff_resolved"() { return t("activityFormat.nextStepChosen"); },
+  get "issue.successful_run_handoff_escalated"() { return t("activityFormat.runFinishedWithoutANextStepRecoveryEscalated"); },
+  get "issue.cross_issue_influence_cap_rejected"() { return t("activityFormat.hitThePerrunCrosstaskWriteCap"); },
+  get "issue.cross_issue_influence_observed"() { return t("activityFormat.madeACrosstaskWrite"); },
+  get "issue.attribution_spoof_rejected"() { return t("activityFormat.triedToChooseItsOwnResponsibleUser"); },
+  get "issue.recovery_action_opened"() { return t("activityFormat.openedASourcescopedRecoveryAction"); },
+  get "issue.recovery_action_resolved"() { return t("activityFormat.resolvedTheRecoveryAction"); },
+  get "issue.recovery_action_escalated"() { return t("activityFormat.escalatedTheRecoveryAction"); },
+  get "issue.accepted_plan_decomposition_updated"() { return t("activityFormat.updatedTheAcceptedplanDecomposition"); },
+  get "agent.created"() { return t("activityFormat.createdAnAgent"); },
+  get "agent.updated"() { return t("activityFormat.updatedTheAgent"); },
+  get "agent.paused"() { return t("activityFormat.pausedTheAgent"); },
+  get "agent.resumed"() { return t("activityFormat.resumedTheAgent"); },
+  get "agent.error_cleared"() { return t("activityFormat.clearedTheAgentError"); },
+  get "agent.terminated"() { return t("activityFormat.terminatedTheAgent"); },
+  get "heartbeat.invoked"() { return t("activityFormat.invokedAHeartbeat"); },
+  get "heartbeat.cancelled"() { return t("activityFormat.cancelledAHeartbeat"); },
+  get "heartbeat.output_stale_source_resolved"() { return t("activityFormat.systemFoldedAStaleRun"); },
+  get "heartbeat.output_stale_recovery_recursion_refused"() { return t("activityFormat.refusedRecoveryonrecoveryEscalation"); },
+  get "approval.created"() { return t("activityFormat.requestedApproval"); },
+  get "approval.approved"() { return t("activityFormat.approved"); },
+  get "approval.rejected"() { return t("activityFormat.rejected"); },
+  get "issue.thread_interaction_created"() { return t("activityFormat.askedForADecision"); },
+  get "issue.thread_interaction_accepted"() { return t("activityFormat.acceptedTheRequest"); },
+  get "issue.thread_interaction_rejected"() { return t("activityFormat.rejectedTheRequest"); },
+  get "issue.thread_interaction_answered"() { return t("activityFormat.answeredTheRequest"); },
+  get "issue.thread_interaction_withdrawn"() { return t("activityFormat.withdrewTheRequest"); },
+  get "issue.thread_interaction_cancelled"() { return t("activityFormat.cancelledTheRequest"); },
+  get "issue.thread_interaction_skipped"() { return t("activityFormat.skippedTheRequest"); },
+  get "issue.thread_interaction_expired"() { return t("activityFormat.expiredTheRequest"); },
+  get "issue.thread_interaction_item_verdicts_submitted"() { return t("activityFormat.submittedVerdictsOnTheRequest"); },
+  get "issue.stalled_review_decided"() { return t("activityFormat.recordedAReviewVerdict"); },
 };
 
 /**
@@ -191,9 +192,9 @@ const ISSUE_ACTIVITY_LABELS: Record<string, string> = {
  * Mirrors `StalledReviewDecisionAction` in shared.
  */
 const STALLED_REVIEW_DECISION_LABELS: Record<string, string> = {
-  approve: "approved the review",
-  request_changes: "requested changes on the review",
-  send_back: "sent the review back to work",
+  get approve() { return t("activityFormat.approvedTheReview"); },
+  get request_changes() { return t("activityFormat.requestedChangesOnTheReview"); },
+  get send_back() { return t("activityFormat.sentTheReviewBackToWork"); },
 };
 
 /**
@@ -204,17 +205,17 @@ const STALLED_REVIEW_DECISION_LABELS: Record<string, string> = {
  * is also the fallback for an event that carries no kind.
  */
 const INTERACTION_ACCEPTED_LABELS: Record<string, string> = {
-  request_confirmation: "approved the request",
-  request_checkbox_confirmation: "approved the request",
-  suggest_tasks: "accepted the task suggestions",
-  ask_user_questions: "accepted the answers",
+  get request_confirmation() { return t("activityFormat.approvedTheRequest"); },
+  get request_checkbox_confirmation() { return t("activityFormat.approvedTheRequest"); },
+  get suggest_tasks() { return t("activityFormat.acceptedTheTaskSuggestions"); },
+  get ask_user_questions() { return t("activityFormat.acceptedTheAnswers"); },
 };
 
 const INTERACTION_REJECTED_LABELS: Record<string, string> = {
-  request_confirmation: "rejected the request",
-  request_checkbox_confirmation: "rejected the request",
-  suggest_tasks: "declined the task suggestions",
-  ask_user_questions: "declined the questions",
+  get request_confirmation() { return t("activityFormat.rejectedTheRequest"); },
+  get request_checkbox_confirmation() { return t("activityFormat.rejectedTheRequest"); },
+  get suggest_tasks() { return t("activityFormat.declinedTheTaskSuggestions"); },
+  get ask_user_questions() { return t("activityFormat.declinedTheQuestions"); },
 };
 
 /**
@@ -237,9 +238,11 @@ function asRecord(value: unknown): Record<string, unknown> | null {
   return value as Record<string, unknown>;
 }
 
+const VALUE_LABEL_KEYS: Record<string, string> = {"backlog":"activityFormat.stateBacklog","todo":"activityFormat.stateTodo","in_progress":"activityFormat.stateInProgress","in_review":"activityFormat.stateInReview","idle":"activityFormat.stateIdle","done":"activityFormat.stateDone","cancelled":"activityFormat.stateCancelled","blocked":"activityFormat.stateBlocked","critical":"activityFormat.priorityCritical","high":"activityFormat.priorityHigh","medium":"activityFormat.priorityMedium","low":"activityFormat.priorityLow"};
+
 function humanizeValue(value: unknown): string {
-  if (typeof value !== "string") return String(value ?? "none");
-  return value.replace(/_/g, " ");
+  if (typeof value !== "string") return String(value ?? t("activityFormat.none"));
+  return VALUE_LABEL_KEYS[value] ? t(VALUE_LABEL_KEYS[value]) : value.replace(/_/g, " ");
 }
 
 function isActivityParticipant(value: unknown): value is ActivityParticipant {
@@ -265,17 +268,17 @@ function readIssueReferences(details: ActivityDetails, key: string): ActivityIss
 }
 
 function formatUserLabel(userId: string | null | undefined, options: ActivityFormatOptions = {}): string {
-  if (!userId || userId === "local-board") return "Board";
-  if (options.currentUserId && userId === options.currentUserId) return "You";
+  if (!userId || userId === "local-board") return t("activityFormat.board");
+  if (options.currentUserId && userId === options.currentUserId) return t("activityFormat.you");
   const profile = options.userProfileMap?.get(userId);
   if (profile) return profile.label;
-  return `user ${userId.slice(0, 5)}`;
+  return t("activityFormat.userLabel", { id: userId.slice(0, 5) });
 }
 
 function formatParticipantLabel(participant: ActivityParticipant, options: ActivityFormatOptions): string {
   if (participant.type === "agent") {
     const agentId = participant.agentId ?? "";
-    return options.agentMap?.get(agentId)?.name ?? "agent";
+    return options.agentMap?.get(agentId)?.name ?? t("activityFormat.agent");
   }
   return formatUserLabel(participant.userId, options);
 }
@@ -284,7 +287,7 @@ function formatIssueReferenceLabel(reference: ActivityIssueReference): string {
   if (reference.identifier) return reference.identifier;
   if (reference.title) return reference.title;
   if (reference.id) return reference.id.slice(0, 8);
-  return "task";
+  return t("activityFormat.task");
 }
 
 function formatChangedEntityLabel(
@@ -293,8 +296,8 @@ function formatChangedEntityLabel(
   labels: string[],
 ): string {
   if (labels.length <= 0) return plural;
-  if (labels.length === 1) return `${singular} ${labels[0]}`;
-  return `${labels.length} ${plural}`;
+  if (labels.length === 1) return t("activityFormat.singleEntity", { kind: singular, name: labels[0] });
+  return t("activityFormat.entityCount", { count: labels.length, kind: plural });
 }
 
 function readNumber(value: unknown): number | null {
@@ -315,13 +318,13 @@ function formatAcceptedPlanDecompositionDetail(details: ActivityDetails): string
   const newlyCreated = readStringArrayLength(details.newlyCreatedChildIssueIds);
   const reused = Math.max(0, totalChildren - newlyCreated);
   const parts: string[] = [];
-  if (newlyCreated > 0) parts.push(`created ${newlyCreated} new`);
-  if (reused > 0) parts.push(`reused ${reused} existing`);
-  if (parts.length === 0 && requested !== null) parts.push(`${requested} requested`);
+  if (newlyCreated > 0) parts.push(t("activityFormat.createdNew", { count: newlyCreated }));
+  if (reused > 0) parts.push(t("activityFormat.reusedExisting", { count: reused }));
+  if (parts.length === 0 && requested !== null) parts.push(t("activityFormat.requestedCount", { count: requested }));
   const summary = parts.length > 0 ? parts.join(", ") : null;
-  if (status === "completed" && summary) return `decomposition completed (${summary})`;
-  if (status === "completed") return "decomposition completed";
-  if (status === "in_flight" && summary) return `decomposition in flight (${summary})`;
+  if (status === "completed" && summary) return t("activityFormat.decompositionCompletedSummary", { summary });
+  if (status === "completed") return t("activityFormat.decompositionCompleted");
+  if (status === "in_flight" && summary) return t("activityFormat.decompositionInFlight", { summary });
   return summary;
 }
 
@@ -332,14 +335,14 @@ function formatIssueUpdatedVerb(details: ActivityDetails): string | null {
     const from = previous.status;
     const to = humanizeValue(details.status === "in_review" && details.externalConversationState === "waiting" ? "idle" : details.status);
     return from
-      ? `changed status from ${humanizeValue(from)} to ${to} on`
-      : `changed status to ${to} on`;
+      ? t("activityFormat.statusFromVerb", { from: humanizeValue(from), to })
+      : t("activityFormat.statusToVerb", { to });
   }
   if (details.priority !== undefined) {
     const from = previous.priority;
     return from
-      ? `changed priority from ${humanizeValue(from)} to ${humanizeValue(details.priority)} on`
-      : `changed priority to ${humanizeValue(details.priority)} on`;
+      ? t("activityFormat.priorityFromVerb", { from: humanizeValue(from), to: humanizeValue(details.priority) })
+      : t("activityFormat.priorityToVerb", { to: humanizeValue(details.priority) });
   }
   return null;
 }
@@ -349,7 +352,7 @@ function formatAssigneeName(details: ActivityDetails, options: ActivityFormatOpt
   const agentId = details.assigneeAgentId;
   const userId = details.assigneeUserId;
   if (typeof agentId === "string" && agentId) {
-    return options.agentMap?.get(agentId)?.name ?? "agent";
+    return options.agentMap?.get(agentId)?.name ?? t("activityFormat.agent");
   }
   if (typeof userId === "string" && userId) {
     return formatUserLabel(userId, options);
@@ -367,29 +370,29 @@ function formatIssueUpdatedAction(details: ActivityDetails, options: ActivityFor
     const to = humanizeValue(details.status === "in_review" && details.externalConversationState === "waiting" ? "idle" : details.status);
     parts.push(
       from
-        ? `changed the status from ${humanizeValue(from)} to ${to}`
-        : `changed the status to ${to}`,
+        ? t("activityFormat.statusFrom", { from: humanizeValue(from), to })
+        : t("activityFormat.statusTo", { to }),
     );
   }
   if (details.priority !== undefined) {
     const from = previous.priority;
     parts.push(
       from
-        ? `changed the priority from ${humanizeValue(from)} to ${humanizeValue(details.priority)}`
-        : `changed the priority to ${humanizeValue(details.priority)}`,
+        ? t("activityFormat.priorityFrom", { from: humanizeValue(from), to: humanizeValue(details.priority) })
+        : t("activityFormat.priorityTo", { to: humanizeValue(details.priority) }),
     );
   }
   if (details.assigneeAgentId !== undefined || details.assigneeUserId !== undefined) {
     const assigneeName = formatAssigneeName(details, options);
-    parts.push(assigneeName ? `made ${assigneeName} responsible for the task` : "cleared the responsible");
+    parts.push(assigneeName ? t("activityFormat.responsible", { name: assigneeName }) : t("activityFormat.clearedTheResponsible"));
   }
   if (details.reviewPolicy !== undefined) {
     // `null` is the default ("anyone can approve"), so it must not read as
     // "changed the review policy to none" (PAP-16506).
-    parts.push(`changed who can approve to ${formatReviewPolicyValue(details.reviewPolicy)}`);
+    parts.push(t("activityFormat.reviewPolicy", { policy: formatReviewPolicyValue(details.reviewPolicy) }));
   }
-  if (details.title !== undefined) parts.push("updated the title");
-  if (details.description !== undefined) parts.push("updated the description");
+  if (details.title !== undefined) parts.push(t("activityFormat.updatedTheTitle"));
+  if (details.description !== undefined) parts.push(t("activityFormat.updatedTheDescription"));
 
   return parts.length > 0 ? parts.join(", ") : null;
 }
@@ -407,30 +410,30 @@ function formatStructuredIssueChange(input: {
     const added = readIssueReferences(details, "addedBlockedByIssues").map(formatIssueReferenceLabel);
     const removed = readIssueReferences(details, "removedBlockedByIssues").map(formatIssueReferenceLabel);
     if (added.length > 0 && removed.length === 0) {
-      const changed = formatChangedEntityLabel("blocker", "blockers", added);
-      return input.forIssueDetail ? `added ${changed}` : `added ${changed} to`;
+      const changed = formatChangedEntityLabel(t("activityFormat.blocker"), t("activityFormat.blockers"), added);
+      return input.forIssueDetail ? t("activityFormat.addedEntity", { entity: changed }) : t("activityFormat.addedEntityTo", { entity: changed });
     }
     if (removed.length > 0 && added.length === 0) {
-      const changed = formatChangedEntityLabel("blocker", "blockers", removed);
-      return input.forIssueDetail ? `removed ${changed}` : `removed ${changed} from`;
+      const changed = formatChangedEntityLabel(t("activityFormat.blocker"), t("activityFormat.blockers"), removed);
+      return input.forIssueDetail ? t("activityFormat.removedEntity", { entity: changed }) : t("activityFormat.removedEntityFrom", { entity: changed });
     }
-    return input.forIssueDetail ? "updated blockers" : "updated blockers on";
+    return input.forIssueDetail ? t("activityFormat.updatedBlockers") : t("activityFormat.updatedBlockersOn");
   }
 
   if (input.action === "issue.reviewers_updated" || input.action === "issue.approvers_updated") {
     const added = readParticipants(details, "addedParticipants").map((participant) => formatParticipantLabel(participant, input.options));
     const removed = readParticipants(details, "removedParticipants").map((participant) => formatParticipantLabel(participant, input.options));
-    const singular = input.action === "issue.reviewers_updated" ? "reviewer" : "approver";
-    const plural = input.action === "issue.reviewers_updated" ? "reviewers" : "approvers";
+    const singular = input.action === "issue.reviewers_updated" ? t("activityFormat.reviewer") : t("activityFormat.approver");
+    const plural = input.action === "issue.reviewers_updated" ? t("activityFormat.reviewers") : t("activityFormat.approvers");
     if (added.length > 0 && removed.length === 0) {
       const changed = formatChangedEntityLabel(singular, plural, added);
-      return input.forIssueDetail ? `added ${changed}` : `added ${changed} to`;
+      return input.forIssueDetail ? t("activityFormat.addedEntity", { entity: changed }) : t("activityFormat.addedEntityTo", { entity: changed });
     }
     if (removed.length > 0 && added.length === 0) {
       const changed = formatChangedEntityLabel(singular, plural, removed);
-      return input.forIssueDetail ? `removed ${changed}` : `removed ${changed} from`;
+      return input.forIssueDetail ? t("activityFormat.removedEntity", { entity: changed }) : t("activityFormat.removedEntityFrom", { entity: changed });
     }
-    return input.forIssueDetail ? `updated ${plural}` : `updated ${plural} on`;
+    return input.forIssueDetail ? t("activityFormat.updatedEntity", { kind: plural }) : t("activityFormat.updatedEntityOn", { kind: plural });
   }
 
   return null;
@@ -446,16 +449,16 @@ export function formatActivityVerb(
       ? details.tool
       : typeof details?.upstreamToolName === "string"
         ? details.upstreamToolName
-        : "an app action";
+        : t("activityFormat.anAppAction");
     const tool = rawTool.replace(/[._-]+/g, " ");
     const isTest = details?.source === "test";
-    if (action === "tool_gateway.call_completed") return `${isTest ? "tested" : "used"} ${tool} on`;
-    if (action === "tool_gateway.call_allowed") return `${isTest ? "started a test of" : "was allowed to use"} ${tool} on`;
-    if (action === "tool_gateway.call_denied") return `was blocked from using ${tool} on`;
-    if (action === "tool_gateway.approval_requested") return `asked to use ${tool} on`;
-    if (action === "tool_gateway.session_created") return "opened an app session for";
-    if (action === "tool_gateway.session_rejected") return "was blocked from opening an app session for";
-    if (action === "tool_gateway.discovery") return "discovered app actions for";
+    if (action === "tool_gateway.call_completed") return t(isTest ? "activityFormat.testedTool" : "activityFormat.usedTool", { tool });
+    if (action === "tool_gateway.call_allowed") return t(isTest ? "activityFormat.startedToolTest" : "activityFormat.allowedTool", { tool });
+    if (action === "tool_gateway.call_denied") return t("activityFormat.blockedTool", { tool });
+    if (action === "tool_gateway.approval_requested") return t("activityFormat.askedTool", { tool });
+    if (action === "tool_gateway.session_created") return t("activityFormat.openedAnAppSessionFor");
+    if (action === "tool_gateway.session_rejected") return t("activityFormat.wasBlockedFromOpeningAnAppSessionFor");
+    if (action === "tool_gateway.discovery") return t("activityFormat.discoveredAppActionsFor");
   }
 
   if (action === "issue.updated") {
@@ -466,11 +469,11 @@ export function formatActivityVerb(
   if (action === "issue.stalled_review_decided") {
     const decision = typeof details?.action === "string" ? details.action : null;
     const label = decision ? STALLED_REVIEW_DECISION_LABELS[decision] : null;
-    if (label) return `${label} on`;
+    if (label) return t("activityFormat.labelOn", { label });
   }
 
   const outcomeLabel = formatInteractionOutcomeLabel(action, details);
-  if (outcomeLabel) return `${outcomeLabel} on`;
+  if (outcomeLabel) return t("activityFormat.labelOn", { label: outcomeLabel });
 
   const structuredChange = formatStructuredIssueChange({
     action,
@@ -520,7 +523,7 @@ export function formatIssueActivityAction(
       ? details.serviceName.trim()
       : null;
     const base = ISSUE_ACTIVITY_LABELS[action] ?? action.replace(/[._]/g, " ");
-    return serviceName ? `${base} for ${serviceName}` : base;
+    return serviceName ? t("activityFormat.serviceLabel", { label: base, service: serviceName }) : base;
   }
 
   if (
@@ -533,7 +536,7 @@ export function formatIssueActivityAction(
     ) &&
     details
   ) {
-    const key = typeof details.key === "string" ? details.key : "document";
+    const key = typeof details.key === "string" ? details.key : t("activityFormat.document");
     const title = typeof details.title === "string" && details.title ? ` (${details.title})` : "";
     return `${ISSUE_ACTIVITY_LABELS[action] ?? action} ${key}${title}`;
   }

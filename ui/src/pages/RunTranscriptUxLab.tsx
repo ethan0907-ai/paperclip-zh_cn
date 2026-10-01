@@ -1,3 +1,4 @@
+import { t, useTranslation } from "@/i18n";
 // token-extraction: allowlisted — intentional one-off decoration (DECISION-SHEET.md B1
 // user ruling). The bg-[...gradient...] / shadow-[...] literals in this demo/UX-lab page
 // are deliberate one-off decoration, reverted from --gradient-extract-*/--shadow-extract-*
@@ -23,23 +24,23 @@ const surfaceOptions: Array<{
 }> = [
   {
     id: "detail",
-    label: "Run Detail",
-    eyebrow: "Full transcript",
-    description: "The long-form run page with the `Nice | Raw` toggle and the most inspectable transcript view.",
+    get label() { return t("uxLabs.run_detail"); },
+    get eyebrow() { return t("uxLabs.full_transcript"); },
+    get description() { return t("uxLabs.run_detail_description"); },
     icon: MonitorCog,
   },
   {
     id: "live",
-    label: "Issue Widget",
-    eyebrow: "Live stream",
-    description: "The issue-detail live run widget, optimized for following an active run without leaving the task page.",
+    get label() { return t("uxLabs.issue_widget"); },
+    get eyebrow() { return t("uxLabs.live_stream"); },
+    get description() { return t("uxLabs.the_issue_detail_live_run_widget_optimized_for_following_an_active_run_without_leaving_the_task_page"); },
     icon: RadioTower,
   },
   {
     id: "dashboard",
-    label: "Dashboard Card",
-    eyebrow: "Dense card",
-    description: "The active-agents dashboard card, tuned for compact scanning while keeping the same transcript language.",
+    get label() { return t("uxLabs.dashboard_card"); },
+    get eyebrow() { return t("uxLabs.dense_card"); },
+    get description() { return t("uxLabs.the_active_agents_dashboard_card_tuned_for_compact_scanning_while_keeping_the_same_transcript_language"); },
     icon: PanelsTopLeft,
   },
 ];
@@ -63,20 +64,19 @@ function RunDetailPreview({
   streaming: boolean;
   density: TranscriptDensity;
 }) {
+  const { t } = useTranslation();
   return (
     <div className="overflow-hidden rounded-xl border border-border/70 bg-background/80 shadow-[0_24px_60px_rgba(15,23,42,0.08)]">
       <div className="border-b border-border/60 bg-background/90 px-5 py-4">
         <div className="flex flex-wrap items-center gap-2">
-          <Badge variant="outline" className="uppercase tracking-(--tracking-caps) text-(length:--text-nano)">
-            Run Detail
-          </Badge>
+          <Badge variant="outline" className="uppercase tracking-(--tracking-caps) text-(length:--text-nano)">{t("uxLabs.run_detail")}</Badge>
           <StatusBadge status={streaming ? "running" : "succeeded"} />
           <span className="text-xs text-muted-foreground">
             {formatDateTime(runTranscriptFixtureMeta.startedAt)}
           </span>
         </div>
         <div className="mt-2 text-sm font-medium">
-          Transcript ({runTranscriptFixtureEntries.length})
+          {t("uxLabs.transcript_count", { count: runTranscriptFixtureEntries.length })}
         </div>
       </div>
       <div className="max-h-(--sz-720px) overflow-y-auto bg-[radial-gradient(circle_at_top_left,rgba(8,145,178,0.08),transparent_36%),radial-gradient(circle_at_bottom_right,rgba(245,158,11,0.10),transparent_28%)] p-5">
@@ -100,15 +100,12 @@ function LiveWidgetPreview({
   mode: TranscriptMode;
   density: TranscriptDensity;
 }) {
+  const { t } = useTranslation();
   return (
     <div className="overflow-hidden rounded-xl border border-cyan-500/25 bg-background/85 shadow-[0_20px_50px_rgba(6,182,212,0.10)]">
       <div className="border-b border-border/60 bg-cyan-500/[0.05] px-5 py-4">
-        <div className="text-xs font-semibold uppercase tracking-(--tracking-caps) text-cyan-700 dark:text-cyan-300">
-          Live Runs
-        </div>
-        <div className="mt-1 text-xs text-muted-foreground">
-          Compact live transcript stream for the issue detail page.
-        </div>
+        <div className="text-xs font-semibold uppercase tracking-(--tracking-caps) text-cyan-700 dark:text-cyan-300">{t("uxLabs.live_runs")}</div>
+        <div className="mt-1 text-xs text-muted-foreground">{t("uxLabs.compact_live_transcript_stream_for_the_issue_detail_page")}</div>
       </div>
       <div className="px-5 py-4">
         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -122,9 +119,7 @@ function LiveWidgetPreview({
               <span>{formatDateTime(runTranscriptFixtureMeta.startedAt)}</span>
             </div>
           </div>
-          <Badge variant="outline" className="border-border/70 bg-background/70 px-2.5 py-1 text-(length:--text-micro) text-muted-foreground">
-            Open run
-            <ExternalLink className="h-3 w-3" />
+          <Badge variant="outline" className="border-border/70 bg-background/70 px-2.5 py-1 text-(length:--text-micro) text-muted-foreground">{t("uxLabs.open_run")}<ExternalLink className="h-3 w-3" />
           </Badge>
         </div>
         <div className="max-h-(--sz-460px) overflow-y-auto pr-1">
@@ -150,6 +145,7 @@ function DashboardPreview({
   mode: TranscriptMode;
   density: TranscriptDensity;
 }) {
+  const { t } = useTranslation();
   return (
     <div className="max-w-md">
       <div className={cn(
@@ -169,7 +165,7 @@ function DashboardPreview({
                 <Identity name={runTranscriptFixtureMeta.agentName} size="sm" />
               </div>
               <div className="mt-2 text-(length:--text-micro) text-muted-foreground">
-                {streaming ? "Live now" : "Finished 2m ago"}
+                {streaming ? t("uxLabs.live_now") : t("uxLabs.finished_2m_ago")}
               </div>
             </div>
             <Badge variant="outline" className="[&>svg]:size-2.5 border-border/70 bg-background/70 py-1 text-(length:--text-nano) text-muted-foreground">
@@ -195,6 +191,7 @@ function DashboardPreview({
 }
 
 export function RunTranscriptUxLab() {
+  const { t } = useTranslation();
   const [selectedSurface, setSelectedSurface] = useState<SurfaceId>("detail");
   const [detailMode, setDetailMode] = useState<TranscriptMode>("nice");
   const [streaming, setStreaming] = useState(true);
@@ -209,13 +206,9 @@ export function RunTranscriptUxLab() {
           <aside className="border-b border-border/60 bg-background/75 p-5 lg:border-b-0 lg:border-r">
             <div className="mb-5">
               <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/25 bg-cyan-500/[0.08] px-3 py-1 text-(length:--text-nano) font-semibold uppercase tracking-(--tracking-caps) text-cyan-700 dark:text-cyan-300">
-                <FlaskConical className="h-3.5 w-3.5" />
-                UX Lab
-              </div>
-              <h1 className="mt-4 text-2xl font-semibold tracking-tight">Run Transcript Fixtures</h1>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Built from a real Paperclip development run, then sanitized so no secrets, local paths, or environment details survive into the fixture.
-              </p>
+                <FlaskConical className="h-3.5 w-3.5" />{t("uxLabs.ux_lab")}</div>
+              <h1 className="mt-4 text-2xl font-semibold tracking-tight">{t("uxLabs.run_transcript_fixtures")}</h1>
+              <p className="mt-2 text-sm text-muted-foreground">{t("uxLabs.built_from_a_real_paperclip_development_run_then_sanitized_so_no_secrets_local_paths_or_environment_details_survive_into_the_fixture")}</p>
             </div>
 
             <div className="space-y-2">
@@ -266,8 +259,7 @@ export function RunTranscriptUxLab() {
               </div>
 
               <div className="flex flex-wrap items-center gap-2">
-                <Badge variant="outline" className="rounded-full px-3 py-1 text-(length:--text-nano) uppercase tracking-(--tracking-caps)">
-                  Source run {runTranscriptFixtureMeta.sourceRunId.slice(0, 8)}
+                <Badge variant="outline" className="rounded-full px-3 py-1 text-(length:--text-nano) uppercase tracking-(--tracking-caps)">{t("uxLabs.source_run")}{" "}{runTranscriptFixtureMeta.sourceRunId.slice(0, 8)}
                 </Badge>
                 <Badge variant="outline" className="rounded-full px-3 py-1 text-(length:--text-nano) uppercase tracking-(--tracking-caps)">
                   {runTranscriptFixtureMeta.issueIdentifier}
@@ -276,9 +268,7 @@ export function RunTranscriptUxLab() {
             </div>
 
             <div className="mb-5 flex flex-wrap items-center gap-2">
-              <span className="text-(length:--text-micro) font-semibold uppercase tracking-(--tracking-caps) text-muted-foreground">
-                Controls
-              </span>
+              <span className="text-(length:--text-micro) font-semibold uppercase tracking-(--tracking-caps) text-muted-foreground">{t("uxLabs.controls")}</span>
               <div className="inline-flex rounded-full border border-border/70 bg-background/80 p-1">
                 {(["nice", "raw"] as const).map((mode) => (
                   <button
@@ -290,7 +280,7 @@ export function RunTranscriptUxLab() {
                     )}
                     onClick={() => setDetailMode(mode)}
                   >
-                    {mode}
+                    {t(`uxLabs.transcript_mode_${mode}`)}
                   </button>
                 ))}
               </div>
@@ -305,7 +295,7 @@ export function RunTranscriptUxLab() {
                     )}
                     onClick={() => setDensity(nextDensity)}
                   >
-                    {nextDensity}
+                    {t(`uxLabs.density_${nextDensity}`)}
                   </button>
                 ))}
               </div>
@@ -315,7 +305,7 @@ export function RunTranscriptUxLab() {
                 className="rounded-full"
                 onClick={() => setStreaming((value) => !value)}
               >
-                {streaming ? "Show settled state" : "Show streaming state"}
+                {streaming ? t("uxLabs.show_settled_state") : t("uxLabs.show_streaming_state")}
               </Button>
             </div>
 

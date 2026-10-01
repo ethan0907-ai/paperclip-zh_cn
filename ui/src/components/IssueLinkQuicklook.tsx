@@ -1,3 +1,4 @@
+import { t, useTranslation } from "@/i18n";
 import * as React from "react";
 import { useMemo } from "react";
 import * as RouterDom from "react-router-dom";
@@ -129,6 +130,17 @@ function QuicklookSeparator({ className }: { className?: string }) {
 
 /** "in_review" -> "In review". The card states the status as a word, not a chip. */
 function statusLabel(status: string): string {
+  const keys: Record<string, string> = {
+    todo: "taskSmallTail.statusTodo",
+    in_progress: "taskSmallTail.statusInProgress",
+    in_review: "taskSmallTail.statusInReview",
+    done: "taskSmallTail.statusDone",
+    blocked: "taskSmallTail.statusBlocked",
+    cancelled: "taskSmallTail.statusCancelled",
+    backlog: "taskSmallTail.statusBacklog",
+    idle: "taskSmallTail.statusIdle",
+  };
+  if (Object.hasOwn(keys, status)) return t(keys[status]);
   const words = status.replace(/_/g, " ");
   return words.charAt(0).toUpperCase() + words.slice(1);
 }
@@ -169,6 +181,7 @@ export function IssueQuicklookCard({
   linkState?: unknown;
   compact?: boolean;
 }) {
+  const { t } = useTranslation();
   const description = useMemo(() => summarizeIssueDescription(issue.description), [issue.description]);
   const projectName = issue.project?.name;
 
@@ -246,6 +259,7 @@ export const IssueLinkQuicklook = React.forwardRef<
   },
   ref,
 ) {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const instanceId = React.useMemo(() => Symbol("issue-quicklook"), []);
   const open = useIsQuicklookOpen(instanceId);
@@ -442,7 +456,7 @@ export const IssueLinkQuicklook = React.forwardRef<
             <div className="h-4 w-full rounded bg-accent/40" />
             <div className="h-4 w-3/4 rounded bg-accent/30" />
             {!isLoading ? (
-              <p className="text-xs text-muted-foreground">Unable to load task preview.</p>
+              <p className="text-xs text-muted-foreground">{t("taskSmallTail.previewError")}</p>
             ) : null}
           </div>
         )}

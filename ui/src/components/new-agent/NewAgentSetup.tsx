@@ -1,3 +1,4 @@
+import { t, useTranslation } from "@/i18n";
 import { AgentCharacter } from "../AgentCharacter";
 import { useAgentAppearanceDraft } from "../../hooks/useAgentAppearanceDraft";
 import { AiConnectionField, aiProviderForAdapter } from "../ai-connections/AiConnectionField";
@@ -72,12 +73,13 @@ const blocking = (result: AdapterEnvironmentTestResult) =>
   result.checks.some((check) => check.code === ADAPTER_AUTH_MISSING_CHECK_CODE);
 
 export function NewAgentSetup() {
+  const { t } = useTranslation();
   const { selectedCompanyId } = useCompany();
   const [params] = useSearchParams();
   if (!selectedCompanyId)
     return (
       <p className="text-sm text-muted-foreground">
-        Select an organization to create an agent.
+        {t("newAgentUi.selectAnOrganizationToCreateAnAgent")}
       </p>
     );
   return (
@@ -105,6 +107,7 @@ function Setup({
   runnerProvider: string;
   createdAgentId: string | null;
 }) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const cache = useQueryClient();
   const { openNewIssue } = useDialogActions();
@@ -258,7 +261,7 @@ function Setup({
     environmentError =
       cause instanceof Error
         ? cause.message
-        : "Could not resolve the environment.";
+        : t("newAgentUi.couldNotResolveTheEnvironment");
   }
   const environment = envs.data?.find((env) => env.id === environmentId);
   const sandboxProvider =
@@ -384,12 +387,12 @@ function Setup({
   }
   function preparedConfig(nextConnection = connection) {
     if (multiProvider && (!model.trim() || !model.includes("/")))
-      throw new Error("Choose or enter a model in provider/model format.");
+      throw new Error(t("newAgentUi.chooseOrEnterAModelInProviderModelFormat"));
     if (
       adapterType === "cursor_cloud" &&
       !/^https:\/\/github\.com\/[^/]+\/[^/]+/.test(repository.trim())
     )
-      throw new Error("Enter a GitHub repository URL.");
+      throw new Error(t("newAgentUi.enterAGitHubRepositoryURL"));
     if (
       ["cursor_cloud", "hermes_gateway"].includes(adapterType) &&
       !apiKey.trim() &&
@@ -397,19 +400,19 @@ function Setup({
     )
       throw new Error(
         adapterType === "cursor_cloud"
-          ? "Enter a Cursor API key."
-          : `Enter ${envKey} or select an organization secret.`,
+          ? t("newAgentUi.enterACursorAPIKey")
+          : t("newAgentUi.enterEnvironmentKey", { key: envKey }),
       );
     if (adapterType === "hermes_gateway") {
       try {
         const url = new URL(gatewayUrl.trim());
         if (!["https:", "http:"].includes(url.protocol)) throw new Error();
       } catch {
-        throw new Error("Enter the Hermes API base URL.");
+        throw new Error(t("newAgentUi.enterTheHermesAPIBaseURL"));
       }
     }
     if (usingKimiApi && !kimiModel.trim())
-      throw new Error("Enter the Kimi API model name.");
+      throw new Error(t("newAgentUi.enterTheKimiAPIModelName"));
     return buildConfig(nextConnection);
   }
   function pendingCredentials(nextConnection = connection) {
@@ -452,7 +455,7 @@ function Setup({
     } catch (cause) {
       if (run === generation.current) {
         setError(
-          cause instanceof Error ? cause.message : "Could not test the agent.",
+          cause instanceof Error ? cause.message : t("newAgentUi.couldNotTestTheAgent"),
         );
         setTestState("fail");
       }
@@ -540,7 +543,7 @@ function Setup({
       ]);
     } catch (cause) {
       setError(
-        cause instanceof Error ? cause.message : "Could not create the agent.",
+        cause instanceof Error ? cause.message : t("newAgentUi.couldNotCreateTheAgent"),
       );
     } finally {
       if (!hired) {
@@ -549,7 +552,7 @@ function Setup({
         } catch {
           setError(
             (original) =>
-              `${original ? `${original} ` : ""}Could not remove an unused setup credential. Remove it from Secrets before retrying.`,
+              t("newAgentUi.removeUnusedCredential", { original: original ? `${original} ` : "" }),
           );
         }
       }
@@ -570,8 +573,8 @@ function Setup({
         className="text-sm text-muted-foreground"
       >
         {savedAgent.error
-          ? "Could not load the created agent. Return to Agents to view it."
-          : "Loading your agent…"}
+          ? t("newAgentUi.couldNotLoadTheCreatedAgentReturnToAgentsToViewIt")
+          : t("newAgentUi.loadingYourAgent")}
       </p>
     );
   if (!name || !adapterType)
@@ -593,9 +596,9 @@ function Setup({
     "saved" as const,
   ];
   const labels = {
-    connect: "Connect",
-    runtime: "Configure",
-    saved: "Confirmation",
+    connect: t("newAgentUi.connect"),
+    runtime: t("newAgentUi.configure"),
+    saved: t("newAgentUi.confirmation"),
   };
   const confirmationEnvironment = created?.defaultEnvironmentId
     ? envs.data?.find((env) => env.id === created.defaultEnvironmentId)
@@ -609,7 +612,7 @@ function Setup({
       ? createdKimiModel
       : (createdKimiModel as { value?: string } | undefined)?.value) ||
     model ||
-    "Default";
+    t("agentDetailUi.default");
   const environmentLabel =
     adapterType === "cursor_cloud"
       ? "Cursor Cloud"
@@ -617,7 +620,7 @@ function Setup({
         ? "Hermes Gateway"
         : confirmationEnvironment
           ? environmentDisplayLabel(confirmationEnvironment)
-          : "Local machine";
+          : t("newAgentUi.localMachine");
   const setupError =
     adapters.error ??
     envs.error ??
@@ -642,7 +645,7 @@ function Setup({
                 <span>
                   ·{" "}
                   {runnerProvider === "codex"
-                    ? "Native app server runner"
+                    ? t("newAgentUi.nativeAppServerRunner")
                     : "Paperclip Runner"}
                 </span>
               )}
@@ -661,19 +664,18 @@ function Setup({
         )}
         {adapters.data && !available && (
           <p role="alert" className="text-sm text-destructive">
-            This adapter is unavailable. Choose an enabled adapter.
+            {t("newAgentUi.thisAdapterIsUnavailableChooseAnEnabledAdapter")}
           </p>
         )}
         {(managedOnly || forced.forced) &&
           !envs.isPending &&
           !environmentId && (
             <p role="alert" className="text-sm text-destructive">
-              No managed environment is available. Configure an environment
-              before continuing.
+              {t("newAgentUi.noManagedEnvironmentIsAvailableConfigureAnEnvironmentBeforeContinuing")}
             </p>
           )}
         <div className="flex flex-col gap-8 md:flex-row">
-          <nav aria-label="Agent setup steps" className="shrink-0 md:w-44">
+          <nav aria-label={t("newAgentUi.agentSetupSteps")} className="shrink-0 md:w-44">
             <ol className="flex flex-wrap gap-2 md:flex-col">
               {steps.map((step, index) => (
                 <li key={step}>
@@ -714,15 +716,15 @@ function Setup({
                   <OnboardingCard className="mx-auto">
                     <div className="mb-8">
                       <OnboardingHeading
-                        title="Connect a model"
-                        lede={`Connect ${name} to ${connectionAdapter === "claude_local" ? "Claude" : connectionAdapter === "grok_local" ? "Grok" : "OpenAI"}.`}
+                        title={t("newAgentUi.connectAModel")}
+                        lede={t("newAgentUi.connectAgentProvider", { name, provider: connectionAdapter === "claude_local" ? "Claude" : connectionAdapter === "grok_local" ? "Grok" : "OpenAI" })}
                         center
                       />
                     </div>
                     <div className="mb-5">
-                      <Field label="Environment">
+                      <Field label={t("agentDetailUi.environment")}>
                         <select
-                          aria-label="Environment"
+                          aria-label={t("agentDetailUi.environment")}
                           className={controlClass}
                           value={environmentOverride}
                           disabled={busy || forced.forced}
@@ -732,7 +734,7 @@ function Setup({
                             resetTest();
                           }}
                         >
-                          <option value="">Default: {environmentLabel}</option>
+                          <option value="">{t("newAgentUi.default")} {environmentLabel}</option>
                           {(envs.data ?? []).filter((env) => env.status === "active" && (!managedOnly || env.driver !== "local")).map((env) => (
                             <option key={env.id} value={env.id}>{environmentDisplayLabel(env)}</option>
                           ))}
@@ -774,27 +776,27 @@ function Setup({
                       <h2 className="flex items-center gap-3 text-lg font-semibold">
                         <Check className="size-5" />
                         {created.status === "pending_approval"
-                          ? "Agent submitted for approval"
-                          : "Your agent is ready"}
+                          ? t("newAgentUi.agentSubmittedForApproval")
+                          : t("newAgentUi.yourAgentIsReady")}
                       </h2>
                       <dl className="grid grid-cols-2 gap-4 text-sm">
-                        <dt className="text-muted-foreground">Adapter</dt>
+                        <dt className="text-muted-foreground">{t("newAgentUi.adapter")}</dt>
                         <dd>{getAdapterDisplay(adapterType).label}</dd>
                         {showModel && (
                           <>
-                            <dt className="text-muted-foreground">Model</dt>
+                            <dt className="text-muted-foreground">{t("newAgentUi.model")}</dt>
                             <dd className="break-all">
                               {String(confirmationModel)}
                             </dd>
                           </>
                         )}
-                        <dt className="text-muted-foreground">Environment</dt>
+                        <dt className="text-muted-foreground">{t("agentDetailUi.environment")}</dt>
                         <dd>{environmentLabel}</dd>
                       </dl>
                       <p className="text-sm text-muted-foreground">
                         {created.status === "pending_approval"
-                          ? "An organization administrator must approve this agent before it can work."
-                          : "Assign a task when you’re ready for this agent to work."}
+                          ? t("newAgentUi.anOrganizationAdministratorMustApproveThisAgentBeforeItCanWork")
+                          : t("newAgentUi.assignATaskWhenYouReReadyForThisAgentToWork")}
                       </p>
                     </div>
                     <div className="flex flex-wrap justify-between gap-3">
@@ -803,7 +805,7 @@ function Setup({
                         onClick={() => navigate(`${agentUrl(created)}/runtime`)}
                       >
                         <Settings2 className="size-4" />
-                        Edit configuration
+                        {t("newAgentUi.editConfiguration")}
                       </Button>
                       <Button
                         disabled={created.status === "pending_approval"}
@@ -814,7 +816,7 @@ function Setup({
                           })
                         }
                       >
-                        Assign {created.name} a Task
+                        {t("newAgentUi.assign")} {created.name} {t("newAgentUi.aTask")}
                         <ArrowRight className="size-4" />
                       </Button>
                     </div>
@@ -828,19 +830,19 @@ function Setup({
                     }}
                   >
                     <h2 className="text-xl font-semibold">
-                      Configure your agent
+                      {t("newAgentUi.configureYourAgent")}
                     </h2>
                     <fieldset disabled={busy} className="space-y-8">
                       <section className="space-y-5">
-                        <h3 className="text-sm font-semibold">Runtime</h3>
+                        <h3 className="text-sm font-semibold">{t("newAgentUi.runtime")}</h3>
                         {aiProviderForAdapter(brandType) && (
                           connection && !aiBinding ? (
                             <div className="space-y-3">
                               <p className="text-sm text-muted-foreground">
-                                Using the connection selected in the Connect step.
+                                {t("newAgentUi.usingTheConnectionSelectedInTheConnectStep")}
                               </p>
                               <Button type="button" variant="outline" onClick={() => setScreen("connect")}>
-                                Change connection
+                                {t("newAgentUi.changeConnection")}
                               </Button>
                             </div>
                           ) : (
@@ -848,7 +850,7 @@ function Setup({
                               onChange={binding => { setRuntimeAiBinding(binding); resetTest(); }} />
                           )
                         )}
-                        {models.error && <p role="alert" className="text-sm text-destructive">Could not load models. Retry or enter a model ID manually.</p>}
+                        {models.error && <p role="alert" className="text-sm text-destructive">{t("newAgentUi.couldNotLoadModelsRetryOrEnterAModelIDManually")}</p>}
                         {((showModel && !usingKimiApi) ||
                           efforts.length > 0) && (
                           <div className="grid items-start gap-5 sm:grid-cols-2">
@@ -886,9 +888,9 @@ function Setup({
                               />
                             )}
                             {efforts.length > 0 && (
-                              <Field label="Thinking effort">
+                              <Field label={t("newAgentUi.thinkingEffort")}>
                                 <select
-                                  aria-label="Thinking effort"
+                                  aria-label={t("newAgentUi.thinkingEffort")}
                                   className={controlClass}
                                   value={effort}
                                   onChange={(event) => {
@@ -896,10 +898,10 @@ function Setup({
                                     resetTest();
                                   }}
                                 >
-                                  <option value="">Auto</option>
+                                  <option value="">{t("newAgentUi.auto")}</option>
                                   {efforts.map((value) => (
                                     <option key={value} value={value}>
-                                      {value}
+                                      {t(`agentConfigForm.${value}`, { defaultValue: value })}
                                     </option>
                                   ))}
                                 </select>
@@ -914,16 +916,15 @@ function Setup({
                         )}
                         {showModel && models.error && (
                           <p className="text-xs text-muted-foreground">
-                            Couldn’t load models. You can enter a model ID
-                            manually.
+                            {t("newAgentUi.couldnTLoadModelsYouCanEnterAModelIDManually")}
                           </p>
                         )}
                         {hasCredentialField && !aiBinding && (
                           <div className="grid gap-5 sm:grid-cols-2">
                             {chooseProvider && (
-                              <Field label="API key provider">
+                              <Field label={t("newAgentUi.aPIKeyProvider")}>
                                 <select
-                                  aria-label="API key provider"
+                                  aria-label={t("newAgentUi.aPIKeyProvider")}
                                   className={controlClass}
                                   value={provider}
                                   onChange={(event) => {
@@ -974,13 +975,13 @@ function Setup({
                                     }}
                                     placeholder={
                                       selectedBinding
-                                        ? "Using saved key"
+                                        ? t("newAgentUi.usingSavedKey")
                                         : [
                                               "cursor_cloud",
                                               "hermes_gateway",
                                             ].includes(adapterType)
-                                          ? "Required"
-                                          : "Optional if already configured"
+                                          ? t("teamCatalogUi.requiredText")
+                                          : t("newAgentUi.optionalIfAlreadyConfigured")
                                     }
                                   />
                                   {adapterType === "cursor_cloud" && (
@@ -990,7 +991,7 @@ function Setup({
                                       rel="noopener noreferrer"
                                       className="shrink-0 text-xs text-muted-foreground underline underline-offset-4 hover:text-foreground"
                                     >
-                                      get api key
+                                      {t("newAgentUi.getApiKey")}
                                     </a>
                                   )}
                                 </div>
@@ -1002,7 +1003,7 @@ function Setup({
                                   chooseProvider ? "sm:col-span-2" : undefined
                                 }
                               >
-                                <Field label="Or use an organization secret">
+                                <Field label={t("newAgentUi.orUseAnOrganizationSecret")}>
                                   <SecretPicker
                                     secretId={
                                       selectedBinding &&
@@ -1027,16 +1028,15 @@ function Setup({
                               </div>
                             )}
                             <p className="text-xs text-muted-foreground sm:col-span-2">
-                              New keys are saved as organization secrets when
-                              you finish setup.
-                              {multiProvider && ` Use a ${provider}/model ID.`}
+                              {t("newAgentUi.newKeysAreSavedAsOrganizationSecretsWhenYouFinishSetup")}
+                              {multiProvider && t("newAgentUi.providerModelId", { provider })}
                             </p>
                           </div>
                         )}
                         {adapterType === "hermes_gateway" && (
-                          <Field label="Hermes API base URL">
+                          <Field label={t("newAgentUi.hermesAPIBaseURL")}>
                             <Input
-                              aria-label="Hermes API base URL"
+                              aria-label={t("newAgentUi.hermesAPIBaseURL")}
                               value={gatewayUrl}
                               onChange={(event) => {
                                 setGatewayUrl(event.target.value);
@@ -1048,9 +1048,9 @@ function Setup({
                         )}
                         {usingKimiApi && (
                           <div className="grid gap-5 sm:grid-cols-2">
-                            <Field label="Kimi API model name">
+                            <Field label={t("newAgentUi.kimiAPIModelName")}>
                               <Input
-                                aria-label="Kimi API model name"
+                                aria-label={t("newAgentUi.kimiAPIModelName")}
                                 value={kimiModel}
                                 onChange={(event) => {
                                   setKimiModel(event.target.value);
@@ -1059,9 +1059,9 @@ function Setup({
                                 placeholder="kimi-for-coding"
                               />
                             </Field>
-                            <Field label="Kimi API protocol">
+                            <Field label={t("newAgentUi.kimiAPIProtocol")}>
                               <select
-                                aria-label="Kimi API protocol"
+                                aria-label={t("newAgentUi.kimiAPIProtocol")}
                                 className={controlClass}
                                 value={kimiProtocol}
                                 onChange={(event) => {
@@ -1077,26 +1077,26 @@ function Setup({
                               </select>
                             </Field>
                             <Field
-                              label="Kimi API base URL"
-                              hint="Optional override for your provider endpoint."
+                              label={t("newAgentUi.kimiAPIBaseURL")}
+                              hint={t("newAgentUi.optionalOverrideForYourProviderEndpoint")}
                             >
                               <Input
-                                aria-label="Kimi API base URL"
+                                aria-label={t("newAgentUi.kimiAPIBaseURL")}
                                 value={kimiBaseUrl}
                                 onChange={(event) => {
                                   setKimiBaseUrl(event.target.value);
                                   resetTest();
                                 }}
-                                placeholder="Provider default"
+                                placeholder={t("newAgentUi.providerDefault")}
                               />
                             </Field>
                           </div>
                         )}
                         {adapterType === "cursor_cloud" && (
                           <div className="grid gap-5 sm:grid-cols-2">
-                            <Field label="GitHub repository">
+                            <Field label={t("newAgentUi.gitHubRepository")}>
                               <Input
-                                aria-label="GitHub repository"
+                                aria-label={t("newAgentUi.gitHubRepository")}
                                 value={repository}
                                 onChange={(event) => {
                                   setRepository(event.target.value);
@@ -1105,10 +1105,10 @@ function Setup({
                                 placeholder="https://github.com/your-org/repo"
                               />
                             </Field>
-                            <Field label="Branch">
+                            <Field label={t("newAgentUi.branch")}>
                               <Input
-                                aria-label="Branch"
-                                placeholder="Repository default"
+                                aria-label={t("newAgentUi.branch")}
+                                placeholder={t("newAgentUi.repositoryDefault")}
                                 value={branch}
                                 onChange={(event) => {
                                   setBranch(event.target.value);
@@ -1123,9 +1123,9 @@ function Setup({
                         adapterType,
                       ) && (
                         <section className="space-y-5">
-                          <h3 className="text-sm font-semibold">Environment</h3>
+                          <h3 className="text-sm font-semibold">{t("agentDetailUi.environment")}</h3>
                           <select
-                            aria-label="Environment"
+                            aria-label={t("agentDetailUi.environment")}
                             className={controlClass}
                             value={environmentOverride}
                             disabled={forced.forced}
@@ -1137,7 +1137,7 @@ function Setup({
                             }}
                           >
                             <option value="">
-                              Default: {environmentLabel}
+                              {t("newAgentUi.default")} {environmentLabel}
                             </option>
                             {(envs.data ?? [])
                               .filter((env) => env.status === "active" && (!managedOnly || env.driver !== "local"))
@@ -1171,7 +1171,7 @@ function Setup({
                           onClick={() => setScreen("connect")}
                         >
                           <ArrowLeft className="size-4" />
-                          Connection
+                          {t("newAgentUi.connection")}
                         </Button>
                       ) : (
                         <span />
@@ -1185,7 +1185,7 @@ function Setup({
                           Boolean(connectionAdapter && !connection)
                         }
                       >
-                        {saving ? "Creating…" : "Finish setup"}
+                        {saving ? t("newAgentUi.creating") : t("newAgentUi.finishSetup")}
                         <Check className="size-4" />
                       </Button>
                     </div>

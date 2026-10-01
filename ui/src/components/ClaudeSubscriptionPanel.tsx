@@ -1,3 +1,5 @@
+import { quotaWindowDisplayLabel, quotaWindowValueLabel, quotaWindowDetailLabel } from "@/lib/quota-window-presentation";
+import { i18n, t, useTranslation } from "@/i18n";
 import type { QuotaWindow } from "@paperclipai/shared";
 import { cn, quotaSourceDisplayName } from "@/lib/utils";
 
@@ -22,16 +24,16 @@ function normalizeLabel(text: string): string {
 }
 
 function detailText(window: QuotaWindow): string | null {
-  if (typeof window.detail === "string" && window.detail.trim().length > 0) return window.detail.trim();
+  if (typeof window.detail === "string" && window.detail.trim().length > 0) return quotaWindowDetailLabel(window.detail.trim());
   if (window.resetsAt) {
-    const formatted = new Date(window.resetsAt).toLocaleString(undefined, {
+    const formatted = new Date(window.resetsAt).toLocaleString(i18n.resolvedLanguage ?? i18n.language, {
       month: "short",
       day: "numeric",
       hour: "numeric",
       minute: "2-digit",
       timeZoneName: "short",
     });
-    return `Resets ${formatted}`;
+    return t("costsUi.resetsDate", { date: formatted });
   }
   return null;
 }
@@ -56,18 +58,15 @@ export function ClaudeSubscriptionPanel({
   source = null,
   error = null,
 }: ClaudeSubscriptionPanelProps) {
+  const { t } = useTranslation();
   const ordered = orderedWindows(windows);
 
   return (
     <div className="border border-border px-4 py-4">
       <div className="flex items-start justify-between gap-3 border-b border-border pb-3">
         <div className="min-w-0">
-          <div className="text-(length:--text-micro) font-semibold uppercase tracking-(--tracking-caps) text-muted-foreground">
-            Anthropic subscription
-          </div>
-          <div className="mt-1 text-sm text-muted-foreground">
-            Live Claude quota windows.
-          </div>
+          <div className="text-(length:--text-micro) font-semibold uppercase tracking-(--tracking-caps) text-muted-foreground">{t("costsUi.anthropicSubscription")}</div>
+          <div className="mt-1 text-sm text-muted-foreground">{t("costsUi.liveClaudeQuotaWindows")}</div>
         </div>
         {source ? (
           <span className="shrink-0 border border-border px-2.5 py-1 text-(length:--text-nano) font-semibold uppercase tracking-(--tracking-eyebrow) text-muted-foreground">
@@ -93,9 +92,9 @@ export function ClaudeSubscriptionPanel({
                 className="border border-border px-3.5 py-3"
               >
                 <div className="flex items-center justify-between gap-3">
-                  <div className="text-sm font-medium text-foreground">{window.label}</div>
+                  <div className="text-sm font-medium text-foreground">{quotaWindowDisplayLabel(window.label)}</div>
                   {window.valueLabel ? (
-                    <div className="text-sm font-medium text-foreground">{window.valueLabel}</div>
+                    <div className="text-sm font-medium text-foreground">{quotaWindowValueLabel(window.valueLabel)}</div>
                   ) : null}
                 </div>
                 {detail ? (
@@ -113,15 +112,14 @@ export function ClaudeSubscriptionPanel({
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <div className="text-sm font-medium text-foreground">{window.label}</div>
+                  <div className="text-sm font-medium text-foreground">{quotaWindowDisplayLabel(window.label)}</div>
                   {detail ? (
                     <div className="mt-1 text-xs text-muted-foreground">{detail}</div>
                   ) : null}
                 </div>
                 {window.usedPercent != null ? (
                   <div className="shrink-0 text-sm font-semibold tabular-nums text-foreground">
-                    {window.usedPercent}% used
-                  </div>
+                    {window.usedPercent}{t("costsUi.used")}</div>
                 ) : null}
               </div>
 

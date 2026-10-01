@@ -1,3 +1,4 @@
+import { t } from "@/i18n";
 import {
   attachmentArtifactWorkProductMetadataSchema,
   type AttachmentArtifactWorkProductMetadata,
@@ -313,7 +314,7 @@ export function getIssueOutputs(workProducts: IssueWorkProduct[] | null | undefi
 
 /** Best display filename for an output, falling back to the work product title. */
 export function outputFilename(item: IssueOutputItem): string {
-  return item.metadata?.originalFilename || item.title || "output";
+  return item.metadata?.originalFilename || item.title || t("taskDisplayTail.outputFallback");
 }
 
 export function getPromotedOutputAttachmentIds(workProducts: IssueWorkProduct[] | null | undefined): Set<string> {

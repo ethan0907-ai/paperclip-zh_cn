@@ -1,4 +1,5 @@
 import { StrictMode, useEffect, useRef, useState } from "react";
+import { useTranslation } from "@/i18n";
 import { createRoot } from "react-dom/client";
 import { MotionConfig, motion } from "motion/react";
 import { isValidBrowserCode } from "@paperclipai/shared";
@@ -121,6 +122,7 @@ function ConnectFlowPreview({
   initialSourceId: string | null;
   initialPhase: Phase;
 }) {
+  const { t } = useTranslation();
   const [selectedId, setSelectedId] = useState<string | null>(initialSourceId);
   const [useApiKeys, setUseApiKeys] = useState(false);
   const [phase, setPhase] = useState<Phase>(initialPhase);
@@ -130,7 +132,7 @@ function ConnectFlowPreview({
 
   const mode: CredentialMode = useApiKeys ? "api" : "subscription";
   const providerName = selectedId === "codex_local" ? "OpenAI" : "Claude";
-  const signInLabel = `Sign in to ${providerName}`;
+  const signInLabel = t("agentConfigForm.signInProvider", { provider: providerName });
   /*
     Claude takes a code back from the customer; OpenAI hands one over. That is
     the only difference between the two cards — the sentence and the last row —
@@ -139,8 +141,8 @@ function ConnectFlowPreview({
   const apiMode = mode === "api";
   const handsOverCode = !apiMode && selectedId === "codex_local";
   const instructionTail = handsOverCode
-    ? " by providing the authorization code below"
-    : " then come back and enter authorization code";
+    ? t("newAgentHelpUi.byProvidingTheAuthorizationCodeBelow")
+    : t("newAgentHelpUi.thenComeBackAndEnterAuthorizationCode");
   const authUrl = OAUTH_URL[selectedId ?? "claude_local"]!;
 
   const after = (ms: number, fn: () => void) => {
@@ -277,18 +279,18 @@ function ConnectFlowPreview({
     phase === "unwindCard"
       ? { label: signInLabel, icon: "none" as const, disabled: true }
       : done
-      ? { label: "Start over", icon: "arrow" as const, disabled: false }
+      ? { label: t("lastNavigation.startOver"), icon: "arrow" as const, disabled: false }
       : phase === "ready" && apiMode
         ? // A key is typed here rather than fetched elsewhere, so the button is
           // the submit and stays dead until there is something to submit.
-          { label: "Connect", icon: "arrow" as const, disabled: !apiKey.trim() }
+          { label: t("issueInteractions.connect"), icon: "arrow" as const, disabled: !apiKey.trim() }
         : phase === "ready"
         ? { label: signInLabel, icon: "none" as const, disabled: false }
         : phase === "waiting"
-          ? { label: "Waiting for code", icon: "spinner" as const, disabled: true }
+          ? { label: t("newAgentUi.waitingForCode"), icon: "spinner" as const, disabled: true }
           : phase === "connecting"
-            ? { label: "Connecting", icon: "spinner" as const, disabled: true }
-            : { label: "Next", icon: "arrow" as const, disabled: true };
+            ? { label: t("newAgentUi.connecting"), icon: "spinner" as const, disabled: true }
+            : { label: t("common.next"), icon: "arrow" as const, disabled: true };
 
   return (
     <MotionConfig reducedMotion="user">
@@ -308,11 +310,11 @@ function ConnectFlowPreview({
         <div className="pt-6">
           <OnboardingHeading
             center
-            title={done ? "Connected" : "Connect a model"}
+            title={done ? t("connectionRemote.connected") : t("newAgentUi.connectAModel")}
             lede={
               done
-                ? "The step advances straight to Review — there is no success screen."
-                : "Paperclip works with your existing subscription or API keys."
+                ? t("lastNavigation.previewComplete")
+                : t("layoutServerTail.connectHelp")
             }
           />
         </div>
@@ -321,7 +323,7 @@ function ConnectFlowPreview({
           <>
             <div className="space-y-2 pt-12">
               <ModelSourceTiles
-                label="Model source"
+                label={t("newAgentUi.modelSource")}
                 sources={MODEL_SOURCES}
                 mode={mode}
                 selectedId={selectedId}
@@ -397,7 +399,7 @@ function ConnectFlowPreview({
                         // No link, because there is nowhere to sign in to. The
                         // key is pasted straight in, so the sentence only has
                         // to say what is wanted.
-                        `Provide your ${providerName} API key to connect`
+                        t("newAgentUi.provideProviderKey", { provider: providerName })
                       ) : (
                         <>
                           {/* The same destination as the button below. Two ways
@@ -420,8 +422,8 @@ function ConnectFlowPreview({
                     {/* The one place the three paths differ. */}
                     {apiMode ? (
                       <OnboardingCardField
-                        label="API key"
-                        placeholder="Enter API key here"
+                        label={t("adapterConfig.aPIKey")}
+                        placeholder={t("newAgentUi.enterAPIKeyHere")}
                         masked
                         value={apiKey}
                         onChange={setApiKey}

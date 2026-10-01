@@ -1,3 +1,4 @@
+import { t } from "@/i18n";
 import type { ExternalObjectSummary, Issue } from "@paperclipai/shared";
 
 export type IssueFilterWorkspaceLookup = {
@@ -73,7 +74,7 @@ const EXTERNAL_OBJECT_FILTER_LABELS: Record<string, string> = {
 };
 
 export function externalObjectFilterLabel(value: string): string {
-  return EXTERNAL_OBJECT_FILTER_LABELS[value] ?? issueFilterLabel(value);
+  return EXTERNAL_OBJECT_FILTER_LABELS[value] ? t("issueFilterUi.external." + value) : issueFilterLabel(value);
 }
 
 export const issueStatusOrder = ["in_progress", "todo", "backlog", "in_review", "blocked", "done", "cancelled"];
@@ -87,7 +88,9 @@ export const issueQuickFilterPresets = [
 ];
 
 export function issueFilterLabel(value: string): string {
-  return value.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
+  const fallback = value.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
+  const namespace = issuePriorityOrder.includes(value) ? "newIssue" : "statusBadge";
+  return t(namespace + "." + value, { defaultValue: fallback });
 }
 
 export function issueFilterArraysEqual(a: string[], b: string[]): boolean {
