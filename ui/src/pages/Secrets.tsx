@@ -65,6 +65,7 @@ import {
 } from "../api/secrets";
 import { ApiError } from "../api/client";
 import { accessApi, type CompanyUserDirectoryEntry } from "../api/access";
+import { t, useTranslation } from "../i18n";
 import { agentsApi } from "../api/agents";
 import { envKeyFromSecretName } from "../components/environment-variables-editor/model";
 import {
@@ -345,16 +346,18 @@ function normalizeUserSecretKeyForPreview(input: string) {
 
 
 function modeLabel(managedMode: SecretManagedMode) {
-  return managedMode === "paperclip_managed" ? "Paperclip-managed" : "Linked external";
+  return managedMode === "paperclip_managed"
+    ? t("secrets.custody.paperclipManaged")
+    : t("secrets.custody.linkedExternal");
 }
 
 function modeDescription(managedMode: SecretManagedMode, canWriteExternalValue = false) {
   if (managedMode === "paperclip_managed") {
-    return "Paperclip owns create and rotation writes for this provider secret.";
+    return t("secrets.custody.paperclipManagedDescription");
   }
   return canWriteExternalValue
-    ? "Paperclip resolves this provider reference and can write new values to it via Update value."
-    : "Paperclip resolves this provider reference but does not rotate the provider value.";
+    ? t("secrets.custody.externalWritableDescription")
+    : t("secrets.custody.externalReadonlyDescription");
 }
 
 function statusLabel(status: SecretStatus) {
@@ -471,12 +474,12 @@ export function getCreateProviderBlockReason(
   health: SecretProviderHealthResponse | null,
   providerConfig?: CompanySecretProviderConfig | null,
 ) {
-  if (!provider) return "Select a provider.";
+  if (!provider) return t("secrets.providerHints.selectProvider");
   if (mode === "managed" && provider.supportsManagedValues === false) {
-    return `${provider.label} does not support Paperclip-managed secret values.`;
+    return t("secrets.providerHints.labelNoManaged", { label: provider.label });
   }
   if (mode === "external" && provider.supportsExternalReferences === false) {
-    return `${provider.label} does not support linked external references.`;
+    return t("secrets.providerHints.labelNoExternal", { label: provider.label });
   }
   const selectedProviderConfigBlockReason = providerConfig?.provider === provider.id
     ? getProviderConfigBlockReason(providerConfig)
@@ -487,15 +490,20 @@ export function getCreateProviderBlockReason(
     if (selectedProviderConfigReady) return null;
     if (selectedProviderConfigBlockReason) return selectedProviderConfigBlockReason;
     const healthEntry = healthEntryForProvider(health, provider.id);
-    const deploymentMessage = `Deployment default ${provider.label} is not configured.`;
-    const nextStep = " Select a ready provider vault or configure the deployment default.";
+    const deploymentMessage = t("secrets.providerHints.deploymentNotConfigured", {
+      label: provider.label,
+    });
+    const nextStep = ` ${t("secrets.providerHints.selectReadyVault")}`;
     return healthEntry?.message
       ? `${deploymentMessage}${nextStep} ${healthEntry.message}`
       : `${deploymentMessage}${nextStep}`;
   }
   const healthEntry = healthEntryForProvider(health, provider.id);
   if (healthEntry?.status === "error") {
-    return `${provider.label} health check failed: ${healthEntry.message}`;
+    return t("secrets.providerHints.labelHealthFailed", {
+      label: provider.label,
+      message: healthEntry.message,
+    });
   }
   return null;
 }
@@ -511,7 +519,9 @@ function providerHealthText(
     providerConfig?.provider === provider.id &&
     !getProviderConfigBlockReason(providerConfig)
   ) {
-    return `Using selected provider vault. Deployment default ${provider.label} is not configured.`;
+    return t("secrets.providerHints.usingSelectedVault", {
+      label: provider.label,
+    });
   }
   const entry = healthEntryForProvider(health, provider.id);
   if (!entry) return null;
@@ -528,10 +538,10 @@ export function getProviderConfigBlockReason(
   config: CompanySecretProviderConfig | null | undefined,
 ) {
   if (!config) return null;
-  if (config.status === "disabled") return "This provider vault is disabled.";
-  if (config.status === "coming_soon") return "This provider vault is saved as draft metadata only.";
+  if (config.status === "disabled") return t("secrets.providerHints.vaultDisabled");
+  if (config.status === "coming_soon") return t("secrets.providerHints.vaultDraftOnly");
   if (config.healthStatus === "error") {
-    return config.healthMessage ?? "This provider vault health check failed.";
+    return config.healthMessage ?? t("secrets.providerHints.vaultHealthCheckFailed");
   }
   return null;
 }
@@ -588,8 +598,8 @@ export function findCreateProviderReplacement({
 }
 
 function providerVaultLabel(configs: CompanySecretProviderConfig[], id: string | null | undefined) {
-  if (!id) return "Deployment default";
-  return configs.find((config) => config.id === id)?.displayName ?? "Unknown vault";
+  if (!id) return t("secrets.providerHints.deploymentDefault");
+  return configs.find((config) => config.id === id)?.displayName ?? t("secrets.providerHints.unknownVault");
 }
 
 function buildProviderVaultConfig(form: ProviderVaultForm): Record<string, unknown> {
@@ -650,6 +660,7 @@ export function getAwsManagedPathPreview(input: {
 }
 
 export function Secrets() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { selectedCompanyId } = useCompany();
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -1114,10 +1125,10 @@ export function Secrets() {
       pushToast({
         title:
           result.kind === "company"
-            ? "Secret created"
+            ? t("secrets.toasts.secretCreated")
             : result.action === "updated"
-              ? "User-provided secret updated"
-              : "User-provided secret created",
+              ? t("secrets.toasts.userSecretUpdated")
+              : t("secrets.toasts.userSecretCreated"),
         body: result.item.name,
         tone: "success",
       });
@@ -1166,7 +1177,7 @@ export function Secrets() {
       });
     },
     onSuccess: (updated) => {
-      pushToast({ title: "Rotated", body: `${updated.name} → v${updated.latestVersion}`, tone: "success" });
+      pushToast({ title: t("secrets.toasts.rotated"), body: `${updated.name} → v${updated.latestVersion}`, tone: "success" });
       setRotateOpen(false);
       setRotateValue("");
       setRotateExternalRef("");
@@ -1198,7 +1209,7 @@ export function Secrets() {
     },
     onError: (error) => {
       pushToast({
-        title: "Status update failed",
+        title: t("secrets.toasts.statusUpdated"),
         body: error instanceof Error ? error.message : "Try again",
         tone: "error",
       });
@@ -1214,7 +1225,7 @@ export function Secrets() {
     },
     onError: (error) => {
       pushToast({
-        title: "Status update failed",
+        title: t("secrets.toasts.statusUpdated"),
         body: error instanceof Error ? error.message : "Try again",
         tone: "error",
       });
@@ -1224,14 +1235,14 @@ export function Secrets() {
   const deleteMutation = useMutation({
     mutationFn: (id: string) => secretsApi.remove(id),
     onSuccess: (_response, id) => {
-      pushToast({ title: "Secret deleted", tone: "info" });
+      pushToast({ title: t("secrets.toasts.secretDeleted"), tone: "info" });
       setDeleteConfirm(null);
       if (selectedSecretId === id) setDetailSelection(null);
       invalidateAll([id]);
     },
     onError: (error) => {
       pushToast({
-        title: "Delete failed",
+        title: t("secrets.toasts.deleteFailed"),
         body: error instanceof Error ? error.message : "Try again",
         tone: "error",
       });
@@ -1242,14 +1253,14 @@ export function Secrets() {
     mutationFn: (definition: UserSecretDefinition) =>
       secretsApi.removeUserSecretDefinition(selectedCompanyId!, definition.id),
     onSuccess: (_response, definition) => {
-      pushToast({ title: "User-provided secret removed", body: definition.name, tone: "info" });
+      pushToast({ title: t("secrets.toasts.userSecretRemoved"), body: definition.name, tone: "info" });
       setDefinitionDeleteConfirm(null);
       if (selectedDefinitionId === definition.id) setDetailSelection(null);
       invalidateAll([definition.id]);
     },
     onError: (error) => {
       pushToast({
-        title: "Delete failed",
+        title: t("secrets.toasts.deleteFailed"),
         body: error instanceof Error ? error.message : "Try again",
         tone: "error",
       });
@@ -1273,7 +1284,7 @@ export function Secrets() {
       } as CreateSecretProviderConfigInput);
     },
     onSuccess: (saved) => {
-      pushToast({ title: editingVault ? "Provider vault updated" : "Provider vault created", body: saved.displayName, tone: "success" });
+      pushToast({ title: editingVault ? t("secrets.toasts.vaultUpdated") : t("secrets.toasts.vaultCreated"), body: saved.displayName, tone: "success" });
       setVaultDialogOpen(false);
       setEditingVault(null);
       setVaultForm(emptyProviderVaultForm());
@@ -1306,12 +1317,12 @@ export function Secrets() {
   const disableVaultMutation = useMutation({
     mutationFn: (id: string) => secretsApi.disableProviderConfig(id),
     onSuccess: (updated) => {
-      pushToast({ title: "Provider vault disabled", body: updated.displayName, tone: "info" });
+      pushToast({ title: t("secrets.toasts.vaultDisabled"), body: updated.displayName, tone: "info" });
       invalidateAll();
     },
     onError: (error) => {
       pushToast({
-        title: "Disable failed",
+        title: t("secrets.toasts.disableFailed"),
         body: error instanceof Error ? error.message : "Try again",
         tone: "error",
       });
@@ -1322,7 +1333,7 @@ export function Secrets() {
     mutationFn: (id: string) => secretsApi.removeProviderConfig(id),
     onSuccess: (removed) => {
       pushToast({
-        title: "Provider vault removed",
+        title: t("secrets.toasts.vaultRemoved"),
         body: `${removed.displayName} was removed from Paperclip only.`,
         tone: "info",
       });
@@ -1331,7 +1342,7 @@ export function Secrets() {
     },
     onError: (error) => {
       pushToast({
-        title: "Remove failed",
+        title: t("secrets.toasts.removeFailed"),
         body: error instanceof Error ? error.message : "Try again",
         tone: "error",
       });
@@ -1341,12 +1352,12 @@ export function Secrets() {
   const defaultVaultMutation = useMutation({
     mutationFn: (id: string) => secretsApi.setDefaultProviderConfig(id),
     onSuccess: (updated) => {
-      pushToast({ title: "Default vault set", body: updated.displayName, tone: "success" });
+      pushToast({ title: t("secrets.toasts.defaultVaultSet"), body: updated.displayName, tone: "success" });
       invalidateAll();
     },
     onError: (error) => {
       pushToast({
-        title: "Default update failed",
+        title: t("secrets.toasts.defaultUpdateFailed"),
         body: error instanceof Error ? error.message : "Try again",
         tone: "error",
       });

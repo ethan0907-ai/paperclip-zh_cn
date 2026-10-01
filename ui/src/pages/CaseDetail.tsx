@@ -124,6 +124,7 @@ function CaseRelationshipsSection({
   parent: CaseParentRef | null;
   children: CaseSummary[];
 }) {
+  const { t } = useTranslation();
   if (!parent && children.length === 0) return null;
 
   return (
@@ -195,6 +196,7 @@ function CaseStatusPicker({
   onChange: (next: CaseStatus) => void;
   disabled?: boolean;
 }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -594,7 +596,7 @@ export function CaseDetail() {
       <div className="mx-auto max-w-md py-16 text-center">
         <p className="text-sm text-muted-foreground">{t("caseDetail.notFound")}</p>
         <Link to={caseHref()} className="mt-2 inline-block text-sm text-primary hover:underline">
-          ← Back to cases
+          ← {t("caseDetail.backToCases")}
         </Link>
       </div>
     );
@@ -633,7 +635,7 @@ export function CaseDetail() {
             />
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="ghost" size="icon-xs" aria-label={t("caseDetail.moreCaseActions")} title="More case actions">
+                <Button variant="ghost" size="icon-xs" aria-label={t("caseDetail.moreCaseActions")} title={t("caseDetail.moreCaseActions")}>
                   <MoreVertical className="h-4 w-4" />
                 </Button>
               </PopoverTrigger>
@@ -644,7 +646,7 @@ export function CaseDetail() {
                   onClick={() => copyCaseToClipboard(caseData)}
                 >
                   {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
-                  Copy as markdown
+                  {t("caseDetail.copyAsMarkdown")}
                 </button>
                 <button
                   type="button"
@@ -654,7 +656,7 @@ export function CaseDetail() {
                   }}
                 >
                   <SlidersHorizontal className="h-3 w-3" />
-                  Properties
+                  {t("caseDetail.properties")}
                 </button>
               </PopoverContent>
             </Popover>
@@ -673,7 +675,7 @@ export function CaseDetail() {
           <TabsTrigger value="overview">{t("common.overview")}</TabsTrigger>
           <TabsTrigger value="properties">{t("common.properties")}</TabsTrigger>
           <TabsTrigger value="activity">
-            Activity{events.length > 0 && <span className="ml-1 text-muted-foreground">{events.length}</span>}
+            {t("caseDetail.activity")}{events.length > 0 && <span className="ml-1 text-muted-foreground">{events.length}</span>}
           </TabsTrigger>
         </TabsList>
 

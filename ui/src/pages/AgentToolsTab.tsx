@@ -207,7 +207,7 @@ function InstalledAppsSection({
         <div>
           <h3 className="text-sm font-semibold text-foreground">{t("agentTools.installedApps")}</h3>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            Installed apps load tools into {agentName}'s context on every run. Permitted-only apps do not add context cost.
+            {t("agentTools.installedAppsDescription", { agentName })}
           </p>
         </div>
         <InstallSaveStatusChip pending={saving} unsaved={unsaved} error={error} />
@@ -215,12 +215,12 @@ function InstalledAppsSection({
 
       <div className="space-y-3 p-3">
         <InlineBanner tone="info" compact>
-          Has access means the app is permitted. Installed means its tools are added to this agent's runtime context.
+          {t("agentTools.accessVsInstalledNote")}
         </InlineBanner>
 
         {connections.length === 0 ? (
           <p className="rounded-md border border-border bg-muted/30 px-3 py-4 text-sm text-muted-foreground">
-            No permitted apps yet. Bind an access profile to make apps available here.
+            {t("agentTools.noPermittedApps")}
           </p>
         ) : (
           <div className="divide-y divide-border rounded-md border border-border">
@@ -236,7 +236,7 @@ function InstalledAppsSection({
                     <Checkbox
                       checked={checked}
                       disabled={installedForAll || rowPending}
-                      aria-label={`Install ${connection.name} on ${agentName}`}
+                      aria-label={t("agentTools.installAria", { appName: connection.name, agentName })}
                       onCheckedChange={(next) => onChange(connection.id, Boolean(next))}
                     />
                     <span className="min-w-0 flex-1">
@@ -616,7 +616,7 @@ export function AgentToolsTab({ agent, companyId }: { agent: AgentDetailRecord; 
         <div className="lg:col-span-2">
           <div className="rounded-lg border border-border">
             <div className="flex items-center justify-between gap-2 border-b border-border px-3 py-2.5">
-              <h3 className="text-sm font-semibold text-foreground">Allowed tools</h3>
+              <h3 className="text-sm font-semibold text-foreground">{t("agentTools.allowedTools")}</h3>
               <span className="text-xs text-muted-foreground tabular-nums">
                 {allowedTools.length} {t("agentTools.toolCount", { count: allowedTools.length })}
               </span>
@@ -732,7 +732,7 @@ export function AgentToolsTab({ agent, companyId }: { agent: AgentDetailRecord; 
                         className="truncate text-xs font-medium text-foreground"
                         title={t("agentToolsAccess.policyTitle", { order, name: policy.name })}
                       >
-                        #{order} {policy.name}
+                        {t("agentToolsAccess.policyOrder", { order })} {policy.name}
                       </span>
                       <span className="shrink-0 rounded border border-border px-1.5 py-0.5 text-(length:--text-nano) uppercase text-muted-foreground">
                         {t(`agentToolsAccess.policyEffect.${policy.policyType}`, {
