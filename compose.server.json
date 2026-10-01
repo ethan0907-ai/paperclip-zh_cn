@@ -2,7 +2,7 @@
   "name": "paperclip",
   "services": {
     "paperclip": {
-      "image": "magic-paperclip:c7ddda3",
+      "image": "magic-paperclip:paperclip-runtime-20261001-2",
       "container_name": "paperclip",
       "restart": "unless-stopped",
       "env_file": [
@@ -16,7 +16,7 @@
         "PAPERCLIP_DEPLOYMENT_EXPOSURE": "private",
         "PAPERCLIP_AUTH_BASE_URL_MODE": "explicit",
         "PAPERCLIP_PUBLIC_URL": "http://192.168.50.60:3100",
-        "PAPERCLIP_ALLOWED_HOSTNAMES": "192.168.50.60",
+        "PAPERCLIP_ALLOWED_HOSTNAMES": "192.168.50.60,paperclip",
         "PAPERCLIP_MIGRATION_AUTO_APPLY": "true",
         "NODE_EXTRA_CA_CERTS": "/etc/paperclip/hermes-ca.crt"
       },

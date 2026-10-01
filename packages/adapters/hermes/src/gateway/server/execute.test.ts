@@ -175,6 +175,34 @@ describe("execute", () => {
     expect(body.session_id).toBe("paperclip:company:company-1:agent:agent-1:issue:issue-1");
   });
 
+  it("passes the run-scoped Paperclip callback credentials outside the prompt", async () => {
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => new Response(JSON.stringify(
+      String(input).endsWith("/v1/runs")
+        ? { run_id: "run-hermes-1", status: "started" }
+        : { status: "completed", output: "done" },
+    ), { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+    const ctx = makeCtx({
+      apiBaseUrl: "http://127.0.0.1:8642",
+      apiKey: "secret-key",
+      paperclipApiUrl: "http://paperclip.internal:3100",
+      timeoutSec: 5,
+    });
+    ctx.authToken = "paperclip-run-token";
+
+    await execute(ctx);
+
+    const calls = fetchMock.mock.calls as Array<[RequestInfo | URL, RequestInit?]>;
+    const call = calls.find(([input]) => String(input).endsWith("/v1/runs"));
+    const body = JSON.parse(String(call?.[1]?.body));
+    expect(body.paperclip_runtime).toEqual({
+      api_url: "http://paperclip.internal:3100",
+      api_key: "paperclip-run-token",
+      run_id: "pc-run-1",
+    });
+    expect(body.input).not.toContain("paperclip-run-token");
+  });
+
   it.each([false, true])("preserves chat handoff policy on gateway turns (resumed=%s)", async (resumed) => {
     const fetchMock = vi.fn(async (input: RequestInfo | URL) => new Response(JSON.stringify(
       String(input).endsWith("/v1/runs")

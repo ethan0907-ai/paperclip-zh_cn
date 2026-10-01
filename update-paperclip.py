@@ -253,9 +253,10 @@ def update():
         run('git', 'fetch', 'origin', 'master', timeout=120)
         commit = run('git', 'rev-parse', 'FETCH_HEAD')
         require(re.fullmatch(r'[0-9a-f]{40}', commit) is not None, 'Invalid fetched commit')
-        run('git', 'merge-base', '--is-ancestor', 'HEAD', commit)
         check_tree(commit)
         run('git', 'merge', '--ff-only', commit)
+        commit = run('git', 'rev-parse', 'HEAD')
+        check_tree(commit)
         image = 'magic-paperclip:' + commit[:7]
         if info['app']['Config']['Image'] == image:
             print(f'Already running {image}; nothing to do.', flush=True)

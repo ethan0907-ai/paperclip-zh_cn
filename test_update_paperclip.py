@@ -17,6 +17,46 @@ if SCRIPT.exists():
 
 
 class UpdateTests(unittest.TestCase):
+    def test_update_preserves_unpushed_local_commit(self):
+        from contextlib import nullcontext
+        with tempfile.TemporaryDirectory(dir=SCRIPT.parent) as directory:
+            root = Path(directory)
+            def git(*args):
+                return subprocess.check_output(['git', '-C', str(root), *args], stderr=subprocess.PIPE).decode().strip()
+            git('init', '-b', 'master')
+            git('config', 'user.email', 'test@example.invalid')
+            git('config', 'user.name', 'Test')
+            git('commit', '--allow-empty', '-m', 'base')
+            git('remote', 'add', 'origin', str(root))
+            git('branch', 'remote-base')
+            git('commit', '--allow-empty', '-m', 'local fix')
+            local = git('rev-parse', 'HEAD')
+            real_run = updater.run
+            real_popen = subprocess.Popen
+            def popen(args, **kwargs):
+                if args[:2] == ['git', 'archive']:
+                    self.assertEqual(args[-1], local)
+                    raise RuntimeError('build boundary')
+                return real_popen(args, **kwargs)
+            def run(*args, **kwargs):
+                if args == ('git', 'fetch', 'origin', 'master'):
+                    args = ('git', 'fetch', 'origin', 'remote-base')
+                return real_run(*args, **kwargs)
+            info = {'app': {'Config': {'Image': 'old'}}}
+            with patch.object(updater, 'ROOT', root), \
+                 patch.object(updater, 'update_lock', return_value=nullcontext()), \
+                 patch.object(updater, 'preflight', return_value=info), \
+                 patch.object(updater, 'check_tree'), \
+                 patch.object(updater, 'run', side_effect=run), \
+                 patch.object(updater.subprocess, 'Popen') as archive, \
+                 patch.object(updater, 'deploy') as deploy:
+                # Stop before Docker; the archive must contain the local HEAD.
+                archive.side_effect = popen
+                with self.assertRaisesRegex(RuntimeError, 'build boundary'):
+                    updater.update()
+                self.assertTrue(any(c.args[0][:2] == ['git', 'archive'] for c in archive.call_args_list))
+                deploy.assert_not_called()
+
     def test_backup_failure_restarts_old_container_without_deploying(self):
         self.assertTrue(hasattr(updater, 'deploy'), 'Deployment flow is not implemented')
         with tempfile.TemporaryDirectory(dir=SCRIPT.parent) as directory:

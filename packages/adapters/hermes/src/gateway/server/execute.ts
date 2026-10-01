@@ -332,11 +332,21 @@ function buildRunBody(ctx: AdapterExecutionContext, sessionKey: string | null): 
     nonEmpty(ctx.config.instructions) ??
     nonEmpty(payloadTemplate.instructions) ??
     "Follow the Paperclip wake instructions exactly. Do not expose secrets in logs, comments, or final output.";
+  const paperclipApiKey = nonEmpty(ctx.authToken);
   return {
     ...payloadTemplate,
     input,
     instructions,
     ...(sessionKey ? { session_id: sessionKey } : {}),
+    ...(paperclipApiUrl && paperclipApiKey
+      ? {
+          paperclip_runtime: {
+            api_url: paperclipApiUrl,
+            api_key: paperclipApiKey,
+            run_id: ctx.runId,
+          },
+        }
+      : {}),
   };
 }
 
@@ -853,6 +863,7 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
   });
   const redactText = createTextRedactor([
     apiKey,
+    nonEmpty(ctx.authToken),
     sessionKey,
     runHeaders.Authorization,
     runHeaders["X-Hermes-Session-Key"],
