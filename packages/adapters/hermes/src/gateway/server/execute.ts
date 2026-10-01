@@ -489,11 +489,10 @@ async function handleEvent(
     `[hermes-gateway:event] run=${state.runId} event=${eventName ?? "message"} data=${stringifyForLog(redactForLog(parsed, [], 0, redactText), 8_000)}\n`,
   );
 
-  const delta = nonEmpty(record?.delta) ?? nonEmpty(record?.text_delta);
+  const delta = asString(record?.delta, "") || asString(record?.text_delta, "");
   if (eventName === "message.delta" && delta) {
-    const sanitizedDelta = redactText(delta);
-    state.outputChunks.push(sanitizedDelta);
-    await ctx.onLog("stdout", sanitizedDelta);
+    // The event line already carries the delta; raw text would glue to the next event.
+    state.outputChunks.push(redactText(delta));
   }
 
   const status = extractStatus(parsed) ?? (eventName?.startsWith("run.") ? eventName.slice(4) : null);
