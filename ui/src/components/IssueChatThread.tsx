@@ -1,3 +1,4 @@
+import { createUuid } from "@/lib/uuid";
 import { t, useTranslation } from "@/i18n";
 import { DispositionRecoveryNotice, useDispositionRecoverySnapshot } from "./DispositionRecoveryNotice";
 import { AgentAvatar } from "@/components/AgentAvatar";
@@ -5015,7 +5016,7 @@ const IssueChatComposer = forwardRef<
         setBody(trimmed);
         return;
       }
-      attemptId = crypto.randomUUID();
+      attemptId = createUuid();
       if (draftKey) {
         saveDraft(draftKey, trimmed);
         saveDraftSubmission(draftKey, { attemptId, reviewed: false });

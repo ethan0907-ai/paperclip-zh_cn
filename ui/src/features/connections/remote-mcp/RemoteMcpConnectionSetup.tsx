@@ -1,3 +1,4 @@
+import { createUuid } from "@/lib/uuid";
 import { useTranslation } from "@/i18n";
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { CheckCircle2, ExternalLink, HelpCircle, Loader2, Plus, Trash2 } from "lucide-react";
@@ -122,7 +123,7 @@ export function RemoteMcpConnectionSetup({ provider, state: s, actions: a, agent
                       <div className="min-w-0 flex-1 space-y-2"><Label htmlFor={`${uid}-${header.id}-value`}>{t("connectionRemote.headerNumberValue", { number: index + 1 })}</Label><Input id={`${uid}-${header.id}-value`} type="password" autoComplete="off" value={header.value} onChange={(event) => change({ headers: s.headers.map((h) => h.id === header.id ? { ...h, value: event.target.value } : h) })} /></div>
                       <Button type="button" variant="ghost" size="icon" aria-label={t("connectionRemote.removeHeaderNumber", { number: index + 1 })} onClick={() => change({ headers: s.headers.filter((h) => h.id !== header.id) })}><Trash2 className="size-4" /></Button>
                     </div>)}
-                    <Button type="button" variant="outline" size="sm" onClick={() => change({ headers: [...s.headers, { id: crypto.randomUUID(), name: "", value: "" }] })}><Plus className="size-4" />{t("connectionRemote.addHeader")}</Button>
+                    <Button type="button" variant="outline" size="sm" onClick={() => change({ headers: [...s.headers, { id: createUuid(), name: "", value: "" }] })}><Plus className="size-4" />{t("connectionRemote.addHeader")}</Button>
                   </div>}
                 </div>
               </details>

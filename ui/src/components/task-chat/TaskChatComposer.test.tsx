@@ -297,6 +297,24 @@ function autocompleteOption(matchText: string) {
 }
 
 describe("TaskChatComposer", () => {
+  it("sends with a UUID request id over HTTP without crypto.randomUUID", async () => {
+    vi.stubGlobal("crypto", { getRandomValues: crypto.getRandomValues.bind(crypto) });
+    try {
+      const onAdd = vi.fn().mockResolvedValue(undefined);
+      render(<TaskChatComposer onAdd={onAdd} workMode="standard" draftKey="http-send" />);
+      typeText("HTTP message");
+      flushSync(() => sendButton().click());
+      await flushAsync();
+      expect(onAdd).toHaveBeenCalledOnce();
+      expect(onAdd.mock.calls[0]?.[0]).toBe("HTTP message");
+      expect(onAdd.mock.calls[0]?.[4]).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+      expect(editable().textContent).toBe("");
+      expect(loadDraftSubmission("http-send")).toBeNull();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
   it("settles an acknowledged submission after navigating away", async () => {
     const key = "navigate-before-save";
     let resolveSend!: () => void;

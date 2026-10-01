@@ -1,3 +1,4 @@
+import { createUuid } from "@/lib/uuid";
 import { t, useTranslation } from "@/i18n";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -819,7 +820,7 @@ function ConnectedTaskComposer({
                   retainedScopeKey.current !== storageKey
                 )
                   return;
-                idempotencyKey.current ??= crypto.randomUUID();
+                idempotencyKey.current ??= createUuid();
                 const input = retainedSend.current ?? {
                   attachmentIds: selectedAttachmentIds,
                   attachmentNames: selectedAttachmentIds.map((id) => ({

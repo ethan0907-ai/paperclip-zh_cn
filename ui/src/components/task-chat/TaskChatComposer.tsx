@@ -1,3 +1,4 @@
+import { createUuid } from "@/lib/uuid";
 import { AgentAvatar } from "../AgentAvatar";
 import { t, useTranslation } from "@/i18n";
 import {
@@ -647,7 +648,7 @@ export function TaskChatComposer({
 
   /** Upload an image and return its URL for inline `![](src)` markdown. */
   async function uploadInlineImage(file: File): Promise<string> {
-    const id = crypto.randomUUID();
+    const id = createUuid();
     setAttachments((prev) => [
       ...prev,
       {
@@ -969,7 +970,7 @@ export function TaskChatComposer({
         setBody(submittedBody);
         return;
       }
-      attemptId = crypto.randomUUID();
+      attemptId = createUuid();
       if (draftKey) {
         saveDraft(draftKey, submittedBody);
         saveDraftSubmission(draftKey, { attemptId, reviewed: false });

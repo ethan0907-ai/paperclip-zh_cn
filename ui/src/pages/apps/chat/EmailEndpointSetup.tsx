@@ -1,3 +1,4 @@
+import { createUuid } from "@/lib/uuid";
 import { i18n, useTranslation } from "@/i18n";
 import { ChatSetupNavigation } from "@/components/chat/ChatSetupNavigation";
 import { useEffect, useState } from "react";
@@ -78,7 +79,7 @@ export function EmailEndpointSetup() {
     new Set(params.get("agentId") ? [params.get("agentId")!] : []),
   );
   const [apiKey, setApiKey] = useState("");
-  const [requestId] = useState(() => crypto.randomUUID());
+  const [requestId] = useState(() => createUuid());
   const [addressMode, setAddressMode] = useState("new");
   const [inboxId, setInboxId] = useState("");
   const [username, setUsername] = useState("");

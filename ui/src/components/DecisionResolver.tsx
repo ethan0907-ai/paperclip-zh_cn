@@ -1,3 +1,4 @@
+import { createUuid } from "@/lib/uuid";
 import { useTranslation } from "@/i18n";
 import { useCallback, useMemo } from "react";
 import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -208,7 +209,7 @@ export function DecisionResolver({ companyId, decisionId, originIssue, agentMap,
       }
       busy={busy}
       errorMessage={errorMessage}
-      onDecide={(optionId, inputValues) => decideMutation.mutate({ optionId, inputValues, idempotencyKey: crypto.randomUUID() })}
+      onDecide={(optionId, inputValues) => decideMutation.mutate({ optionId, inputValues, idempotencyKey: createUuid() })}
       onDismiss={(reason) => dismissMutation.mutate(reason)}
     />
   );
