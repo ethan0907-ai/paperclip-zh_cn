@@ -262,7 +262,16 @@ export const InlineEntitySelector = forwardRef<HTMLButtonElement, InlineEntitySe
               }
             }}
           />
-          <div data-mobile-entity-picker-list="" className="max-h-56 overflow-y-auto overscroll-contain py-1 touch-pan-y">
+          <div
+            data-mobile-entity-picker-list=""
+            className="max-h-56 overflow-y-auto overscroll-contain py-1 touch-pan-y"
+            onWheelCapture={(event) => {
+              // Keep the parent dialog's scroll lock from cancelling portalled list scrolling.
+              if (event.currentTarget.scrollHeight > event.currentTarget.clientHeight) {
+                event.stopPropagation();
+              }
+            }}
+          >
             {filteredOptions.length === 0 ? (
               <p className="px-2 py-2 text-xs text-muted-foreground">{emptyMessage}</p>
             ) : (

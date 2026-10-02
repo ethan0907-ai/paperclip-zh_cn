@@ -52,6 +52,7 @@ test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true
 
 test("new-task assignee and model sheets scroll by touch and retain the selected values", async ({ page, request, browserName }, testInfo) => {
   test.skip(browserName !== "chromium", "Native touch drags use Chromium's input protocol.");
+  await page.addInitScript(() => window.localStorage.setItem("paperclip.locale", "en"));
   const company = await json(await request.post("/api/companies", {
     data: { name: `Touch pickers ${randomUUID()}` },
   }));
@@ -85,10 +86,10 @@ test("new-task assignee and model sheets scroll by touch and retain the selected
 
   await page.getByRole("button", { name: "Codex options", exact: true }).tap();
   await page.getByRole("radio", { name: "Custom", exact: true }).tap();
-  await page.getByRole("button", { name: "Default model", exact: true }).tap();
+  await page.getByRole("button", { name: /^Default\s*model$/i }).tap();
   // A reduced viewport exercises the space available when a phone keyboard opens.
   await page.setViewportSize({ width: 390, height: 430 });
-  const models = page.getByRole("dialog", { name: "Default model", exact: true });
+  const models = page.getByRole("dialog", { name: /^Default\s*model$/i });
   const lastModel = await swipeToLastOption(page, models);
   await expect(lastModel).toHaveText("Touch Model 24");
   await lastModel.tap();
@@ -113,10 +114,21 @@ test("new-task assignee and model sheets scroll by touch and retain the selected
   await expect(page.getByPlaceholder("Task title")).toHaveValue("Keep this touch selection draft");
   await page.screenshot({ path: testInfo.outputPath("selected-mobile-assignee-and-model.png") });
 
-  // The desktop popover keeps mouse opening and keyboard selection.
+  // Desktop wheel events must scroll portalled lists inside the task dialog.
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.getByRole("button", { name: "Touch Model 24", exact: true }).click();
+  const desktopList = page.locator("[data-mobile-entity-picker-list]");
+  await desktopList.hover();
+  await page.mouse.wheel(0, 300);
+  await expect.poll(() => desktopList.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
+  // Mouse opening and keyboard selection still work after scrolling.
   await page.getByPlaceholder("Search models...").fill("Touch Model 01");
   await page.getByPlaceholder("Search models...").press("Enter");
   await expect(page.getByRole("button", { name: "Touch Model 01", exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Touch Agent 22", exact: true }).click();
+  await desktopList.hover();
+  await page.mouse.wheel(0, 300);
+  await expect.poll(() => desktopList.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
+  await page.getByPlaceholder("Search assignees...").press("Escape");
+  await expect(page.getByPlaceholder("Task title")).toHaveValue("Keep this touch selection draft");
 });

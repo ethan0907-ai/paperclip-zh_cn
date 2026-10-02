@@ -5,6 +5,7 @@ import { flushSync } from "react-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Dialog, DialogContent, DialogTitle } from "./ui/dialog";
 import { InlineEntitySelector } from "./InlineEntitySelector";
+import { t } from "../i18n";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
@@ -33,9 +34,9 @@ describe("InlineEntitySelector", () => {
     document.body.innerHTML = "";
   });
 
-  it("allows touch scrolling in a mobile picker portalled outside a parent dialog", async () => {
+  it.each([true, false])("allows scrolling in a picker portalled outside a parent dialog (mobile: %s)", async (mobile) => {
     window.matchMedia = vi.fn().mockImplementation((query: string) => ({
-      matches: query === "(max-width: 40rem)",
+      matches: mobile && query === "(max-width: 40rem)",
       media: query,
       addEventListener: vi.fn(),
       removeEventListener: vi.fn(),
@@ -56,7 +57,7 @@ describe("InlineEntitySelector", () => {
               onChange={vi.fn()}
               triggerTestId="nested-assignee-picker"
               openOnFocus={false}
-              disablePortal
+              disablePortal={mobile}
             />
           </DialogContent>
         </Dialog>,
@@ -87,8 +88,16 @@ describe("InlineEntitySelector", () => {
         option.dispatchEvent(event);
         return event;
       };
-      touch("touchstart", 150);
-      expect(touch("touchmove", 100).defaultPrevented).toBe(false);
+      if (mobile) {
+        touch("touchstart", 150);
+        expect(touch("touchmove", 100).defaultPrevented).toBe(false);
+      }
+      const wheel = new WheelEvent("wheel", { bubbles: true, cancelable: true, deltaY: 100 });
+      option.dispatchEvent(wheel);
+      expect(wheel.defaultPrevented).toBe(false);
+      const outsideWheel = new WheelEvent("wheel", { bubbles: true, cancelable: true, deltaY: 100 });
+      document.body.dispatchEvent(outsideWheel);
+      expect(outsideWheel.defaultPrevented).toBe(true);
       // The background stays locked while the picker is open.
       const outsideMove = new Event("touchmove", { bubbles: true, cancelable: true });
       Object.defineProperties(outsideMove, {
@@ -241,11 +250,11 @@ describe("InlineEntitySelector", () => {
     expect(document.querySelector("[data-mobile-entity-picker]")).not.toBeNull();
     expect(container.contains(document.querySelector("[data-mobile-entity-picker]"))).toBe(false);
     expect(document.querySelector("[data-mobile-entity-picker-header]")?.textContent).toContain("Responsible");
-    expect(document.querySelector('button[aria-label="Close selector"]')).not.toBeNull();
+    expect(document.querySelector(`[aria-label="${t("finalAria.closeSelector")}"]`)).not.toBeNull();
     expect(document.activeElement).toBe(searchInput);
 
     await act(async () => {
-      (document.querySelector('button[aria-label="Close selector"]') as HTMLButtonElement | null)?.click();
+      (document.querySelector(`[aria-label="${t("finalAria.closeSelector")}"]`) as HTMLButtonElement | null)?.click();
       await Promise.resolve();
     });
     expect(document.querySelector("[data-mobile-entity-picker]")).toBeNull();
