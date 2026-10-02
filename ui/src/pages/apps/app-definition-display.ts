@@ -1,4 +1,5 @@
-import type { AppDefinition, ToolApplication, ToolConnection } from "@paperclipai/shared";
+import { APP_DEFINITIONS, type AppDefinition, type ToolApplication, type ToolConnection } from "@paperclipai/shared";
+import { t } from "@/i18n";
 
 export type AppGalleryDisplayEntry = AppDefinition & {
   key?: string;
@@ -16,7 +17,11 @@ export function appDefinitionName(entry: AppGalleryDisplayEntry | null | undefin
 }
 
 export function appDefinitionDescription(entry: AppGalleryDisplayEntry | null | undefined): string {
-  return entry?.description ?? entry?.tagline ?? "";
+  const description = entry?.description ?? entry?.tagline ?? "";
+  const slug = appDefinitionSlug(entry);
+  return description && description === APP_DEFINITIONS.find((app) => app.slug === slug)?.description
+    ? t(`appDescriptions.${slug}`, { defaultValue: description })
+    : description;
 }
 
 export function appDefinitionLogoUrl(entry: AppGalleryDisplayEntry | null | undefined): string | undefined {

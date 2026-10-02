@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Browse } from "./Browse";
 import { getAppStoreDefinition } from "@paperclipai/shared";
 import { queryKeys } from "@/lib/queryKeys";
+import { i18n } from "@/i18n";
 
 const listGalleryMock = vi.hoisted(() => vi.fn());
 const listApplicationsMock = vi.hoisted(() => vi.fn());
@@ -134,6 +135,7 @@ describe("Connectors landing page", () => {
   let root: ReturnType<typeof createRoot>;
 
   beforeEach(() => {
+    i18n.changeLanguage("en");
     experimentalMock.mockResolvedValue({ enableChatConnectors: true });
     chatListMock.mockResolvedValue([]);
     chatSetupMock.mockReset().mockResolvedValue({ status: "archived" });
@@ -170,6 +172,7 @@ describe("Connectors landing page", () => {
 
   afterEach(() => {
     act(() => root?.unmount());
+    i18n.changeLanguage("en");
     container.remove();
     document.body.innerHTML = "";
     vi.clearAllMocks();
@@ -190,6 +193,37 @@ describe("Connectors landing page", () => {
     await flushReact();
     return client;
   }
+
+  it("shows translated descriptions and refreshes them when the locale changes", async () => {
+    listGalleryMock.mockResolvedValue({ apps: ["openai", "airtable", "anthropic", "arcade"].map(getAppStoreDefinition) });
+    await act(() => { i18n.changeLanguage("zh-CN"); });
+    await renderBrowse();
+    for (const [slug, description] of [
+      ["openai", "为智能体连接 OpenAI 账户。"],
+      ["airtable", "连接 Airtable 托管的 MCP 服务器。"],
+      ["anthropic", "使用权限受限的密钥调用 Anthropic API。"],
+      ["arcade", "使用 Arcade MCP 连接提供的工具。"],
+    ]) {
+      const row = container.querySelector(`[data-app-slug="${slug}"]`);
+      expect(row?.textContent).toContain(getAppStoreDefinition(slug)!.name);
+      expect(row?.textContent).toContain(description);
+    }
+    const input = container.querySelector<HTMLInputElement>('input[type="search"]')!;
+    const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value")!.set!;
+    await act(() => {
+      setter.call(input, "权限受限");
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    await flushReact();
+    expect(Array.from(container.querySelectorAll<HTMLElement>("[data-app-slug]"), (row) => row.dataset.appSlug)).toEqual(["anthropic"]);
+    await act(() => {
+      setter.call(input, "");
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+      i18n.changeLanguage("en");
+    });
+    await flushReact();
+    expect(container.querySelector('[data-app-slug="openai"]')?.textContent).toContain("Connect OpenAI accounts for your agents.");
+  });
 
   it("shows retirement guidance before paused state for an obsolete Composio account", async () => {
     listApplicationsMock.mockResolvedValue({ applications: [application({ id: "old-app", name: "Composio", metadata: { sourceTemplateKey: "composio" } })] });
