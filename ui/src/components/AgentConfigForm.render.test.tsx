@@ -6,8 +6,9 @@ import { flushSync } from "react-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Agent, Environment, UserSecretDefinition } from "@paperclipai/shared";
-import { getEnvironmentCapabilities } from "@paperclipai/shared";
+import { AGENT_ROLES, getEnvironmentCapabilities } from "@paperclipai/shared";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { i18n } from "@/i18n";
 import { ToastProvider } from "../context/ToastContext";
 import { AgentConfigForm, AdapterLoginPanel, subtractPersistedOverlay, type AdapterLoginDescriptor } from "./AgentConfigForm";
 import { defaultCreateValues } from "./agent-config-defaults";
@@ -598,7 +599,7 @@ async function renderStatefulCreateClaudeSandbox(environments: Environment[]) {
 }
 
 async function selectEnvironment(container: HTMLElement, environmentId: string) {
-  const select = container.querySelector("select");
+  const select = container.querySelector('[data-config-section="environment"] select');
   await act(async () => {
     if (select) {
       const setter = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, "value")?.set;
@@ -650,6 +651,7 @@ describe("AgentConfigForm environment selector", () => {
   let roots: Root[] = [];
 
   beforeEach(() => {
+    void i18n.changeLanguage("en");
     mockAgentsApi.adapterModels.mockResolvedValue([]);
     mockAgentsApi.detectModel.mockResolvedValue(null);
     mockAgentsApi.list.mockResolvedValue([]);
@@ -739,6 +741,39 @@ describe("AgentConfigForm environment selector", () => {
     vi.clearAllMocks();
   });
 
+  it("shows the stored role and saves or discards role edits through the page actions", async () => {
+    const dirty = vi.fn();
+    let save: (() => void) | null = null;
+    let discard: (() => void) | null = null;
+    const result = await renderForm([], { role: "general", title: "Technical lead" }, {
+      hideInlineSave: true,
+      onDirtyChange: dirty,
+      onSaveActionChange: action => { save = action; },
+      onCancelActionChange: action => { discard = action; },
+    });
+    roots.push(result.root);
+    const trigger = result.container.querySelector<HTMLButtonElement>('[role="combobox"][aria-label="Role"]')!;
+    expect(trigger.textContent).toContain("General");
+
+    await act(async () => {
+      trigger.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+    });
+    await flushReact();
+    const options = [...document.querySelectorAll('[role="option"]')];
+    expect(options).toHaveLength(AGENT_ROLES.length);
+    await clickElement(options.find(option => option.textContent?.trim() === "CTO"));
+    expect(trigger.textContent).toContain("CTO");
+    expect(dirty).toHaveBeenLastCalledWith(true);
+    expect(result.onSave).not.toHaveBeenCalled();
+    await act(async () => { await save?.(); });
+    expect(result.onSave).toHaveBeenCalledWith({ role: "cto" });
+
+    await act(async () => discard?.());
+    await flushReact();
+    expect(trigger.textContent).toContain("General");
+    expect(dirty).toHaveBeenLastCalledWith(false);
+  });
+
   it("promotes environment drafts through the page Save action and discards them through the page Discard action", async () => {
     const dirty = vi.fn();
     let save: (() => void) | null = null;
@@ -770,11 +805,11 @@ describe("AgentConfigForm environment selector", () => {
   it("reads and saves Pi thinking effort using the Pi runtime key", async () => {
     const result = await renderForm([], { adapterType: "pi_local", adapterConfig: { model: "openrouter/anthropic/claude-sonnet-4.6", thinking: "high" } });
     roots.push(result.root);
-    const effort = [...result.container.querySelectorAll("button")].find(button => button.textContent?.trim() === "high")!;
+    const effort = [...result.container.querySelectorAll("button")].find(button => button.textContent?.trim() === "High")!;
     expect(effort).toBeTruthy();
     await act(async () => effort.click());
     await flushReact();
-    const low = [...document.querySelectorAll("button")].find(button => button.textContent?.trim() === "lowlow")!;
+    const low = [...document.querySelectorAll("button")].find(button => button.textContent?.trim() === "Lowlow")!;
     expect(low).toBeTruthy();
     await act(async () => low.click());
     await flushReact();
@@ -808,7 +843,7 @@ describe("AgentConfigForm environment selector", () => {
     roots.push(result.root);
 
     expect(result.container.textContent).not.toContain("Environment override");
-    expect(result.container.querySelector("select")).toBeNull();
+    expect(result.container.querySelector('[data-config-section="environment"] select')).toBeNull();
   });
 
   it("renders GPT-6 Astra and its model-specific reasoning efforts", async () => {
@@ -935,7 +970,7 @@ describe("AgentConfigForm environment selector", () => {
     roots.push(result.root);
 
     const text = result.container.textContent ?? "";
-    const selector = result.container.querySelector("select");
+    const selector = result.container.querySelector('[data-config-section="environment"] select');
 
     expect(text).toContain("Environment");
     expect(text).toContain("Environment override");
@@ -962,7 +997,7 @@ describe("AgentConfigForm environment selector", () => {
     roots.push(result.root);
 
     const text = result.container.textContent ?? "";
-    const selector = result.container.querySelector("select");
+    const selector = result.container.querySelector('[data-config-section="environment"] select');
 
     expect(text).toContain("Environment override");
     expect(selector?.textContent).toContain("E2B · sandbox");
@@ -984,7 +1019,7 @@ describe("AgentConfigForm environment selector", () => {
     roots.push(result.root);
 
     const text = result.container.textContent ?? "";
-    const selector = result.container.querySelector("select");
+    const selector = result.container.querySelector('[data-config-section="environment"] select');
 
     expect(text).toContain("Environment override");
     expect(selector?.textContent).toContain("E2B · sandbox");
@@ -1006,7 +1041,7 @@ describe("AgentConfigForm environment selector", () => {
     roots.push(result.root);
 
     const text = result.container.textContent ?? "";
-    const selector = result.container.querySelector("select");
+    const selector = result.container.querySelector('[data-config-section="environment"] select');
 
     expect(text).toContain("Environment override");
     expect(selector?.textContent).toContain("Default: Local");
@@ -1026,7 +1061,7 @@ describe("AgentConfigForm environment selector", () => {
     ]);
     roots.push(result.root);
 
-    const selector = result.container.querySelector("select");
+    const selector = result.container.querySelector('[data-config-section="environment"] select');
 
     expect(selector?.textContent).toContain("Default: Paperclip Computer");
     expect(selector?.textContent).toContain("Paperclip Computer");
@@ -2428,7 +2463,7 @@ describe("AgentConfigForm environment selector", () => {
     await runTest(result.container);
     expect(findButton(result.container, "Sign in")).toBeTruthy();
 
-    const select = result.container.querySelector("select");
+    const select = result.container.querySelector('[data-config-section="environment"] select');
     await act(async () => {
       if (select) {
         const setter = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, "value")?.set;

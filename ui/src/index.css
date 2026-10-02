@@ -2928,7 +2928,7 @@ span.paperclip-mention-chip[data-mention-kind="external-object"] {
 .agent-settings-form
   [data-config-section="identity"]
   > .rounded-lg
-  > :nth-child(n + 3) {
+  > :nth-child(n + 5) {
   @apply sm:col-span-2;
 }
 .agent-settings-overview section,

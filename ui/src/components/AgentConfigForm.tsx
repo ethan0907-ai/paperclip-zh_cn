@@ -20,7 +20,7 @@ import type {
   EnvSecretRefBinding,
   Environment,
 } from "@paperclipai/shared";
-import { AGENT_DEFAULT_MAX_CONCURRENT_RUNS, supportedEnvironmentDriversForAdapter, isValidBrowserCode, ADAPTER_AUTH_MISSING_CHECK_CODE } from "@paperclipai/shared";
+import { AGENT_ROLES, AGENT_DEFAULT_MAX_CONCURRENT_RUNS, supportedEnvironmentDriversForAdapter, isValidBrowserCode, ADAPTER_AUTH_MISSING_CHECK_CODE } from "@paperclipai/shared";
 import type { AdapterModel } from "../api/agents";
 import { agentsApi } from "../api/agents";
 import { ApiError } from "../api/client";
@@ -43,6 +43,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FolderOpen, Heart, ChevronDown, X, Copy, Check, ExternalLink, Loader2, TriangleAlert, Bug } from "lucide-react";
 import { asBoolean, asFiniteNumber, asObject, cn } from "../lib/utils";
 import { copyTextToClipboard } from "../lib/clipboard";
@@ -71,6 +72,7 @@ import {
   DraftNumberInput,
   help,
   adapterLabels,
+  roleLabels,
 } from "./agent-config-primitives";
 import { defaultCreateValues } from "./agent-config-defaults";
 import { getUIAdapter } from "../adapters";
@@ -1472,6 +1474,21 @@ export function AgentConfigForm(props: AgentConfigFormProps) {
                 className={inputClass}
                 placeholder={t("agentConfigForm.egVPOfEngineering")}
               />
+            </Field>
+            <Field label={t("agents.detail.role")} hint={help.role}>
+              <Select
+                value={eff("identity", "role", props.agent.role)}
+                onValueChange={(role) => mark("identity", "role", role)}
+              >
+                <SelectTrigger aria-label={t("agents.detail.role")} className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {AGENT_ROLES.map((role) => (
+                    <SelectItem key={role} value={role}>{roleLabels[role]}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </Field>
             <Field label={t("agentConfigForm.reportsTo")} hint={help.reportsTo}>
               <ReportsToPicker
