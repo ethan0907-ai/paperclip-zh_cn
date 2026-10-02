@@ -10,6 +10,7 @@ import type {
 } from "@paperclipai/shared";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createElement } from "react";
+import { setAppLocale } from "@/i18n";
 
 const mockToolsApi = vi.hoisted(() => ({
   getEffectiveProfilesForAgent: vi.fn(),
@@ -106,6 +107,7 @@ describe("AgentToolsTab", () => {
   let root: ReturnType<typeof createRoot>;
 
   beforeEach(() => {
+    setAppLocale("en");
     container = document.createElement("div");
     document.body.appendChild(container);
     mockToolsApi.getEffectiveProfilesForAgent.mockReset();
@@ -335,7 +337,7 @@ describe("AgentToolsTab", () => {
 
     const text = container.textContent ?? "";
     expect(text).toContain("@dottabot");
-    expect(text).toContain("takes precedence over the responsible person's GitHub");
+    expect(text).toContain("takes priority over the GitHub account of the task assignee");
     expect(container.querySelector('a[href="/apps/conn-github/permissions"]')?.textContent).toBe("Manage GitHub identity");
     expect(text).not.toContain("Connect my GitHub");
   });

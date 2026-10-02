@@ -570,7 +570,7 @@ export function AgentToolsTab({ agent, companyId }: { agent: AgentDetailRecord; 
   const profilesHref = "/apps/advanced/profiles";
 
   return (
-    <div className="space-y-4">
+    <div className="@container space-y-4">
       <EnforcementBanner
         tone="info"
         title={t("agentTools.effectiveAccess")}
@@ -611,9 +611,9 @@ export function AgentToolsTab({ agent, companyId }: { agent: AgentDetailRecord; 
         }}
       />
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 @4xl:grid-cols-3">
         {/* {t("agentTools.allowedTools")} table */}
-        <div className="lg:col-span-2">
+        <div className="min-w-0 @4xl:col-span-2">
           <div className="rounded-lg border border-border">
             <div className="flex items-center justify-between gap-2 border-b border-border px-3 py-2.5">
               <h3 className="text-sm font-semibold text-foreground">{t("agentTools.allowedTools")}</h3>
@@ -626,56 +626,58 @@ export function AgentToolsTab({ agent, companyId }: { agent: AgentDetailRecord; 
                 {t("agentTools.noToolsAllowed")}
               </p>
             ) : (
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border text-left text-xs text-muted-foreground">
-                    <th className="px-3 py-2 font-medium">{t("agentTools.tool")}</th>
-                    <th className="px-3 py-2 font-medium">{t("agentTools.capability")}</th>
-                    <th className="px-3 py-2 font-medium">{t("agentTools.risk")}</th>
-                    <th className="px-3 py-2 font-medium">{t("agentTools.source")}</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {allowedTools.map((tool) => (
-                    <tr key={tool.id} className="align-top">
-                      <td className="px-3 py-2">
-                        <div className="font-mono text-xs text-foreground">{tool.toolName}</div>
-                        {tool.title ? (
-                          <div className="text-(length:--text-micro) text-muted-foreground">{tool.title}</div>
-                        ) : null}
-                      </td>
-                      <td className="px-3 py-2">
-                        <CapabilityBadges
-                          isReadOnly={tool.isReadOnly}
-                          isWrite={tool.isWrite}
-                          isDestructive={tool.isDestructive}
-                        />
-                      </td>
-                      <td className="px-3 py-2">
-                        <RiskBadge risk={tool.riskLevel} />
-                      </td>
-                      <td className="px-3 py-2 text-xs text-muted-foreground">
-                        {connectionNameById.get(tool.connectionId) ?? "—"}
-                      </td>
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-lg table-fixed text-sm">
+                  <thead>
+                    <tr className="border-b border-border text-left text-xs text-muted-foreground">
+                      <th className="px-3 py-2 font-medium">{t("agentTools.tool")}</th>
+                      <th className="px-3 py-2 font-medium">{t("agentTools.capability")}</th>
+                      <th className="px-3 py-2 font-medium">{t("agentTools.risk")}</th>
+                      <th className="px-3 py-2 font-medium">{t("agentTools.source")}</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {allowedTools.map((tool) => (
+                      <tr key={tool.id} className="align-top">
+                        <td className="wrap-anywhere px-3 py-2">
+                          <div className="font-mono text-xs text-foreground">{tool.toolName}</div>
+                          {tool.title ? (
+                            <div className="text-(length:--text-micro) text-muted-foreground">{tool.title}</div>
+                          ) : null}
+                        </td>
+                        <td className="px-3 py-2">
+                          <CapabilityBadges
+                            isReadOnly={tool.isReadOnly}
+                            isWrite={tool.isWrite}
+                            isDestructive={tool.isDestructive}
+                          />
+                        </td>
+                        <td className="px-3 py-2">
+                          <RiskBadge risk={tool.riskLevel} />
+                        </td>
+                        <td className="wrap-anywhere px-3 py-2 text-xs text-muted-foreground">
+                          {connectionNameById.get(tool.connectionId) ?? "—"}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
         </div>
 
         {/* {t("agentTools.whyTheseTools")} side panel */}
-        <aside className="space-y-4">
+        <aside className="min-w-0 space-y-4 wrap-anywhere">
           <div className="rounded-lg border border-border bg-background/60 p-3">
             <h3 className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
-              <HelpCircle className="h-3.5 w-3.5 text-muted-foreground" />
+              <HelpCircle className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
               {t("agentToolsSidePanel.whyTheseTools")}
             </h3>
 
             {/* {t("agentTools.accessProfiles")} */}
             <div className="mt-3 space-y-1.5">
-              <div className="flex items-center justify-between gap-2">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="text-(length:--text-micro) font-medium uppercase tracking-wide text-muted-foreground">
                   {t("agentToolsSidePanel.accessProfiles")}
                 </div>
@@ -696,7 +698,7 @@ export function AgentToolsTab({ agent, companyId }: { agent: AgentDetailRecord; 
                     <div key={profile.id} className="rounded-md border border-border/70 px-2.5 py-2">
                       <Link
                         to={`${profilesHref}/${profile.id}`}
-                        className="text-xs font-medium text-primary hover:underline"
+                        className="block text-xs font-medium text-primary hover:underline"
                       >
                         {profile.name}
                       </Link>
@@ -770,7 +772,7 @@ export function AgentToolsTab({ agent, companyId }: { agent: AgentDetailRecord; 
                     {deniedTools.slice(0, DENIED_TOOLS_DISPLAY_LIMIT).map((tool) => (
                       <span
                         key={tool.id}
-                        className="inline-flex items-center gap-1 rounded border border-border/70 bg-muted/40 px-1.5 py-0.5 font-mono text-(length:--text-micro) text-muted-foreground"
+                        className="inline-flex max-w-full items-center gap-1 rounded border border-border/70 bg-muted/40 px-1.5 py-0.5 font-mono text-(length:--text-micro) text-muted-foreground"
                         title={connectionNameById.get(tool.connectionId) ?? undefined}
                       >
                         {tool.toolName}
