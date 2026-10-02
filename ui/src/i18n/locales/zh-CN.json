@@ -1,4 +1,75 @@
 {
+  "bundledPlugins": {
+    "plugin-cloudflare-sandbox": {
+      "name": "Cloudflare 沙箱提供方",
+      "description": "官方沙箱插件，通过管理员部署的 Worker 桥接服务创建 Cloudflare 沙箱。"
+    },
+    "plugin-createos": {
+      "name": "CreateOS 沙箱提供方",
+      "description": "在 CreateOS 沙箱中运行 Paperclip 代理。"
+    },
+    "plugin-daytona": {
+      "name": "Daytona 沙箱提供方",
+      "description": "官方沙箱插件，创建 Daytona 沙箱作为 Paperclip 的执行环境。"
+    },
+    "plugin-e2b": {
+      "name": "E2B 沙箱提供方",
+      "description": "官方沙箱插件，创建 E2B 云沙箱作为 Paperclip 的执行环境。"
+    },
+    "plugin-exe-dev": {
+      "name": "exe.dev 沙箱提供方",
+      "description": "沙箱插件，创建 exe.dev 虚拟机作为 Paperclip 的执行环境。"
+    },
+    "plugin-fake-sandbox": {
+      "name": "模拟沙箱提供方",
+      "description": "官方模拟沙箱插件，无需外部基础设施即可测试 Paperclip 与沙箱插件的集成，并提供确定性的测试行为。"
+    },
+    "plugin-kubernetes": {
+      "name": "Kubernetes 沙箱（早期预览）",
+      "description": "官方 Kubernetes 沙箱插件，基于 kubernetes-sigs/agent-sandbox（v1alpha1）。处于早期预览阶段，上游 CRD 更新可能带来不兼容变更。未安装 agent-sandbox 的集群会回退到稳定的 batch/v1 Job 模式。"
+    },
+    "plugin-modal": {
+      "name": "Modal 沙箱提供方",
+      "description": "官方沙箱插件，创建 Modal 沙箱作为 Paperclip 的执行环境。"
+    },
+    "plugin-novita-sandbox": {
+      "name": "Novita 沙箱提供方",
+      "description": "沙箱插件，为 Paperclip 代理创建 Novita Agent Sandbox 运行环境。"
+    },
+    "plugin-llm-wiki": {
+      "name": "LLM 维基",
+      "description": "基于本地文件的 LLM 维基插件，支持资料导入、维基浏览、查询、内容检查及维护工作流。"
+    },
+    "plugin-workspace-diff": {
+      "name": "工作区变更",
+      "description": "为执行工作区和项目工作区添加“变更”标签页，通过插件本地的 Git 差异计算和 @pierre/diffs 展示变更。"
+    },
+    "plugin-kitchen-sink-example": {
+      "name": "功能集成示例",
+      "description": "参考插件，集中展示 Paperclip 插件 API、界面、桥接操作、事件、后台任务、Webhook、工具、本地工作区访问和运行时诊断。"
+    },
+    "plugin-orchestration-smoke-example": {
+      "name": "插件编排冒烟测试示例",
+      "description": "官方冒烟测试插件，用于验证 Paperclip 插件编排 API。"
+    },
+    "plugin-file-browser-example": {
+      "name": "文件浏览器示例",
+      "description": "示例插件，在侧边栏各项目下添加文件入口，在项目详情页提供文件浏览器与编辑器，并为评论中的文件链接添加标注和打开文件的右键菜单操作。"
+    },
+    "plugin-authoring-smoke-example": {
+      "name": "插件开发冒烟测试示例",
+      "description": "用于插件开发冒烟测试的 Paperclip 插件。"
+    },
+    "plugin-hello-world-example": {
+      "name": "Hello World 小组件示例",
+      "description": "参考界面插件，为 Paperclip 仪表盘添加一个简单的 Hello World 小组件。"
+    }
+  },
+  "themeToggle": {
+    "switchToLight": "切换到浅色模式",
+    "switchToDark": "切换到深色模式",
+    "description": "切换应用外观。"
+  },
   "app": {
     "noCompanies": {
       "title": "创建您的第一家公司",
@@ -3889,6 +3960,33 @@
     "connectedAs": "已以 {{identity}} 身份连接",
     "toolsCount": "{{count}} 个工具",
     "designExampleNotice": "仅为设计示例。请在 Storybook → Apps / Connections 中查看交互状态。不会保存或发送凭据。"
+  },
+  "bundledSkills": {
+    "source": "Paperclip 内置",
+    "paperclip": {
+      "name": "Paperclip 任务协作",
+      "description": "通过 Paperclip 控制平台 API 协调任务并执行治理规则。适用于查看任务分配、更新任务状态、发表评论、委派工作、管理例行任务或调用 Paperclip API。"
+    },
+    "first-task": {
+      "name": "首个任务引导",
+      "description": "当任务描述中使用 /first-task 时，引导用户完成首个 Paperclip 任务。理解初始回答、明确目标、提出计划或单个任务，并在获得批准后再招聘代理或执行工作。"
+    },
+    "paperclip-board": {
+      "name": "Paperclip 董事会管理",
+      "description": "通过聊天以董事会成员身份管理 Paperclip 公司。适用于入门配置、公司或代理管理、审批、任务监控、成本监督及工作成果评审。"
+    },
+    "paperclip-converting-plans-to-tasks": {
+      "name": "计划转任务",
+      "description": "将 Paperclip 计划转化为可执行的任务关系图。适用于规划、确定工作范围或拆分公司工作，并根据专业能力分配任务，明确依赖关系、阻塞因素及可并行执行的工作。"
+    },
+    "paperclip-create-agent": {
+      "name": "创建代理",
+      "description": "按照治理规则在 Paperclip 中创建新代理。适用于查看适配器配置选项、比较现有代理配置、起草新代理的提示词与配置，以及提交招聘申请。"
+    },
+    "para-memory-files": {
+      "name": "PARA 文件记忆",
+      "description": "使用基于文件的 PARA 记忆系统，跨会话存储、检索和组织长期知识。适用于保存事实、每日笔记、实体记录、每周综合总结、记忆检索、用户习惯或计划记忆。"
+    }
   },
   "skillsUi": {
     "installedFromTheAppshippedSkillsCatalogProvenanceIsSignedByPackageVersionAndContentHash": "从应用内置技能目录安装，来源由包版本和内容哈希标识。",

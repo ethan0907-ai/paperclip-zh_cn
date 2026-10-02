@@ -1,9 +1,22 @@
+import { t } from "@/i18n";
+
 type SkillSummaryInput = {
   tagline?: string | null;
   description?: string | null;
   key?: string | null;
   name?: string | null;
+  sourceBadge?: string | null;
 };
+
+export function resolveSkillNameText(skill: SkillSummaryInput & { name: string }): string {
+  return skill.sourceBadge === "paperclip" && skill.key
+    ? t(`bundledSkills.${skill.key.split("/").pop()}.name`, { defaultValue: skill.name })
+    : skill.name;
+}
+
+export function resolveSkillSourceLabel(label: string | null): string | null {
+  return label?.trim() === "Paperclip bundled" ? t("bundledSkills.source") : label;
+}
 
 function isStaleYamlBlockScalarIndicator(raw: string) {
   return /^[>|][+-]?$/.test(raw.trim());
@@ -20,6 +33,10 @@ export function resolveSkillSummaryText(
   options: { fallbackKey?: boolean } = {},
 ): string | null {
   const summary = sanitizeSkillSummaryText(skill.tagline) ?? sanitizeSkillSummaryText(skill.description);
+  if (skill.sourceBadge === "paperclip" && skill.key) {
+    const localized = t(`bundledSkills.${skill.key.split("/").pop()}.description`, { defaultValue: summary ?? "" });
+    if (localized) return localized;
+  }
   if (summary) return summary;
 
   if (options.fallbackKey) {

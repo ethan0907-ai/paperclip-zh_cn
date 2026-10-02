@@ -3,6 +3,7 @@
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { i18n } from "@/i18n";
 import { ThemeToggle } from "./ThemeToggle";
 
 const mockToggleTheme = vi.hoisted(() => vi.fn());
@@ -28,6 +29,7 @@ describe("ThemeToggle", () => {
   let container: HTMLDivElement;
 
   beforeEach(() => {
+    void i18n.changeLanguage("en");
     container = document.createElement("div");
     document.body.appendChild(container);
     mockTheme.value = "dark";
@@ -119,6 +121,27 @@ describe("ThemeToggle", () => {
     const button = container.querySelector("button");
     expect(button?.getAttribute("aria-label")).toBe("Switch to dark mode");
 
+    await act(async () => root.unmount());
+  });
+
+  it("localizes menu labels and accessibility text when the language changes", async () => {
+    const root = createRoot(container);
+    await act(async () => {
+      root.render(<ThemeToggle variant="compact-menu-action" />);
+    });
+    await act(async () => { await i18n.changeLanguage("zh-CN"); });
+    expect(container.textContent).toContain("切换到浅色模式");
+    expect(container.querySelector("button")?.getAttribute("aria-label")).toBe("切换到浅色模式");
+
+    mockTheme.value = "light";
+    await act(async () => { root.render(<ThemeToggle variant="menu-action" />); });
+    expect(container.textContent).toContain("切换到深色模式");
+    expect(container.textContent).toContain("切换应用外观。");
+
+    await act(async () => { root.render(<ThemeToggle />); });
+    expect(container.querySelector("button")?.getAttribute("title")).toBe("切换到深色模式");
+    await act(async () => { await i18n.changeLanguage("en"); });
+    expect(container.querySelector("button")?.getAttribute("aria-label")).toBe("Switch to dark mode");
     await act(async () => root.unmount());
   });
 });

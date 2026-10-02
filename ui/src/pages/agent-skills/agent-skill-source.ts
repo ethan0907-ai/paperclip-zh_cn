@@ -2,6 +2,7 @@ import { t } from "@/i18n";
 import { Boxes, Folder, Link2, Paperclip, type LucideIcon } from "lucide-react";
 import { GithubIcon } from "@/components/icons/github-icon";
 import type { CompanySkillListItem } from "@paperclipai/shared";
+import { resolveSkillSourceLabel } from "@/lib/company-skill-summary";
 
 export interface AgentSkillSourceMeta {
   icon: LucideIcon;
@@ -105,7 +106,8 @@ export function buildAgentSkillSourceMeta(skill: SourceSkill): AgentSkillSourceM
   }
 
   if (skill.sourceBadge === "paperclip") {
-    return { icon: Paperclip, label: skill.sourceLabel?.trim() || t("profileOnboardingUi.text116") };
+    const label = resolveSkillSourceLabel(skill.sourceLabel?.trim() ?? null);
+    return { icon: Paperclip, label: label || t("profileOnboardingUi.text116") };
   }
 
   if (skill.sourceBadge === "catalog" || skill.sourceType === "catalog") {

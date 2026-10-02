@@ -75,7 +75,7 @@ export function AgentSkillRow({
       <SkillCardIcon card={data.icon} size={32} />
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
-          <span className="truncate text-sm font-medium text-foreground">{data.name}</span>
+          <span className="truncate text-sm font-medium text-foreground" title={data.key}>{data.name}</span>
           {badge ? <span className="shrink-0">{badge}</span> : null}
           {data.chip ? (
             <span className="hidden shrink-0 items-center rounded-full border border-border bg-muted/40 px-2 py-0.5 text-(length:--text-nano) capitalize text-muted-foreground sm:inline-flex">

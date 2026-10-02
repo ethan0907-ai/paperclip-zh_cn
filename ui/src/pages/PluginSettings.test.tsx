@@ -4,6 +4,7 @@ import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { i18n } from "@/i18n";
 import { queryKeys } from "../lib/queryKeys";
 import { PluginSettings } from "./PluginSettings";
 
@@ -148,6 +149,7 @@ describe("PluginSettings", () => {
   let container: HTMLDivElement;
 
   beforeEach(() => {
+    void i18n.changeLanguage("en");
     container = document.createElement("div");
     document.body.appendChild(container);
 
@@ -167,6 +169,15 @@ describe("PluginSettings", () => {
     container.remove();
     document.body.innerHTML = "";
     vi.clearAllMocks();
+  });
+
+  it("localizes bundled plugin identity and description in settings and breadcrumbs", async () => {
+    void i18n.changeLanguage("zh-CN");
+    const root = await renderSettings(container);
+    expect(container.querySelector("h1")?.textContent).toBe("E2B 沙箱提供方");
+    expect(container.textContent).toContain("创建 E2B 云沙箱作为 Paperclip 的执行环境");
+    expect(mockSetBreadcrumbs).toHaveBeenLastCalledWith(expect.arrayContaining([{ label: "E2B 沙箱提供方" }]));
+    await act(async () => { root.unmount(); });
   });
 
   it("routes environment-provider plugins to instance environments when they have no instance config", async () => {

@@ -3,7 +3,8 @@
 import { act as reactAct, type ComponentProps, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import type { CatalogSkill, CompanySkillDetail, CompanySkillListItem, CompanySkillVersion, FolderListResult } from "@paperclipai/shared";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { i18n } from "@/i18n";
 import {
   DiscoveryGrid,
   InstallPreviewDialog,
@@ -101,6 +102,8 @@ vi.mock("../components/MarkdownEditor", () => ({
 
 let root: Root | null = null;
 let container: HTMLDivElement | null = null;
+
+beforeEach(() => { void i18n.changeLanguage("en"); });
 
 async function act(callback: () => void | Promise<void>) {
   await reactAct(async () => {
@@ -373,6 +376,36 @@ describe("getSkillVersionDiffSelection", () => {
 });
 
 describe("DiscoveryGrid IA presentation", () => {
+  it("renders installed bundled skills in Chinese while preserving their keys", async () => {
+    void i18n.changeLanguage("zh-CN");
+    const skill = makeDetail(makeVersion(1, "# Paperclip"), {
+      key: "paperclipai/paperclip/paperclip",
+      name: "paperclip",
+      slug: "paperclip",
+      sourceBadge: "paperclip",
+      sourceLabel: "Paperclip bundled",
+      authorName: null,
+    });
+    const installedSkill: CompanySkillListItem = { ...skill, catalogKind: null, originHash: null, packageName: null, packageVersion: null };
+    const cards = buildDiscoveryCards([installedSkill], []);
+    const onOpenCard = vi.fn();
+    const node = await renderDiscoveryGrid({ cards, totalCount: 1, onOpenCard });
+
+    expect(node.textContent).toContain("Paperclip 任务协作");
+    expect(node.textContent).toContain("通过 Paperclip 控制平台 API");
+    expect(node.textContent).toContain("作者 Paperclip 内置");
+    expect(node.textContent).toMatch(/1\s+项技能/);
+    expect(node.textContent).not.toContain("Paperclip bundled");
+    const title = node.querySelector(`[title="${skill.key}"]`);
+    expect(title).not.toBeNull();
+    await act(() => { title?.dispatchEvent(new MouseEvent("click", { bubbles: true })); });
+    expect(onOpenCard).toHaveBeenCalledWith(expect.objectContaining({ key: skill.key, skillId: skill.id }));
+
+    await act(() => { void i18n.changeLanguage("en"); });
+    expect(buildDiscoveryCards([installedSkill], [])[0]).toMatchObject({ name: "paperclip", author: "Paperclip bundled" });
+    expect(node.textContent).toMatch(/1\s+skill/);
+  });
+
   it("makes the search scope explicit for Installed and Discover", async () => {
     let node = await renderDiscoveryGrid({ tab: "installed" });
     expect(node.querySelector('input[aria-label="Search installed skills"]')).not.toBeNull();

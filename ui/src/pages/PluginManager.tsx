@@ -1,5 +1,5 @@
 import { t, useTranslation } from "@/i18n";
-import { pluginStatusDisplay } from "./plugin-display";
+import { pluginDescriptionDisplay, pluginNameDisplay, pluginStatusDisplay } from "./plugin-display";
 /**
  * @fileoverview Plugin Manager page — admin UI for discovering,
  * installing, enabling/disabling, and uninstalling plugins.
@@ -286,7 +286,7 @@ export function PluginManager() {
                   <div className="flex items-center gap-4 px-4 py-3">
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-medium">{bundledPlugin.displayName}</span>
+                        <span className="font-medium">{pluginNameDisplay(bundledPlugin.packageName, bundledPlugin.displayName)}</span>
                         <Badge variant="outline">
                           {bundledPlugin.tag === "first-party" ? t("pluginManager.firstparty") : t("pluginManager.example")}
                         </Badge>
@@ -306,7 +306,7 @@ export function PluginManager() {
                           <Badge variant="secondary">{t("pluginManager.notInstalled")}</Badge>
                         )}
                       </div>
-                      <p className="mt-1 text-sm text-muted-foreground">{bundledPlugin.description}</p>
+                      <p className="mt-1 text-sm text-muted-foreground">{pluginDescriptionDisplay(bundledPlugin.packageName, bundledPlugin.description)}</p>
                       <p className="mt-1 text-xs text-muted-foreground">{bundledPlugin.packageName}</p>
                       {installPending && !bundledPlugin.hasBuiltEntrypoints && (
                         <p className="mt-2 text-xs text-muted-foreground">{t("pluginManager.buildingPlugin")}</p>
@@ -382,9 +382,9 @@ export function PluginManager() {
                       <Link
                         to={`/company/settings/instance/plugins/${plugin.id}`}
                         className="font-medium hover:underline truncate block"
-                        title={plugin.manifestJson.displayName ?? plugin.packageName}
+                        title={pluginNameDisplay(plugin.packageName, plugin.manifestJson.displayName)}
                       >
-                        {plugin.manifestJson.displayName ?? plugin.packageName}
+                        {pluginNameDisplay(plugin.packageName, plugin.manifestJson.displayName)}
                       </Link>
                       {bundledByPackageName.has(plugin.packageName) && (
                         <Badge variant="outline">
@@ -405,8 +405,8 @@ export function PluginManager() {
                         {plugin.packageName} · v{plugin.manifestJson.version ?? plugin.version}
                       </p>
                     </div>
-                    <p className="text-sm text-muted-foreground truncate mt-0.5" title={plugin.manifestJson.description}>
-                      {plugin.manifestJson.description || t("pluginManager.noDescriptionProvided")}
+                    <p className="text-sm text-muted-foreground truncate mt-0.5" title={pluginDescriptionDisplay(plugin.packageName, plugin.manifestJson.description)}>
+                      {pluginDescriptionDisplay(plugin.packageName, plugin.manifestJson.description) || t("pluginManager.noDescriptionProvided")}
                     </p>
                     {plugin.status === "error" && (
                       <div className="mt-3 rounded-md border border-red-500/25 bg-red-500/[0.06] px-3 py-2">
@@ -476,7 +476,7 @@ export function PluginManager() {
                           title={t("pluginManager.uninstall")}
                           onClick={() => {
                             setUninstallPluginId(plugin.id);
-                            setUninstallPluginName(plugin.manifestJson.displayName ?? plugin.packageName);
+                            setUninstallPluginName(pluginNameDisplay(plugin.packageName, plugin.manifestJson.displayName));
                           }}
                           disabled={uninstallMutation.isPending}
                         >
@@ -537,7 +537,7 @@ export function PluginManager() {
           <DialogHeader>
             <DialogTitle>{t("pluginManager.errorDetails")}</DialogTitle>
             <DialogDescription>
-              {errorDetailsPlugin?.manifestJson.displayName ?? errorDetailsPlugin?.packageName ?? t("pluginManager.plugin")} {t("pluginManager.hitAnErrorState")}
+              {errorDetailsPlugin ? pluginNameDisplay(errorDetailsPlugin.packageName, errorDetailsPlugin.manifestJson.displayName) : t("pluginManager.plugin")} {t("pluginManager.hitAnErrorState")}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">

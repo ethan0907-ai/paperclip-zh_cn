@@ -8,7 +8,7 @@ import { agentsApi } from "../../api/agents";
 import { companySkillsApi } from "../../api/companySkills";
 import { instanceSettingsApi } from "../../api/instanceSettings";
 import { queryKeys } from "../../lib/queryKeys";
-import { resolveSkillSummaryText } from "../../lib/company-skill-summary";
+import { resolveSkillNameText, resolveSkillSummaryText } from "../../lib/company-skill-summary";
 import { adapterLabels } from "../../components/agent-config-primitives";
 import { cn } from "../../lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -233,7 +233,7 @@ export function AgentSkillsTab({ agent, companyId }: { agent: Agent; companyId?:
     () =>
       (companySkills ?? []).filter((skill) => !(skillSnapshot?.entries ?? []).some((entry) => entry.key === skill.key && entry.readOnly)).map((skill) => ({
         key: skill.key,
-        name: skill.name,
+        name: resolveSkillNameText(skill),
         icon: {
           key: skill.key,
           name: skill.name,
@@ -248,7 +248,7 @@ export function AgentSkillsTab({ agent, companyId }: { agent: Agent; companyId?:
         // search haystack (mirrors the store's discoveryMatchesSearch fields)
         slug: skill.slug,
         author: skill.authorName ?? skill.sourceLabel,
-        tagline: skill.tagline,
+        tagline: resolveSkillSummaryText(skill),
         description: skill.description,
         categories: skill.categories,
       })),

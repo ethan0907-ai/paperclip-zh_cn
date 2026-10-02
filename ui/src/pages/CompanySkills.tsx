@@ -69,7 +69,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { buildLineDiff, type DiffRow } from "../lib/line-diff";
 import { cn, relativeTime } from "../lib/utils";
-import { resolveSkillSummaryText } from "../lib/company-skill-summary";
+import { resolveSkillNameText, resolveSkillSourceLabel, resolveSkillSummaryText } from "../lib/company-skill-summary";
 import {
   parseSkillRoute,
   skillRoute,
@@ -281,7 +281,7 @@ function sourceMeta(sourceBadge: CompanySkillSourceBadge, sourceLabel: string | 
     case "local":
       return { icon: Folder, label: sourceLabel ?? t("skillsUi.folder"), managedLabel: t("skillsUi.folderManaged") };
     case "paperclip":
-      return { icon: Paperclip, label: sourceLabel ?? "Paperclip", managedLabel: t("skillsUi.paperclipManaged") };
+      return { icon: Paperclip, label: resolveSkillSourceLabel(sourceLabel) ?? "Paperclip", managedLabel: t("skillsUi.paperclipManaged") };
     default:
       return { icon: Boxes, label: sourceLabel ?? t("skillsUi.catalog"), managedLabel: t("skillsUi.catalogManaged") };
   }
@@ -705,11 +705,11 @@ export function buildDiscoveryCards(
       skillId: skill.id,
       folderId: skill.folderId ?? null,
       catalogRef: catalogMatch ? catalogMatch.id : null,
-      name: skill.name,
+      name: resolveSkillNameText(skill),
       slug: skill.slug,
-      author: skill.authorName ?? skill.sourceLabel ?? "you",
+      author: resolveSkillSourceLabel(skill.authorName ?? skill.sourceLabel) ?? "you",
       version: discoveryVersionLabel(skill, required),
-      tagline: skill.tagline ?? null,
+      tagline: resolveSkillSummaryText(skill),
       description: skill.description ?? null,
       categories: uniqueCategories([...(skill.categories ?? []), catalogMatch?.category]),
       iconUrl: skill.iconUrl,
@@ -885,7 +885,7 @@ function SkillCard({
         ) : null}
         <SkillCardIcon card={card} />
         <div className="min-w-0 flex-1">
-          <div className="truncate font-mono text-sm font-medium text-foreground">{card.name}</div>
+          <div className="truncate font-mono text-sm font-medium text-foreground" title={card.key}>{card.name}</div>
           <div className="truncate text-xs text-muted-foreground">
             {t("skillsUi.by")} {card.author}{card.version ? ` · ${card.version}` : ""}
           </div>
@@ -939,12 +939,7 @@ function SkillCard({
 
       {/* Always reserve two lines so cards line up even without a description. */}
       <p className="mt-2 line-clamp-2 min-h-8 text-xs text-muted-foreground">
-        {resolveSkillSummaryText({
-          tagline: card.tagline,
-          description: card.description,
-          key: card.key,
-          name: card.name,
-        }) ?? ""}
+        {resolveSkillSummaryText(card) ?? ""}
       </p>
 
       <div className="mt-auto pt-3">
@@ -1476,7 +1471,7 @@ export function DiscoveryGrid({
           ) : (
             <>
               <p className="mb-3 text-xs text-muted-foreground">
-                {sourceFilteredCards.length} {sourceFilteredCards.length === 1 ? "skill" : "skills"}
+                {sourceFilteredCards.length} {sourceFilteredCards.length === 1 ? t("companySkills.discoveryCountSingular") : t("companySkills.discoveryCountPlural")}
                 {activeCategory ? <span className="capitalize"> · {activeCategory}</span> : null}
               </p>
               <div className="grid gap-3 [grid-template-columns:repeat(auto-fill,minmax(19rem,1fr))]">
@@ -4645,7 +4640,7 @@ export function CompanySkills() {
   // --- Discovery grid derived data (PAP-10879) ---
   const discoveryCards = useMemo(
     () => buildDiscoveryCards(installedSkills, catalogListQuery.data ?? []),
-    [installedSkills, catalogListQuery.data],
+    [installedSkills, catalogListQuery.data, t],
   );
   const discoveryTabCards = useMemo(
     () => {

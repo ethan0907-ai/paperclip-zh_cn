@@ -1,5 +1,5 @@
 import { i18n, t, useTranslation } from "@/i18n";
-import { pluginStatusDisplay } from "./plugin-display";
+import { pluginDescriptionDisplay, pluginNameDisplay, pluginStatusDisplay } from "./plugin-display";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Puzzle, ArrowLeft, ShieldAlert, ActivitySquare, CheckCircle, XCircle, Loader2, Clock, Cpu, Webhook, CalendarClock, AlertTriangle, FolderOpen, Save } from "lucide-react";
@@ -135,7 +135,7 @@ export function PluginSettings() {
       { label: selectedCompany?.name ?? t("pluginSettings.organization"), href: "/dashboard" },
       { label: t("pluginSettings.settings"), href: "/company/settings" },
       { label: t("pluginSettings.plugins"), href: "/company/settings/instance/plugins" },
-      { label: plugin?.manifestJson?.displayName ?? plugin?.packageName ?? t("pluginSettings.pluginDetails") },
+      { label: plugin ? pluginNameDisplay(plugin.packageName, plugin.manifestJson.displayName) : t("pluginSettings.pluginDetails") },
     ]);
   }, [selectedCompany?.name, setBreadcrumbs, companyPrefix, plugin, t]);
 
@@ -158,7 +158,7 @@ export function PluginSettings() {
       : plugin.status === "error"
         ? "destructive"
         : "secondary";
-  const pluginDescription = plugin.manifestJson.description || t("pluginSettings.noDescriptionProvided");
+  const pluginDescription = pluginDescriptionDisplay(plugin.packageName, plugin.manifestJson.description) || t("pluginSettings.noDescriptionProvided");
   const pluginCapabilities = plugin.manifestJson.capabilities ?? [];
   const environmentDrivers = plugin.manifestJson.environmentDrivers ?? [];
   const localFolderDeclarations = plugin.manifestJson.localFolders ?? [];
@@ -183,7 +183,7 @@ export function PluginSettings() {
         </Link>
         <div className="flex items-center gap-2">
           <Puzzle className="h-6 w-6 text-muted-foreground" />
-          <h1 className="text-xl font-semibold">{plugin.manifestJson.displayName ?? plugin.packageName}</h1>
+          <h1 className="text-xl font-semibold">{pluginNameDisplay(plugin.packageName, plugin.manifestJson.displayName)}</h1>
           <Badge variant={statusVariant} className="ml-2">
             {pluginStatusDisplay(displayStatus)}
           </Badge>

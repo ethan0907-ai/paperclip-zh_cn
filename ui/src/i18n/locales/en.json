@@ -1,4 +1,75 @@
 {
+  "bundledPlugins": {
+    "plugin-cloudflare-sandbox": {
+      "name": "Cloudflare Sandbox Provider",
+      "description": "First-party sandbox provider plugin that provisions Cloudflare sandboxes through an operator-deployed Worker bridge."
+    },
+    "plugin-createos": {
+      "name": "CreateOS Sandbox Provider",
+      "description": "Runs Paperclip agents in CreateOS sandboxes."
+    },
+    "plugin-daytona": {
+      "name": "Daytona Sandbox Provider",
+      "description": "First-party sandbox provider plugin that provisions Daytona sandboxes as Paperclip execution environments."
+    },
+    "plugin-e2b": {
+      "name": "E2B Sandbox Provider",
+      "description": "First-party sandbox provider plugin that provisions E2B cloud sandboxes as Paperclip execution environments."
+    },
+    "plugin-exe-dev": {
+      "name": "exe.dev Sandbox Provider",
+      "description": "Sandbox provider plugin that provisions exe.dev VMs as Paperclip execution environments."
+    },
+    "plugin-fake-sandbox": {
+      "name": "Fake Sandbox Provider",
+      "description": "First-party deterministic sandbox provider plugin for exercising Paperclip provider-plugin integration without external infrastructure."
+    },
+    "plugin-kubernetes": {
+      "name": "Kubernetes Sandbox (alpha)",
+      "description": "Built on kubernetes-sigs/agent-sandbox (v1alpha1). ALPHA — expect breaking changes as the upstream CRD evolves. Falls back to stable batch/v1 Job mode for clusters without agent-sandbox installed. First-party Paperclip sandbox-provider plugin for Kubernetes."
+    },
+    "plugin-modal": {
+      "name": "Modal Sandbox Provider",
+      "description": "First-party sandbox provider plugin that provisions Modal sandboxes as Paperclip execution environments."
+    },
+    "plugin-novita-sandbox": {
+      "name": "Novita Sandbox Provider",
+      "description": "Sandbox provider plugin that provisions Novita Agent Sandbox environments for Paperclip agent runs."
+    },
+    "plugin-llm-wiki": {
+      "name": "LLM Wiki",
+      "description": "Local-file LLM Wiki plugin for source ingestion, wiki browsing, query, lint, and maintenance workflows."
+    },
+    "plugin-workspace-diff": {
+      "name": "Workspace Changes",
+      "description": "Adds a Changes tab to execution and project workspaces using plugin-local Git diff computation and @pierre/diffs."
+    },
+    "plugin-kitchen-sink-example": {
+      "name": "Kitchen Sink (Example)",
+      "description": "Reference plugin that demonstrates the current Paperclip plugin API surface, UI surfaces, bridge actions, events, jobs, webhooks, tools, local workspace access, and runtime diagnostics in one place."
+    },
+    "plugin-orchestration-smoke-example": {
+      "name": "Plugin Orchestration Smoke Example",
+      "description": "First-party smoke plugin that exercises Paperclip orchestration-grade plugin APIs."
+    },
+    "plugin-file-browser-example": {
+      "name": "File Browser (Example)",
+      "description": "Example plugin that adds a Files link under each project in the sidebar, a file browser + editor tab on the project detail page, and per-comment file link annotations with a context menu action to open referenced files."
+    },
+    "plugin-authoring-smoke-example": {
+      "name": "Plugin Authoring Smoke Example",
+      "description": "A Paperclip plugin"
+    },
+    "plugin-hello-world-example": {
+      "name": "Hello World Widget (Example)",
+      "description": "Reference UI plugin that adds a simple Hello World widget to the Paperclip dashboard."
+    }
+  },
+  "themeToggle": {
+    "switchToLight": "Switch to light mode",
+    "switchToDark": "Switch to dark mode",
+    "description": "Toggle the app appearance."
+  },
   "app": {
     "noCompanies": {
       "title": "Create your first organization",
@@ -3889,6 +3960,33 @@
     "connectedAs": "Connected as {{identity}}",
     "toolsCount": "{{count}} tools",
     "designExampleNotice": "Design example only. Review the interactive states in Storybook → Apps / Connections. No credentials are saved or sent."
+  },
+  "bundledSkills": {
+    "source": "Paperclip bundled",
+    "paperclip": {
+      "name": "paperclip",
+      "description": "Interact with the Paperclip control plane API for task coordination and governance. Use when checking assignments, updating issue status, posting comments, delegating work, managing routines, or calling Paperclip API endpoints."
+    },
+    "first-task": {
+      "name": "first-task",
+      "description": "Guide the user's first Paperclip task when its description invokes /first-task. Interpret the opening answer, clarify their goal, propose a plan or a single task, and wait for approval before hiring agents or executing approved work."
+    },
+    "paperclip-board": {
+      "name": "paperclip-board",
+      "description": "Manage a Paperclip company as a board member via chat. Use when the user wants onboarding, company or agent management, approvals, task monitoring, cost oversight, or work product review in the Paperclip control plane."
+    },
+    "paperclip-converting-plans-to-tasks": {
+      "name": "paperclip-converting-plans-to-tasks",
+      "description": "Convert Paperclip plans into executable issue graphs. Use when asked to plan, scope, or break down Paperclip company work into assigned tasks with specialty fit, dependencies, blockers, and parallelization."
+    },
+    "paperclip-create-agent": {
+      "name": "paperclip-create-agent",
+      "description": "Create new agents in Paperclip with governance-aware hiring. Use when you need to inspect adapter configuration options, compare existing agent configs, draft a new agent prompt/config, and submit a hire request."
+    },
+    "para-memory-files": {
+      "name": "para-memory-files",
+      "description": "Use a file-based PARA memory system to store, retrieve, and organize durable knowledge across sessions. Trigger on saving facts, daily notes, entity records, weekly synthesis, recall, tacit user patterns, or plan memory."
+    }
   },
   "skillsUi": {
     "installedFromTheAppshippedSkillsCatalogProvenanceIsSignedByPackageVersionAndContentHash": "Installed from the app-shipped skills catalog. Provenance is signed by package version and content hash.",
