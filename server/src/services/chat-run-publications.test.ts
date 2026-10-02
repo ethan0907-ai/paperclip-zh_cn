@@ -4,6 +4,23 @@ import { safeMilestoneText } from "./chat-run-publications.js";
 import { isExplicitExternalAgentComment } from "./issues.js";
 
 describe("chat run milestone projection", () => {
+  it.each([
+    ["queued", null, "CTO 已排队等待执行。"],
+    ["working", null, "CTO 正在工作…"],
+    ["completed", null, "CTO 已完成本轮任务。"],
+    ["waiting_for_input", "native_execution_ownership_unverified", "CTO 需要 Paperclip 管理员安全恢复本轮任务后才能继续工作。 请在 Paperclip 中打开任务查看详情。"],
+    ["failed", "private_error", "CTO 在完成本轮任务前停止了。 请在 Paperclip 中打开任务查看详情。"],
+  ] as const)("uses Chinese for Telegram milestone %s", (milestone, errorCode, text) => {
+    expect(safeMilestoneText({ agentName: "CTO", milestone, errorCode, issueId: "issue-1", provider: "telegram" })).toBe(text);
+  });
+
+  it("explains Telegram guest recovery in Chinese and retains the safe task link", () => {
+    expect(safeMilestoneText({
+      agentName: "CTO", milestone: "failed", errorCode: "low_trust_isolation_unavailable",
+      issueId: "issue-1", provider: "telegram", publicBaseUrl: "https://paperclip.example/path",
+    })).toBe("CTO 无法安全启动本轮任务：此任务由未关联身份的外部访客创建，且当前没有可用的访客隔离执行环境。请联系 Paperclip 管理员，为此账号创建私密身份关联链接，或启用访客隔离执行，然后开始新任务。 在 Paperclip 中打开任务：https://paperclip.example/issues/issue-1");
+  });
+
   it("allows only safe lifecycle state and text through the shared projection", () => {
     expect(
       projectSafeChatPublication({

@@ -1,3 +1,5 @@
+import type { ChatProvider } from "@paperclipai/shared";
+
 export const SAFE_NATIVE_CHAT_PROGRESS_EVENT_TYPES = [
   "workspace.ready",
   "research.started",
@@ -76,8 +78,20 @@ const SAFE_NATIVE_CHAT_PROGRESS_TEXT: Readonly<
 export function safeNativeChatProgressForEvent(
   eventType: string,
   agentName: string,
+  provider?: ChatProvider,
 ): { phase: SafeNativeChatProgressPhase; text: string } | null {
   if (!isSafeNativeChatProgressEventType(eventType)) return null;
   const phase = SAFE_NATIVE_CHAT_PROGRESS_PHASES[eventType];
+  if (provider === "telegram") {
+    const labels: Record<SafeNativeChatProgressPhase, string> = {
+      preparing: "正在准备",
+      researching: "正在调研",
+      making_progress: "正在推进任务",
+      using_tools: "正在使用工具",
+      coordinating: "正在协调工作",
+      working_with_files: "正在处理文件",
+    };
+    return { phase, text: `${agentName} ${labels[phase]}…` };
+  }
   return { phase, text: SAFE_NATIVE_CHAT_PROGRESS_TEXT[phase](agentName) };
 }

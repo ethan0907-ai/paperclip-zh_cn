@@ -12890,16 +12890,16 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         commands: [
           {
             command: "task",
-            description: "Start or continue a Paperclip task",
+            description: "开始或继续 Paperclip 任务",
           },
-          { command: "status", description: "Show the active Paperclip task" },
+          { command: "status", description: "查看当前 Paperclip 任务" },
           {
             command: "new",
-            description: "Start a new task after the current one",
+            description: "结束当前对话并开始新任务",
           },
           {
             command: "close",
-            description: "Close the active chat conversation",
+            description: "关闭当前聊天对话",
           },
         ],
       });
@@ -17525,7 +17525,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       expect.objectContaining({ state: "active", sessionGeneration: 1 }),
     ]);
     expect(runtime.endpoints.get(endpoint.id)?.posts[0]?.text).toBe(
-      "Send your request to start a new Paperclip task.",
+      "请发送你的请求，开始新的 Paperclip 任务。",
     );
     // Command-only acknowledgements have no run whose final reply can retire
     // a processing reaction. The subsequent task message has its own receipt.
@@ -26590,7 +26590,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
             method: "sendMessage",
             body: {
               chat_id: "-100123",
-              text: "This Paperclip action is no longer available. Open the linked task or ask an operator to link this account.",
+              text: "此 Paperclip 操作已不可用。请打开关联任务，或请管理员为此账号关联身份。",
               ephemeral_message_parameters: {
                 receiver_user_id: 456,
                 callback_query_id: "native-private-callback-1",
@@ -26805,7 +26805,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
             method: "sendMessage",
             body: {
               chat_id: "456",
-              text: "This Paperclip action is no longer available. Open the linked task or ask an operator to link this account.",
+              text: "此 Paperclip 操作已不可用。请打开关联任务，或请管理员为此账号关联身份。",
             },
           },
         ]);
@@ -27014,7 +27014,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     expect(statusPublication).toMatchObject({
       conversationId: conversation.id,
       state: "pending",
-      payload: { text: expect.stringMatching(/— in_progress$/) },
+      payload: { text: expect.stringMatching(/— 进行中$/) },
     });
 
     // Sample again at send time so a status waiting behind an older provider
@@ -27031,7 +27031,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       {
         threadId: thread.thread.id,
         messageId: "outbound-1",
-        text: expect.stringMatching(/— done$/),
+        text: expect.stringMatching(/— 已完成$/),
       },
     ]);
 
@@ -27053,7 +27053,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       {
         threadId: thread.thread.id,
         messageId: "outbound-1",
-        text: expect.stringMatching(/— done$/),
+        text: expect.stringMatching(/— 已完成$/),
       },
       {
         threadId: thread.thread.id,
@@ -27079,7 +27079,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       .then((rows) => rows[0]);
     expect(publishedStatus).toMatchObject({
       state: "published",
-      payload: { text: expect.stringMatching(/— done$/) },
+      payload: { text: expect.stringMatching(/— 已完成$/) },
       providerMessageId: "outbound-1",
     });
     await service.shutdown();
@@ -27178,7 +27178,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       runtime.endpoints.get(endpoint.id)?.posts.map((post) => post.text),
     ).toEqual([
       "old-generation-final",
-      "Send your request to start a new Paperclip task.",
+      "请发送你的请求，开始新的 Paperclip 任务。",
     ]);
     await expect(service.listConversations(endpoint.id)).resolves.toEqual([
       expect.objectContaining({ id: oldConversation.id, state: "completed" }),
@@ -27244,7 +27244,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       runtime.endpoints.get(endpoint.id)?.posts.map((post) => post.text),
     ).toEqual([
       "old-generation-final",
-      "Send your request to start a new Paperclip task.",
+      "请发送你的请求，开始新的 Paperclip 任务。",
       "new-generation-final",
     ]);
     expect(
@@ -27354,7 +27354,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
 
     expect(injectedCrash).toBe(true);
     expect(providerRuntime.posts.map((post) => post.text)).toEqual([
-      "This chat conversation is closed. Send another message to start a new task.",
+      "当前聊天对话已关闭。再次发送消息即可开始新任务。",
     ]);
     await expect(service.listConversations(endpoint.id)).resolves.toEqual([
       expect.objectContaining({ id: conversation.id, state: "active" }),
@@ -27677,7 +27677,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
           {
             threadId: `telegram:77118896`,
             messageId: f.progressMessageId,
-            text: "This chat conversation is closed. Send another message to start a new task.",
+            text: "当前聊天对话已关闭。再次发送消息即可开始新任务。",
           },
         ]);
         expect(f.providerRuntime.removedReactions).toContainEqual({
@@ -27856,7 +27856,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         expect(f.providerRuntime.edits).toEqual([]);
         expect(f.providerRuntime.posts).toHaveLength(before + 1);
         expect(f.providerRuntime.posts.at(-1)?.text).toBe(
-          "This chat conversation is closed. Send another message to start a new task.",
+          "当前聊天对话已关闭。再次发送消息即可开始新任务。",
         );
         await expect(
           db
@@ -28255,7 +28255,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         ]);
         expect(f.providerRuntime.posts.map((post) => post.text)).toEqual([
           "Maya is working…",
-          "This chat conversation is closed. Send another message to start a new task.",
+          "当前聊天对话已关闭。再次发送消息即可开始新任务。",
         ]);
       } finally {
         release();
@@ -28289,7 +28289,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         expect(f.providerRuntime.posts).toHaveLength(1);
         expect(f.providerRuntime.edits.at(-1)).toMatchObject({
           messageId: f.progressMessageId,
-          text: "This chat conversation is closed. Send another message to start a new task.",
+          text: "当前聊天对话已关闭。再次发送消息即可开始新任务。",
         });
       } finally {
         await retirePublicationFixture(f.service, f.endpoint.id);
@@ -29448,7 +29448,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         payload: expect.objectContaining({
           progressState: "failed",
           text: expect.stringContaining(
-            "Maya stopped before completing this turn.",
+            "Maya 在完成本轮任务前停止了。",
           ),
         }),
         state: "published",
@@ -29459,7 +29459,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         {
           threadId: dm.thread.id,
           text: expect.stringContaining(
-            "Maya stopped before completing this turn.",
+            "Maya 在完成本轮任务前停止了。",
           ),
         },
       ]),
@@ -29603,7 +29603,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         payload: expect.objectContaining({
           progressState: "failed",
           text: expect.stringContaining(
-            "Maya stopped before completing this turn.",
+            "Maya 在完成本轮任务前停止了。",
           ),
         }),
         state: "published",
@@ -34753,7 +34753,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       },
     ]);
     expect(providerRuntime.edits[0]?.text).toBe(
-      "This response needs a separate attachment because it exceeds the message limit.",
+      "回复超过消息长度限制，完整内容将以附件发送。",
     );
     expect(providerRuntime.posts).toHaveLength(1);
     expect(providerRuntime.posts[0]?.text).toBe("Complete response attached.");
@@ -35497,7 +35497,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       },
     ]);
     expect(providerRuntime.edits[0]?.text).toBe(
-      "This response needs a separate attachment because it exceeds the message limit.",
+      "回复超过消息长度限制，完整内容将以附件发送。",
     );
     expect(providerRuntime.posts).toHaveLength(1);
     expect(providerRuntime.posts[0]?.text).toBe("Complete response attached.");
@@ -39157,7 +39157,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       expect(notices).toHaveLength(1);
       expect(JSON.parse(notices[0]!.body)).toMatchObject({
         chat_id: "417200359",
-        text: "This Paperclip action is no longer available. Open the linked task or ask an operator to link this account.",
+        text: "此 Paperclip 操作已不可用。请打开关联任务，或请管理员为此账号关联身份。",
       });
       expect(notices[0]!.body).not.toContain(actionId);
       expect(notices[0]!.body).not.toContain(callbackData);
@@ -50850,10 +50850,10 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       runtime.endpoints.get(endpoint.id)?.posts.map((post) => post.text),
     ).toEqual([
       expect.stringMatching(
-        /^Send a direct message to start work with Maya\. In a group, use \/task@paperclip_\d+_bot followed by your request\./,
+        /^发送私信即可让 Maya 开始工作。在群聊中，请使用 \/task@paperclip_\d+_bot 并在命令后填写你的请求。/,
       ),
       expect.stringMatching(
-        /^Available commands: \/task@paperclip_\d+_bot followed by your request, \/status, \/new, and \/close\.$/,
+        /^可用命令：\/task@paperclip_\d+_bot 后填写请求；\/status 查看当前任务；\/new 开始新任务；\/close 关闭当前对话。$/,
       ),
     ]);
     expect(wakeup).not.toHaveBeenCalled();
@@ -51672,7 +51672,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         idempotencyKey: expect.stringMatching(/^control:guidance:/),
         payload: expect.objectContaining({
           text: expect.stringMatching(
-            /^Send a direct message to start work with Maya\. In a group, use \/task@paperclip_\d+_bot followed by your request\./,
+            /^发送私信即可让 Maya 开始工作。在群聊中，请使用 \/task@paperclip_\d+_bot 并在命令后填写你的请求。/,
           ),
         }),
       }),
@@ -51684,7 +51684,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       runtime.endpoints.get(endpoint.id)?.posts.map((post) => post.text),
     ).toEqual([
       expect.stringMatching(
-        /^Send a direct message to start work with Maya\. In a group, use \/task@paperclip_\d+_bot followed by your request\./,
+        /^发送私信即可让 Maya 开始工作。在群聊中，请使用 \/task@paperclip_\d+_bot 并在命令后填写你的请求。/,
       ),
     ]);
     expect(wakeup).toHaveBeenCalledTimes(1);
@@ -51877,8 +51877,8 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
           .filter(({ method }) => method === "sendMessage")
           .map(({ body }) => (JSON.parse(body) as { text?: string }).text),
       ).toEqual([
-        "Send a direct message to start work with Maya. In a group, use /task@paperclip_guidance_test_bot followed by your request. Use /status, /new, or /close to manage the active task in this chat.",
-        "Available commands: /task@paperclip_guidance_test_bot followed by your request, /status, /new, and /close.",
+        "发送私信即可让 Maya 开始工作。在群聊中，请使用 /task@paperclip_guidance_test_bot 并在命令后填写你的请求。使用 /status 查看当前任务、/new 开始新任务，或 /close 关闭当前对话。",
+        "可用命令：/task@paperclip_guidance_test_bot 后填写请求；/status 查看当前任务；/new 开始新任务；/close 关闭当前对话。",
       ]);
 
       await service.update(
@@ -52059,11 +52059,11 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     expect(
       runtime.endpoints.get(endpoint.id)?.posts.map((post) => post.text),
     ).toEqual([
-      expect.stringMatching(/— todo$/),
+      expect.stringMatching(/— 待处理$/),
       expect.stringContaining(
-        "Open a new Telegram forum topic to start a new Paperclip task.",
+        "请新建 Telegram 论坛话题以开始新的 Paperclip 任务。",
       ),
-      "This chat conversation is closed. A later message here will continue the same Paperclip task.",
+      "当前聊天对话已关闭。在此话题中再次发送消息将继续同一个 Paperclip 任务。",
     ]);
   });
 
@@ -55361,13 +55361,13 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
     await service.processPendingPublications();
     const providerRuntime = runtime.endpoints.get(endpoint.id);
     expect(providerRuntime?.posts).toEqual([
-      { threadId: dm.thread.id, text: "Maya is working…" },
+      { threadId: dm.thread.id, text: "Maya 正在工作…" },
     ]);
     expect(providerRuntime?.edits).toEqual([
       {
         threadId: dm.thread.id,
         messageId: "outbound-2",
-        text: "Maya needs a Paperclip admin to safely recover this turn before more work can start. Open the task in Paperclip for details.",
+        text: "Maya 需要 Paperclip 管理员安全恢复本轮任务后才能继续工作。 请在 Paperclip 中打开任务查看详情。",
       },
     ]);
     expect(JSON.stringify(providerRuntime?.edits)).not.toContain(
@@ -55581,13 +55581,13 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
 
     const providerRuntime = runtime.endpoints.get(endpoint.id);
     expect(providerRuntime?.posts).toEqual([
-      { threadId: dm.thread.id, text: "Maya is working…" },
+      { threadId: dm.thread.id, text: "Maya 正在工作…" },
     ]);
     expect(providerRuntime?.edits).toEqual([
       {
         threadId: dm.thread.id,
         messageId: "outbound-2",
-        text: "Maya completed this turn.",
+        text: "Maya 已完成本轮任务。",
       },
     ]);
     expect(
@@ -55728,7 +55728,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
 
       const providerRuntime = runtime.endpoints.get(endpoint.id);
       expect(providerRuntime?.posts).toEqual([
-        { threadId: dm.thread.id, text: "Maya is working…" },
+        { threadId: dm.thread.id, text: "Maya 正在工作…" },
       ]);
       expect(providerRuntime?.edits).toEqual([
         {
@@ -55736,7 +55736,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
           messageId: "outbound-2",
           text: publishesComment
             ? `Explicit Telegram reply via ${authorizationReason}`
-            : "Maya completed this turn.",
+            : "Maya 已完成本轮任务。",
         },
       ]);
       await expect(
@@ -58499,7 +58499,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         expect(blocked.providerRuntime.edits).toEqual([
           expect.objectContaining({
             messageId: "outbound-1",
-            text: "Maya is making progress…",
+            text: "Maya 正在推进任务…",
           }),
         ]);
         await expect(
@@ -58607,7 +58607,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         await context.service.processPendingPublications(100);
         expect(
           context.providerRuntime.edits.map((edit) => edit.text),
-        ).not.toContain("Maya is making progress…");
+        ).not.toContain("Maya 正在推进任务…");
         const progress = await db
           .select()
           .from(chatPublications)
@@ -58692,7 +58692,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
         {
           threadId: context.thread.thread.id,
           messageId: originalWorking!.providerMessageId,
-          text: "Maya stopped before completing this turn. Open the task in Paperclip for details.",
+          text: "Maya 在完成本轮任务前停止了。 请在 Paperclip 中打开任务查看详情。",
         },
       ]);
 
@@ -58748,7 +58748,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
           providerMessageId: originalWorking!.providerMessageId,
           payload: {
             progressState: "failed",
-            text: "Maya stopped before completing this turn. Open the task in Paperclip for details.",
+            text: "Maya 在完成本轮任务前停止了。 请在 Paperclip 中打开任务查看详情。",
           },
         }),
       ]);
@@ -58997,7 +58997,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
           {
             threadId: context.thread.thread.id,
             messageId: "outbound-1",
-            text: "Maya is making progress…",
+            text: provider === "telegram" ? "Maya 正在推进任务…" : "Maya is making progress…",
           },
         ]);
         expect(
@@ -59019,7 +59019,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
           expect.objectContaining({
             idempotencyKey: `run:${run.runId}:working:${context.endpoint.id}:native:making_progress:1`,
             payload: {
-              text: "Maya is making progress…",
+              text: provider === "telegram" ? "Maya 正在推进任务…" : "Maya is making progress…",
               progressState: "working",
             },
             providerMessageId: "outbound-1",
@@ -59103,7 +59103,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
           {
             threadId: context.thread.thread.id,
             messageId: "outbound-1",
-            text: "Maya is making progress…",
+            text: provider === "telegram" ? "Maya 正在推进任务…" : "Maya is making progress…",
           },
         ]);
         const publications = await db
@@ -62711,7 +62711,7 @@ describeEmbeddedPostgres("chat channel control-plane integration", () => {
       runtime.endpoints.get(endpoint.id)?.posts.map((post) => post.text),
     ).toEqual([
       expect.stringMatching(
-        /^Please include a request after \/task@paperclip_\d+_bot\.$/,
+        /^请在 \/task@paperclip_\d+_bot 后填写你的请求。$/,
       ),
     ]);
     runtime.endpoints.get(endpoint.id)!.posts.length = 0;

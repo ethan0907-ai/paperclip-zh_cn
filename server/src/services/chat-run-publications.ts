@@ -15,6 +15,7 @@ import {
 } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import type { Db } from "@paperclipai/db";
+import type { ChatProvider } from "@paperclipai/shared";
 import {
   agents,
   chatConversations,
@@ -106,6 +107,7 @@ type ChatRunMilestoneCandidate = {
   endpointId: string;
   conversationId: string;
   agentName: string;
+  provider: ChatProvider;
 };
 
 type SafeNativeChatProgressCandidate = {
@@ -120,6 +122,7 @@ type SafeNativeChatProgressCandidate = {
   endpointId: string;
   conversationId: string;
   agentName: string;
+  provider: ChatProvider;
 };
 
 const SAFE_NATIVE_CHAT_PROGRESS_CADENCE_MS = 20_000;
@@ -147,7 +150,32 @@ export function safeMilestoneText(input: {
   milestone: SafeRunMilestone;
   issueId: string;
   publicBaseUrl?: string | null;
+  provider?: ChatProvider;
 }): string {
+  if (input.provider === "telegram") {
+    if (input.milestone === "queued") return `${input.agentName} 已排队等待执行。`;
+    if (input.milestone === "working") return `${input.agentName} 正在工作…`;
+    if (input.milestone === "completed")
+      return `${input.agentName} 已完成本轮任务。`;
+    const taskUrl = safeChatTaskUrl(input.publicBaseUrl, input.issueId);
+    const recovery =
+      input.milestone === "waiting_for_input"
+        ? `${input.agentName} 需要 Paperclip 管理员安全恢复本轮任务后才能继续工作。`
+        : input.errorCode === "low_trust_isolation_unavailable"
+          ? `${input.agentName} 无法安全启动本轮任务：此任务由未关联身份的外部访客创建，且当前没有可用的访客隔离执行环境。请联系 Paperclip 管理员，为此账号创建私密身份关联链接，或启用访客隔离执行，然后开始新任务。`
+          : input.errorCode === "native_provider_usage_limit"
+            ? `${input.agentName} 无法完成本轮任务，因为模型服务商的使用额度已耗尽。请联系 Paperclip 管理员恢复可用额度后再重试。`
+            : input.errorCode === "native_event_replay_conflict"
+              ? `${input.agentName} 无法安全继续本轮任务。请联系 Paperclip 管理员检查此次运行后再重试。`
+              : input.errorCode === "native_session_cleanup_quarantined"
+                ? `${input.agentName} 无法启动本轮任务，因为之前的会话需要恢复。你的请求已保存。请联系 Paperclip 管理员恢复该会话后再重试；重复发送请求无法修复此问题。`
+                : `${input.agentName} 在完成本轮任务前停止了。`;
+    return `${recovery}${
+      taskUrl
+        ? ` 在 Paperclip 中打开任务：${taskUrl}`
+        : " 请在 Paperclip 中打开任务查看详情。"
+    }`;
+  }
   if (input.milestone === "queued") return `${input.agentName} is queued.`;
   if (input.milestone === "working") return `${input.agentName} is working…`;
   if (input.milestone === "completed")
@@ -215,6 +243,7 @@ async function enqueueSafeNativeChatProgress(
         endpointId: chatConversations.endpointId,
         conversationId: chatConversations.id,
         agentName: agents.name,
+        provider: chatEndpoints.provider,
       })
       .from(heartbeatRunEvents)
       .innerJoin(
@@ -408,6 +437,7 @@ async function enqueueSafeNativeChatProgress(
         const progress = safeNativeChatProgressForEvent(
           currentEvent.eventType,
           row.agentName,
+          row.provider,
         );
         if (!progress) return 0;
 
@@ -658,6 +688,7 @@ export async function enqueueChatRunMilestones(
         endpointId: chatConversations.endpointId,
         conversationId: chatConversations.id,
         agentName: agents.name,
+        provider: chatEndpoints.provider,
       })
       .from(heartbeatRuns)
       .innerJoin(
@@ -907,6 +938,7 @@ export async function enqueueChatRunMilestones(
             source: "safe_milestone",
             text: safeMilestoneText({
               agentName: row.agentName,
+              provider: row.provider,
               errorCode: row.runErrorCode,
               milestone,
               issueId: row.issueId,

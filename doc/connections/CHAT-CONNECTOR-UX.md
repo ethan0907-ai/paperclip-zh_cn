@@ -310,6 +310,13 @@ choosing a test instruction. A provider's privacy mode may require a command or
 reply instead of an ordinary mention. Use the actual bot username and keep
 personal linking distinct from sending a task request.
 
+Telegram's bot command descriptions, command guidance, task status, run progress,
+recovery notices, and attachment handoff messages use Simplified Chinese. Command
+names remain `/task`, `/status`, `/new`, and `/close`. Agent-authored replies keep
+the language chosen by the agent's instructions; the board language setting does
+not control these bot messages. Existing bots receive the updated command menu
+when their Telegram connection is configured again.
+
 ### AgentMail / email example
 
 Use mailbox and sender language rather than bot/channel terminology. If the

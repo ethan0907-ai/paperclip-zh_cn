@@ -7,6 +7,17 @@ import {
 
 describe("safe native chat progress", () => {
   it.each([
+    ["workspace.ready", "preparing", "Maya 正在准备…"],
+    ["research.progressed", "researching", "Maya 正在调研…"],
+    ["tool.execution.completed", "using_tools", "Maya 正在使用工具…"],
+    ["item.completed", "making_progress", "Maya 正在推进任务…"],
+    ["delegation.updated", "coordinating", "Maya 正在协调工作…"],
+    ["artifact.generated", "working_with_files", "Maya 正在处理文件…"],
+  ] as const)("uses Chinese for Telegram event %s", (eventType, phase, text) => {
+    expect(safeNativeChatProgressForEvent(eventType, "Maya", "telegram")).toEqual({ phase, text });
+  });
+
+  it.each([
     ["workspace.ready", "preparing", "Maya is preparing…"],
     ["research.progressed", "researching", "Maya is doing research…"],
     ["tool.execution.completed", "using_tools", "Maya is using tools…"],

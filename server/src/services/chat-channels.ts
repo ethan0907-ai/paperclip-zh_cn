@@ -794,11 +794,25 @@ const REQUIRED_GITHUB_PERMISSIONS = {
 } as const;
 
 const TELEGRAM_COMMANDS = [
-  { command: "task", description: "Start or continue a Paperclip task" },
-  { command: "status", description: "Show the active Paperclip task" },
-  { command: "new", description: "Start a new task after the current one" },
-  { command: "close", description: "Close the active chat conversation" },
+  { command: "task", description: "开始或继续 Paperclip 任务" },
+  { command: "status", description: "查看当前 Paperclip 任务" },
+  { command: "new", description: "结束当前对话并开始新任务" },
+  { command: "close", description: "关闭当前聊天对话" },
 ] as const;
+
+function chatTaskStatusText(status: string, provider: ChatProvider): string {
+  if (provider !== "telegram") return status;
+  const labels: Record<string, string> = {
+    backlog: "待安排",
+    todo: "待处理",
+    in_progress: "进行中",
+    in_review: "待审核",
+    done: "已完成",
+    blocked: "受阻",
+    cancelled: "已取消",
+  };
+  return labels[status] ?? status;
+}
 
 const UNAVOIDABLE_GITHUB_EVENTS = [
   "github_app_authorization",
@@ -15819,14 +15833,14 @@ export function chatChannelService(db: Db, options: ChatChannelServiceOptions) {
                     eq(agents.id, endpoint.assignedAgentId),
                   ),
                 )
-                .then((rows) => rows[0]?.name ?? "this agent")
+                .then((rows) => rows[0]?.name ?? "此智能体")
             : null;
         const responseText =
           guidanceCommand === "start"
-            ? `Send a direct message to start work with ${assignedAgentName}. In a group, use /task@${endpoint.botUsername ?? "your_bot"} followed by your request. Use /status, /new, or /close to manage the active task in this chat.`
+            ? `发送私信即可让 ${assignedAgentName} 开始工作。在群聊中，请使用 /task@${endpoint.botUsername ?? "your_bot"} 并在命令后填写你的请求。使用 /status 查看当前任务、/new 开始新任务，或 /close 关闭当前对话。`
             : guidanceCommand === "task"
-              ? `Please include a request after /task@${endpoint.botUsername ?? "your_bot"}.`
-              : `Available commands: /task@${endpoint.botUsername ?? "your_bot"} followed by your request, /status, /new, and /close.`;
+              ? `请在 /task@${endpoint.botUsername ?? "your_bot"} 后填写你的请求。`
+              : `可用命令：/task@${endpoint.botUsername ?? "your_bot"} 后填写请求；/status 查看当前任务；/new 开始新任务；/close 关闭当前对话。`;
         const publicationBinding =
           existingConversation && existingIssue
             ? { conversation: existingConversation, issue: existingIssue }
@@ -15910,27 +15924,36 @@ export function chatChannelService(db: Db, options: ChatChannelServiceOptions) {
       }
 
       if (controlCommand) {
+        const isTelegram = endpoint.provider === "telegram";
         const isTelegramForumTopic =
           endpoint.provider === "telegram" && surfaceKind === "native_thread";
         const taskLabel = existingIssue
           ? `${existingIssue.identifier}: ${existingIssue.title}`
-          : "No task is active in this conversation.";
+          : isTelegram
+            ? "当前对话没有进行中的任务。"
+            : "No task is active in this conversation.";
         const responseText =
           controlCommand === "status"
             ? existingIssue
-              ? `${taskLabel} — ${existingIssue.status}`
+              ? `${taskLabel} — ${chatTaskStatusText(existingIssue.status, endpoint.provider)}`
               : taskLabel
             : controlCommand === "new"
               ? isTelegramForumTopic
                 ? existingIssue
-                  ? `${taskLabel} stays bound to this forum topic. Open a new Telegram forum topic to start a new Paperclip task.`
-                  : "Open a new Telegram forum topic to start a new Paperclip task."
-                : "Send your request to start a new Paperclip task."
+                  ? `${taskLabel} 仍绑定在此论坛话题中。请新建 Telegram 论坛话题以开始新的 Paperclip 任务。`
+                  : "请新建 Telegram 论坛话题以开始新的 Paperclip 任务。"
+                : isTelegram
+                  ? "请发送你的请求，开始新的 Paperclip 任务。"
+                  : "Send your request to start a new Paperclip task."
               : existingConversation
                 ? isTelegramForumTopic
-                  ? "This chat conversation is closed. A later message here will continue the same Paperclip task."
-                  : "This chat conversation is closed. Send another message to start a new task."
-                : "No task is active. Send a message to start one.";
+                  ? "当前聊天对话已关闭。在此话题中再次发送消息将继续同一个 Paperclip 任务。"
+                  : isTelegram
+                    ? "当前聊天对话已关闭。再次发送消息即可开始新任务。"
+                    : "This chat conversation is closed. Send another message to start a new task."
+                : isTelegram
+                  ? "当前没有进行中的任务。发送消息即可开始任务。"
+                  : "No task is active. Send a message to start one.";
         const publicationBinding =
           existingConversation && existingIssue
             ? { conversation: existingConversation, issue: existingIssue }
@@ -35172,6 +35195,7 @@ export function chatChannelService(db: Db, options: ChatChannelServiceOptions) {
 
   async function currentTaskControlPayload(
     publication: typeof chatPublications.$inferSelect,
+    provider: ChatProvider,
   ): Promise<SafeChatPublicationPayload> {
     const persisted = publication.payload as SafeChatPublicationPayload;
     if (!publication.idempotencyKey.startsWith("control:status:")) {
@@ -35195,7 +35219,7 @@ export function chatChannelService(db: Db, options: ChatChannelServiceOptions) {
     return projectSafeChatPublication({
       classification: "external",
       source: "task_control",
-      text: `${issue.identifier}: ${issue.title} — ${issue.status}`,
+      text: `${issue.identifier}: ${issue.title} — ${chatTaskStatusText(issue.status, provider)}`,
     });
   }
 
@@ -35830,7 +35854,7 @@ export function chatChannelService(db: Db, options: ChatChannelServiceOptions) {
 
         const handoffPayload: SafeChatPublicationPayload = {
           ...currentPayload,
-          text: "This response needs a separate attachment because it exceeds the message limit.",
+          text: "回复超过消息长度限制，完整内容将以附件发送。",
           transportPart: transportPart(0, 2, "inline"),
         };
         delete handoffPayload.attachmentIds;
@@ -37415,7 +37439,10 @@ export function chatChannelService(db: Db, options: ChatChannelServiceOptions) {
         // not when the command was admitted. If an already-streaming final
         // publication won the race, this reply reflects Paperclip's latest
         // authoritative task state after that earlier send commits.
-        let payload = await currentTaskControlPayload(publication);
+        let payload = await currentTaskControlPayload(
+          publication,
+          endpoint.provider,
+        );
         await withCredentialMutationLease(
           recordForLease.endpoint,
           async (credentialGuard) => {
