@@ -32,7 +32,7 @@ export async function authorizeRoutineTelegramDelivery(
       eq(chatExternalPrincipals.companyId, companyId),
       eq(chatExternalPrincipals.provider, "telegram"),
       eq(chatExternalPrincipals.providerAccountId, chatEndpoints.providerAccountId),
-      eq(chatExternalPrincipals.externalId, chatConversations.externalConversationId),
+      sql`${chatConversations.externalConversationId} = 'telegram:' || ${chatExternalPrincipals.externalId}`,
       eq(chatExternalPrincipals.isBot, false),
     ))
     .innerJoin(chatIdentityLinks, and(
