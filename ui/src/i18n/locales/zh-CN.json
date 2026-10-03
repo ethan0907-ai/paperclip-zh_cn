@@ -1,4 +1,14 @@
 {
+  "routineTelegram": {
+    "label": "Telegram 自动汇报",
+    "help": "每次任务完成后，将结果文档或智能体最后一条评论发送到与你账号关联的 Telegram 私聊，并附上任务链接。需要审批的内容仍由你确认。",
+    "disabled": "不自动发送",
+    "unavailable": "已配置的会话当前不可用",
+    "loading": "正在加载 Telegram 会话…",
+    "loadError": "无法加载 Telegram 会话，请重试后选择收件人。",
+    "retry": "重试",
+    "empty": "请先连接 Telegram 机器人，向它发送私信并关联 Paperclip 身份，再选择收件会话。"
+  },
   "appDescriptions": {
     "agentmail": "为智能体提供电子邮箱，并将每段邮件对话作为任务处理。",
     "airtable": "连接 Airtable 托管的 MCP 服务器。",

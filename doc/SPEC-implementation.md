@@ -219,6 +219,10 @@ Invariant:
 
 Routine execution issues add a routine-scoped env overlay after project env and before Paperclip runtime-owned keys. Routine env uses the same secret-aware binding format, is stored on `routines.env`, is snapshotted in routine revisions, and resolves secret refs against the routine binding target so routine-owned secrets do not require direct bindings on the executing agent.
 
+Routine Telegram reports are opt-in through the routine's Delivery settings. Only a board user can enroll their own linked Telegram direct conversation in the same company. The endpoint must be active and the user must retain active company membership. The server records the authorizing user in `routines.telegram_delivery` and the routine revision; agents cannot enroll or restore a changed recipient. Imports do not carry instance-local delivery recipients.
+
+The scheduler queues a report after an execution task is done and its routine run is completed. It sends the `result` document, falling back to the assignee's last non-deleted comment, with a task link when a public origin is configured. Each run has a distinct durable publication key; restart recovery and the existing chat outbox retries reuse that key. Historical runs without enrollment are not backfilled or retargeted. Disabling delivery, pausing the routine, unlinking the identity, or removing membership stops new and queued deliveries. The publication activity is attributed to the routine scheduler and names the authorizing user. Reporting does not resolve approvals.
+
 Project source repositories use the existing `project_workspaces` collection.
 Each selected GitHub repository has a canonical `repo_url` and stable provider ID
 in `metadata.githubRepositoryId`; the first workspace remains the execution default.

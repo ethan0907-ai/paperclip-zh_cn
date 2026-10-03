@@ -1552,6 +1552,7 @@ export type {
   RevokeToolTrustRule,
   Routine,
   RoutineEnvConfig,
+  RoutineTelegramDelivery,
   RoutineManagedByPlugin,
   RoutineDescriptionDocument,
   RoutineVariable,

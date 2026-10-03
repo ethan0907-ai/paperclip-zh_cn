@@ -1,0 +1,1 @@
+ALTER TABLE "routines" ADD COLUMN "telegram_delivery" jsonb;

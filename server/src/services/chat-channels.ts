@@ -1,4 +1,5 @@
 import { withSlackBoardLease } from "./slack-board-lease.js";
+import { authorizeRoutineTelegramPublication } from "./routine-telegram-delivery.js";
 import { mirrorSlackBoardComment, slackBoardReplyBindings } from "./slack-board-messages.js";
 import { authorizeSlackBoardPublication } from "./slack-board-authority.js";
 import { assertSlackBoardWorkAllowed } from "./slack-board-resume.js";
@@ -13641,6 +13642,7 @@ export function chatChannelService(db: Db, options: ChatChannelServiceOptions) {
     tx: DbOrTransaction,
     publication: typeof chatPublications.$inferSelect,
   ): Promise<boolean> {
+    if (!(await authorizeRoutineTelegramPublication(tx as unknown as Db, publication))) return false;
     const notice = parseInboundWakePublicationKey(publication.idempotencyKey);
     let runId = runIdFromMilestonePublication(publication);
     if (!runId && publication.commentId && !notice) {
@@ -30525,6 +30527,7 @@ export function chatChannelService(db: Db, options: ChatChannelServiceOptions) {
     clientIdempotencyKey: string,
     userId: string,
     attachmentIds: string[] = [],
+    automation?: { routineId: string; runId: string },
   ) {
     const emailBoundary = await endpointRecord(endpointId);
     if (emailBoundary?.endpoint.publicationMode === "explicit")
@@ -30674,7 +30677,7 @@ export function chatChannelService(db: Db, options: ChatChannelServiceOptions) {
             conversation.issueId,
             body,
             { userId },
-            { authorType: "user", attachmentIds },
+            { authorType: automation ? "system" : "user", attachmentIds },
             inner,
           ),
         );
@@ -30803,8 +30806,8 @@ export function chatChannelService(db: Db, options: ChatChannelServiceOptions) {
       }
       await logActivity(tx as unknown as Db, {
         companyId: conversation.companyId,
-        actorType: "user",
-        actorId: userId,
+        actorType: automation ? "system" : "user",
+        actorId: automation ? "routine-scheduler" : userId,
         action: "chat.publication_requested",
         entityType: "chat_publication",
         entityId: created.id,
@@ -30814,6 +30817,7 @@ export function chatChannelService(db: Db, options: ChatChannelServiceOptions) {
           conversationId,
           commentId: comment.id,
           source: "explicit_board_send",
+          ...(automation ? { routineId: automation.routineId, routineRunId: automation.runId, authorizedUserId: userId } : {}),
         },
       });
       return terminalPublication;

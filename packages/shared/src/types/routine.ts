@@ -69,6 +69,12 @@ export interface RoutineVariable {
 
 export type RoutineEnvConfig = Record<string, EnvBinding>;
 
+export interface RoutineTelegramDelivery {
+  endpointId: string;
+  conversationId: string;
+  authorizedUserId: string;
+}
+
 export interface Routine {
   id: string;
   companyId: string;
@@ -89,6 +95,7 @@ export interface Routine {
   originId?: string | null;
   variables: RoutineVariable[];
   env?: RoutineEnvConfig | null;
+  telegramDelivery?: RoutineTelegramDelivery | null;
   latestRevisionId: string | null;
   latestRevisionNumber: number;
   createdByAgentId: string | null;
@@ -134,6 +141,7 @@ export interface RoutineRevisionSnapshotRoutineV1 {
   originId?: string | null;
   variables: RoutineVariable[];
   env: RoutineEnvConfig | null;
+  telegramDelivery?: RoutineTelegramDelivery | null;
   responsibleUserId: string | null;
 }
 

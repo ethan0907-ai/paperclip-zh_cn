@@ -81,6 +81,7 @@ import { queueIssueAssignmentWakeup, type IssueAssignmentWakeupDeps } from "./is
 import { logActivity } from "./activity-log.js";
 import type { PluginWorkerManager } from "./plugin-worker-manager.js";
 import { runtimePublicOrigin } from "./cloud-runtime-identity.js";
+import { authorizeRoutineTelegramDelivery } from "./routine-telegram-delivery.js";
 
 const OPEN_ISSUE_STATUSES = ["backlog", "todo", "in_progress", "in_review", "blocked"];
 const LIVE_HEARTBEAT_RUN_STATUSES = ["queued", "running", "scheduled_retry"];
@@ -571,6 +572,7 @@ function routineRevisionSnapshotRoutine(routine: RoutineRow): RoutineRevisionSna
     activityGateScope: routine.activityGateScope as RoutineRevisionSnapshotV1["routine"]["activityGateScope"],
     variables: routine.variables ?? [],
     env: routine.env ?? null,
+    telegramDelivery: routine.telegramDelivery ?? null,
     responsibleUserId: routine.responsibleUserId ?? null,
   };
 }
@@ -2197,6 +2199,8 @@ export function routineService(
     getDescriptionDocument: async (routineId: string) => getRoutineDescriptionDocument(routineId),
 
     create: async (companyId: string, input: CreateRoutine, actor: Actor): Promise<Routine> => {
+      const telegramDelivery = input.telegramDelivery === undefined ? null
+        : await authorizeRoutineTelegramDelivery(db, companyId, input.telegramDelivery, actor);
       await assertProject(companyId, input.projectId ?? null);
       await assertRoutineFolder(companyId, input.folderId ?? null);
       await assertAssignableAgent(db, companyId, input.assigneeAgentId ?? null, { kind: "routine" });
@@ -2239,6 +2243,7 @@ export function routineService(
             activityGateScope: input.activityGateScope ?? "company",
             variables,
             env,
+            telegramDelivery,
             responsibleUserId,
             createdByAgentId: actor.agentId ?? null,
             createdByUserId: actor.userId ?? null,
@@ -2265,6 +2270,8 @@ export function routineService(
     update: async (id: string, patch: UpdateRoutine, actor: Actor): Promise<Routine | null> => {
       const existing = await getRoutineById(id);
       if (!existing) return null;
+      const nextTelegramDelivery = patch.telegramDelivery === undefined ? existing.telegramDelivery
+        : await authorizeRoutineTelegramDelivery(db, existing.companyId, patch.telegramDelivery, actor);
       const nextProjectId = patch.projectId === undefined ? existing.projectId : patch.projectId;
       const nextFolderId = patch.folderId === undefined ? existing.folderId : patch.folderId;
       const nextAssigneeAgentId = patch.assigneeAgentId === undefined ? existing.assigneeAgentId : patch.assigneeAgentId;
@@ -2355,6 +2362,7 @@ export function routineService(
           activityGateScope: patch.activityGateScope ?? locked.activityGateScope,
           variables: nextVariables,
           env: nextEnv,
+          telegramDelivery: nextTelegramDelivery,
           responsibleUserId: locked.responsibleUserId ?? responsibleUserId,
           updatedByAgentId: actor.agentId ?? null,
           updatedByUserId: actor.userId ?? null,
@@ -2420,6 +2428,7 @@ export function routineService(
             activityGateScope: candidate.activityGateScope,
             variables: candidate.variables,
             env: candidate.env,
+            telegramDelivery: candidate.telegramDelivery,
             responsibleUserId: candidate.responsibleUserId,
             updatedByAgentId: actor.agentId ?? null,
             updatedByUserId: actor.userId ?? null,
@@ -2705,6 +2714,9 @@ export function routineService(
 
       const snapshot = routineRevisionSnapshotSchema.parse(targetRevision.snapshot) as RoutineRevisionSnapshotV1;
       const routineSnapshot = snapshot.routine;
+      const telegramDelivery = JSON.stringify(existingRoutine.telegramDelivery ?? null) === JSON.stringify(routineSnapshot.telegramDelivery ?? null)
+        ? existingRoutine.telegramDelivery
+        : await authorizeRoutineTelegramDelivery(db, existingRoutine.companyId, routineSnapshot.telegramDelivery ?? null, actor);
       await assertRestorableAssignee(existingRoutine.companyId, routineSnapshot.assigneeAgentId, actor);
 
       const result = await db.transaction(async (tx) => {
@@ -2762,6 +2774,7 @@ export function routineService(
             activityGateScope: routineSnapshot.activityGateScope,
             variables: routineSnapshot.variables,
             env: routineSnapshot.env,
+            telegramDelivery,
             updatedByAgentId: actor.agentId ?? null,
             updatedByUserId: actor.userId ?? null,
             updatedAt: now,

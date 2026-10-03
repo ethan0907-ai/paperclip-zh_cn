@@ -2,6 +2,8 @@
 
 Target specification for the Paperclip control plane. Living document — updated incrementally during spec interviews.
 
+Recurring work can deliver completed reports to a board user's linked Telegram direct conversation through explicit routine enrollment. Delivery retains company and identity boundaries, durable per-run deduplication, and human approval authority; see [the implementation contract](SPEC-implementation.md) for the current behavior.
+
 ---
 
 ## 1. Company Model [DRAFT]

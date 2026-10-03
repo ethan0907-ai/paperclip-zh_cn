@@ -1,4 +1,14 @@
 {
+  "routineTelegram": {
+    "label": "Telegram reports",
+    "help": "Send each completed task's result document or final agent comment to your linked Telegram direct conversation. Includes a task link. Approvals remain yours to review.",
+    "disabled": "Do not send automatically",
+    "unavailable": "Configured conversation unavailable",
+    "loading": "Loading Telegram conversations…",
+    "loadError": "Could not load Telegram conversations. Retry to select a recipient.",
+    "retry": "Retry",
+    "empty": "Connect a Telegram bot, send it a direct message, and link your Paperclip identity to select a recipient."
+  },
   "appDescriptions": {
     "agentmail": "Give agents email inboxes and handle each conversation as a task.",
     "airtable": "Connect Airtable's provider-hosted MCP server.",

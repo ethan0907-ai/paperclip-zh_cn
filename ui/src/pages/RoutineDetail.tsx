@@ -117,6 +117,7 @@ function buildRoutineMutationPayload(input: RoutineEditDraft) {
     projectId: input.projectId || null,
     assigneeAgentId: input.assigneeAgentId || null,
     env: input.env && Object.keys(input.env).length > 0 ? input.env : null,
+    telegramDelivery: input.telegramDelivery ? { endpointId: input.telegramDelivery.endpointId, conversationId: input.telegramDelivery.conversationId } : null,
   };
 }
 
@@ -153,6 +154,7 @@ export function RoutineDetail() {
     activityGateScope: "company",
     variables: [],
     env: null,
+    telegramDelivery: null,
   });
 
   const legacyOperateSection = !streamlinedUiEnabled && (sectionParam === "runs" || sectionParam === "activity")
@@ -257,6 +259,7 @@ export function RoutineDetail() {
             activityGateScope: routine.activityGateScope,
             variables: routine.variables,
             env: routine.env ?? null,
+            telegramDelivery: routine.telegramDelivery ? { endpointId: routine.telegramDelivery.endpointId, conversationId: routine.telegramDelivery.conversationId } : null,
           }
         : null,
     [routine],
@@ -294,6 +297,9 @@ export function RoutineDetail() {
     }
     if (JSON.stringify(editDraft.env ?? null) !== JSON.stringify(routineDefaults.env ?? null)) {
       result.push({ key: "env", label: t("routineDetailTail.secretsField") });
+    }
+    if (JSON.stringify(editDraft.telegramDelivery) !== JSON.stringify(routineDefaults.telegramDelivery)) {
+      result.push({ key: "telegramDelivery", label: t("routineTelegram.label") });
     }
     return result;
   }, [editDraft, routineDefaults, t]);
@@ -645,6 +651,7 @@ export function RoutineDetail() {
         activityGateScope: response.routine.activityGateScope,
         variables: response.routine.variables as RoutineVariable[],
         env: (response.routine.env ?? null) as RoutineEnvConfig | null,
+        telegramDelivery: response.routine.telegramDelivery ? { endpointId: response.routine.telegramDelivery.endpointId, conversationId: response.routine.telegramDelivery.conversationId } : null,
       });
       hydratedRoutineIdRef.current = response.routine.id;
     },

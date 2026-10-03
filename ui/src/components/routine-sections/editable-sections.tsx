@@ -33,6 +33,7 @@ import { MarkdownEditor } from "../MarkdownEditor";
 import { RoutineVariablesEditor, RoutineVariablesHint } from "../RoutineVariablesEditor";
 import { EnvironmentVariablesEditor } from "../environment-variables-editor";
 import { useRoutineDetail } from "./context";
+import { TelegramDelivery } from "./telegram-delivery";
 import type { EnvBinding, RoutineDetail as RoutineDetailType } from "@paperclipai/shared";
 
 const concurrencyPolicyOptions = [
@@ -475,6 +476,7 @@ export function DeliverySection() {
 
   return (
     <div className="space-y-6">
+      <TelegramDelivery />
       <div className="space-y-3">
         <p className="text-xs font-medium uppercase tracking-(--tracking-caps) text-muted-foreground">{t("routineSections.concurrency")}</p>
         <RadioCardGroup

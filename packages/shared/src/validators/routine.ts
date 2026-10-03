@@ -62,6 +62,11 @@ export const routineVariableSchema = z.object({
   }
 });
 
+export const routineTelegramDeliverySchema = z.object({
+  endpointId: z.string().guid(),
+  conversationId: z.string().guid(),
+}).strict();
+
 export const createRoutineSchema = z.object({
   projectId: z.string().guid().optional().nullable(),
   folderId: z.string().guid().optional().nullable(),
@@ -78,6 +83,7 @@ export const createRoutineSchema = z.object({
   activityGateScope: z.enum(ROUTINE_ACTIVITY_GATE_SCOPES).optional(),
   variables: z.array(routineVariableSchema).optional().default([]),
   env: envConfigSchema.optional().nullable(),
+  telegramDelivery: routineTelegramDeliverySchema.optional().nullable(),
 });
 
 export type CreateRoutine = z.infer<typeof createRoutineSchema>;
@@ -105,6 +111,7 @@ export const routineRevisionSnapshotRoutineV1Schema = z.object({
   activityGateScope: z.enum(ROUTINE_ACTIVITY_GATE_SCOPES).default("company"),
   variables: z.array(routineVariableSchema),
   env: envConfigSchema.nullable().default(null),
+  telegramDelivery: routineTelegramDeliverySchema.extend({ authorizedUserId: z.string().min(1) }).nullable().default(null),
   responsibleUserId: z.string().nullable().default(null),
 }).strict();
 

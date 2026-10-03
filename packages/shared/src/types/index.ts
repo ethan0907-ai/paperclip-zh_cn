@@ -858,6 +858,7 @@ export type {
 export type {
   Routine,
   RoutineEnvConfig,
+  RoutineTelegramDelivery,
   RoutineManagedByPlugin,
   RoutineDescriptionDocument,
   RoutineVariable,

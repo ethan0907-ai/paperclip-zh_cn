@@ -87,6 +87,8 @@ import {
   workspaceOperationService,
 } from "./services/index.js";
 import { questionResponseDeliveryService } from "./services/question-response-delivery.js";
+import { routineTelegramDeliveryService } from "./services/routine-telegram-delivery.js";
+import { chatChannelService } from "./services/chat-channels.js";
 import { deliverNativeQuestionResponse } from "./services/native-runtime/native-question-bridge.js";
 import { queueIssueAssignmentWakeup } from "./services/issue-assignment-wakeup.js";
 import { createSecretProposalsService } from "./services/secret-proposals.js";
@@ -1318,6 +1320,8 @@ async function startServerWithDatabaseTeardown(
     prepareHotRestartShutdown = heartbeat.prepareHotRestartShutdown;
     const environmentCustomImages = environmentCustomImageService(db as any, { pluginWorkerManager });
     const routines = routineService(db as any, { pluginWorkerManager });
+    const routineTelegramDelivery = routineTelegramDeliveryService(db as any,
+      chatChannelService(db as any, { heartbeat, publicBaseUrl: config.authPublicBaseUrl }).publishBoardMessage);
     const statusCards = statusCardService(db as any);
     const issues = issueService(db as any);
     const mergedPullRequestConfirmations = issueThreadInteractionService(db as any, {
@@ -1692,6 +1696,8 @@ async function startServerWithDatabaseTeardown(
           .catch((err) => {
             logger.error({ err }, "routine scheduler tick failed");
           }));
+        trackHeartbeatSchedulerWork(routineTelegramDelivery.sweep()
+          .catch((err) => logger.error({ err }, "routine Telegram delivery sweep failed")));
 
         if (heartbeatSchedulerStopped) return;
         trackHeartbeatSchedulerWork((async () => {
