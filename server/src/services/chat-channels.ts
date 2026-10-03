@@ -30676,7 +30676,7 @@ export function chatChannelService(db: Db, options: ChatChannelServiceOptions) {
           issueService(inner as unknown as Db).addComment(
             conversation.issueId,
             body,
-            { userId },
+            automation ? {} : { userId },
             { authorType: automation ? "system" : "user", attachmentIds },
             inner,
           ),
